@@ -56,8 +56,11 @@ export function LatestReports() {
               Report Feed
             </p>
             <h2 className="mt-3 max-w-3xl text-3xl font-semibold text-parchment md:text-5xl">
-              Latest reports, source-aware and unverified by default.
+              Latest reports, unverified by default.
             </h2>
+            <p className="mt-3 max-w-xl text-base leading-7 text-muted">
+              Source-aware, time-stamped, and linked whenever possible.
+            </p>
           </div>
           <p className="max-w-md rounded-md border border-signal-amber/25 bg-signal-amber/10 px-4 py-3 text-sm text-signal-amber">
             Mock reports for Phase 1. Live collectors are not connected yet.

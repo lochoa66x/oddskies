@@ -10,8 +10,13 @@ export function OddSkiesOracle() {
             Think it&apos;s real? Ask our little bro, the OddSkies Oracle.
           </h2>
           <p className="mt-5 max-w-xl text-base leading-7 text-muted">
-            The Oracle offers playful possible explanations, weird clues, and a
-            maybe-weird reading. It does not verify reports.
+            The Oracle gives playful, AI-generated reality checks for strange
+            reports — possible normal explanations, weird clues, and a
+            maybe-weird verdict. It cannot verify sightings.
+          </p>
+          <p className="mt-4 max-w-xl rounded-md border border-signal-amber/25 bg-signal-amber/10 px-4 py-3 text-sm leading-6 text-signal-amber">
+            The Oracle cannot verify whether something is real, AI-generated,
+            mistaken, staged, satire, or a joke.
           </p>
           <a
             className="mt-8 inline-flex min-h-12 items-center justify-center rounded-md bg-signal-violet px-5 py-3 text-sm font-bold text-parchment transition hover:bg-signal-teal hover:text-night-950"

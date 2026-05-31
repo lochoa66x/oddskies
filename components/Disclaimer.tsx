@@ -7,7 +7,7 @@ const badges = [
 
 export function Disclaimer() {
   return (
-    <section className="border-y border-night-800 bg-night-900 px-5 py-16" id="policy">
+    <section className="border-y border-night-800 bg-night-900 px-5 py-16" id="about">
       <div className="mx-auto max-w-5xl">
         <div className="field-card rounded-lg p-6 md:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-amber">

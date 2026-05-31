@@ -16,23 +16,32 @@ export default function Home() {
       <Disclaimer />
       <footer className="bg-night-950 px-5 py-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 border-t border-night-800 pt-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
-          <div>
+          <div className="max-w-2xl">
             <p className="font-semibold text-parchment">OddSkies</p>
-            <p>Strange reports, honestly mapped.</p>
+            <p className="mt-1 text-parchment">
+              Strange reports, honestly mapped.
+            </p>
+            <p className="mt-2 leading-6">
+              OddSkies organizes unverified public reports for curiosity and
+              entertainment. We do not confirm sightings or paranormal claims.
+            </p>
             <p>oddskies.com</p>
             <p className="mt-2 text-xs text-slate-500">
               A Voynich Tech experiment
             </p>
           </div>
           <div className="flex flex-wrap gap-5">
-            <a className="transition hover:text-signal-teal" href="#">
+            <a className="transition hover:text-signal-teal" href="#about">
               About
             </a>
             <a className="transition hover:text-signal-teal" href="#">
               Privacy
             </a>
             <a className="transition hover:text-signal-teal" href="#">
-              Source Policy
+              Policy
+            </a>
+            <a className="transition hover:text-signal-teal" href="#">
+              Source Guidelines
             </a>
           </div>
         </div>

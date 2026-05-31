@@ -14,7 +14,7 @@ export function Hero() {
       <div className="absolute inset-0 bg-star-field opacity-80" />
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-signal-teal/50 to-transparent" />
 
-      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
+      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
         <a className="flex items-center gap-3" href="#">
           <span className="grid size-10 place-items-center rounded-md border border-signal-teal/40 bg-signal-teal/10 text-sm font-black text-signal-teal shadow-glow">
             OS
@@ -28,10 +28,10 @@ export function Hero() {
         </a>
 
         <nav className="hidden items-center gap-1 rounded-md border border-night-800 bg-night-900/80 p-1 text-sm text-muted md:flex">
-          {["Map", "Reports", "Oracle", "Policy"].map((item) => (
+          {["Map", "Reports", "Oracle", "About"].map((item) => (
             <a
               className="rounded px-3 py-2 transition hover:bg-night-850 hover:text-parchment"
-              href={item === "Policy" ? "#policy" : `#${item.toLowerCase()}`}
+              href={`#${item.toLowerCase()}`}
               key={item}
             >
               {item}
@@ -40,15 +40,15 @@ export function Hero() {
         </nav>
       </header>
 
-      <div className="relative z-10 mx-auto grid min-h-[86svh] max-w-7xl gap-10 px-5 pb-14 pt-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:pb-24 lg:pt-16">
+      <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pb-12 pt-5 lg:min-h-[calc(100svh-76px)] lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:gap-10 lg:pb-14 lg:pt-4">
         <div>
           <p className="inline-flex rounded-md border border-signal-amber/30 bg-signal-amber/10 px-3 py-2 text-sm font-semibold text-signal-amber">
             Mystery Atlas / Phase 1 Preview
           </p>
-          <h1 className="mt-6 max-w-3xl text-5xl font-semibold leading-[0.95] text-parchment sm:text-6xl lg:text-7xl">
+          <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[0.95] text-parchment sm:text-6xl lg:text-7xl">
             Explore the weird side of the map.
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-8 text-muted md:text-lg">
+          <p className="mt-5 max-w-2xl text-base leading-8 text-muted md:text-lg">
             OddSkies organizes strange, unverified public reports — from UFOs
             and strange lights to haunted places and local legends — by time,
             place, category, and source.
@@ -56,7 +56,7 @@ export function Hero() {
           <p className="mt-5 max-w-xl rounded-md border border-night-800 bg-night-900/80 px-4 py-3 text-sm font-semibold text-parchment">
             Verified? No. Interesting? Maybe. Source-linked? Always.
           </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <a
               className="inline-flex min-h-14 items-center justify-center rounded-md bg-signal-teal px-5 py-3 text-sm font-bold text-night-950 shadow-glow transition hover:bg-parchment"
               href="#map"
@@ -85,12 +85,17 @@ export function Hero() {
                 Public report activity, not verified events.
               </p>
             </div>
-            <div className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
-              45.5017 N / 73.5673 W
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
+                Phase 1 density layer
+              </span>
+              <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
+                45.5017 N / 73.5673 W
+              </span>
             </div>
           </div>
 
-          <div className="atlas-grid relative min-h-[430px] overflow-hidden">
+          <div className="atlas-grid relative min-h-[360px] overflow-hidden lg:min-h-[410px]">
             <div className="scan-line absolute left-0 top-20 h-px w-full" />
             <div className="absolute left-[8%] top-[22%] h-32 w-48 rounded-[52%_48%_58%_42%] atlas-shape" />
             <div className="absolute left-[34%] top-[30%] h-24 w-40 rounded-[44%_56%_42%_58%] atlas-shape" />
@@ -98,7 +103,10 @@ export function Hero() {
             <div className="absolute left-[69%] top-[18%] h-20 w-36 rounded-[50%] atlas-shape" />
 
             <div className="absolute left-5 top-5 rounded-md border border-night-800 bg-night-950/80 px-3 py-2 text-xs text-muted">
-              Field layer: public-source report density
+              Field layer: public report density
+            </div>
+            <div className="absolute right-5 top-5 rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs font-semibold text-signal-amber">
+              Not confirmed events
             </div>
 
             {heroClusters.map((cluster) => (
