@@ -1,36 +1,37 @@
+import { CategoryStrip } from "@/components/CategoryStrip";
 import { Disclaimer } from "@/components/Disclaimer";
-import { HeatMapPreview } from "@/components/HeatMapPreview";
 import { Hero } from "@/components/Hero";
 import { LatestReports } from "@/components/LatestReports";
 import { OddSkiesOracle } from "@/components/OddSkiesOracle";
-import { TrendsPreview } from "@/components/TrendsPreview";
+import { TonightsOddSkies } from "@/components/TonightsOddSkies";
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-night-950 text-slate-100">
+    <main className="min-h-screen overflow-hidden bg-night-950 text-parchment">
       <Hero />
-      <HeatMapPreview />
+      <CategoryStrip />
+      <TonightsOddSkies />
       <LatestReports />
-      <TrendsPreview />
       <OddSkiesOracle />
       <Disclaimer />
-      <footer className="border-t border-white/10 bg-night-950 px-5 py-10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
+      <footer className="bg-night-950 px-5 py-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 border-t border-night-800 pt-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-semibold text-slate-100">OddSkies</p>
+            <p className="font-semibold text-parchment">OddSkies</p>
+            <p>Strange reports, honestly mapped.</p>
             <p>oddskies.com</p>
             <p className="mt-2 text-xs text-slate-500">
               A Voynich Tech experiment
             </p>
           </div>
           <div className="flex flex-wrap gap-5">
-            <a className="transition hover:text-signal-cyan" href="#">
-              Privacy
-            </a>
-            <a className="transition hover:text-signal-cyan" href="#">
+            <a className="transition hover:text-signal-teal" href="#">
               About
             </a>
-            <a className="transition hover:text-signal-cyan" href="#">
+            <a className="transition hover:text-signal-teal" href="#">
+              Privacy
+            </a>
+            <a className="transition hover:text-signal-teal" href="#">
               Source Policy
             </a>
           </div>
