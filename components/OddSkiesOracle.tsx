@@ -17,21 +17,31 @@ export function OddSkiesOracle() {
             unusual, and delightfully weird possible explanations. It does not
             verify reports.
           </p>
+          <a
+            className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-signal-green px-5 py-3 text-sm font-bold text-night-950 shadow-glow transition hover:bg-signal-cyan"
+            href="#oracle"
+          >
+            Ask the Oracle
+          </a>
         </div>
 
-        <div className="glass-panel relative overflow-hidden rounded-lg p-6 md:p-8">
-          <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-signal-cyan/[0.14] blur-3xl" />
+        <div className="oracle-card glass-panel relative overflow-hidden rounded-lg p-6 md:p-8">
           <div className="relative">
-            <div className="flex items-center gap-3">
-              <div className="grid size-12 place-items-center rounded-lg border border-signal-cyan/[0.35] bg-signal-cyan/10 text-lg font-black text-signal-cyan">
-                O
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="grid size-12 place-items-center rounded-lg border border-signal-cyan/[0.35] bg-signal-cyan/10 text-lg font-black text-signal-cyan">
+                  O
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Oracle Preview</p>
+                  <p className="text-sm text-slate-400">
+                    Playful explanations, not verification.
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold text-white">Oracle Preview</p>
-                <p className="text-sm text-slate-400">
-                  Playful explanations, not verification.
-                </p>
-              </div>
+              <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-signal-amber">
+                Mildly Odd
+              </span>
             </div>
 
             <div className="mt-7 rounded-lg border border-white/10 bg-night-950/70 p-5">
@@ -43,13 +53,19 @@ export function OddSkiesOracle() {
             </div>
 
             <div className="mt-4 rounded-lg border border-signal-teal/[0.18] bg-signal-teal/[0.08] p-5">
-              <p className="text-sm text-signal-green">Oracle response style</p>
+              <p className="text-sm font-semibold text-signal-green">
+                Suspiciously Interesting
+              </p>
               <p className="mt-2 text-sm leading-6 text-slate-300">
                 Could be aircraft lights, drones, atmospheric reflection, a
                 camera artifact, an edited post, or something worth comparing
                 against nearby reports.
               </p>
             </div>
+            <p className="mt-5 text-xs leading-5 text-slate-500">
+              The Oracle offers playful possibilities only. It does not verify,
+              debunk, or confirm reports.
+            </p>
           </div>
         </div>
       </div>

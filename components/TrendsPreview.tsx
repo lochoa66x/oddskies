@@ -1,23 +1,23 @@
 const trends = [
   {
     label: "Reports by region",
-    value: "Northeast corridor",
-    detail: "Mocked density lead",
+    value: "Sample region",
+    detail: "Preview label only",
   },
   {
     label: "Most active time",
-    value: "9 PM - 1 AM",
-    detail: "Local report window",
+    value: "Sample window",
+    detail: "Not live timing",
   },
   {
     label: "Reports this month",
-    value: "1,284",
-    detail: "Sample value only",
+    value: "Mock count",
+    detail: "Placeholder metric",
   },
   {
     label: "Top category",
-    value: "Strange Lights",
-    detail: "Mocked category rank",
+    value: "Sample category",
+    detail: "Preview ranking",
   },
 ];
 
@@ -38,6 +38,9 @@ export function TrendsPreview() {
           <p className="mt-5 text-base leading-7 text-slate-300">
             OddSkies is built to help people explore report volume, timing, and
             public-source patterns without claiming a report is true.
+          </p>
+          <p className="mt-5 inline-flex rounded-lg border border-signal-amber/[0.22] bg-signal-amber/[0.08] px-4 py-3 text-sm text-signal-amber">
+            Coming soon: these trend tiles are mocked sample data.
           </p>
         </div>
 

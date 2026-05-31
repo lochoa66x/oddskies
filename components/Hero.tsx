@@ -4,7 +4,7 @@ const navItems = ["Map", "Reports", "Trends", "Oracle"];
 
 export function Hero() {
   return (
-    <section className="relative min-h-[86svh] overflow-hidden border-b border-white/10">
+    <section className="relative min-h-[88svh] overflow-hidden border-b border-white/10">
       <Image
         alt="Strange twilight sky over a distant horizon"
         className="absolute inset-0 h-full w-full object-cover"
@@ -42,35 +42,40 @@ export function Hero() {
         </nav>
       </header>
 
-      <div className="relative z-10 mx-auto flex max-w-7xl px-5 pb-16 pt-16 md:pb-24 md:pt-28">
-        <div className="max-w-3xl">
+      <div className="relative z-10 mx-auto flex max-w-7xl px-5 pb-20 pt-20 md:pb-28 md:pt-32">
+        <div className="max-w-5xl">
           <p className="mb-5 inline-flex rounded-lg border border-signal-teal/30 bg-signal-teal/10 px-3 py-2 text-sm font-medium text-signal-green">
             Strange reports, honestly mapped.
           </p>
-          <h1 className="max-w-4xl text-5xl font-semibold leading-[0.98] text-white sm:text-6xl md:text-7xl">
+          <h1 className="max-w-5xl text-6xl font-semibold leading-[0.93] text-white sm:text-7xl md:text-8xl lg:text-[6.75rem]">
             Explore strange reports from the skies and beyond.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
+          <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
             OddSkies maps public, unverified reports by time, place, category,
             and source.
           </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-12 flex flex-col gap-4 sm:flex-row">
             <a
-              className="inline-flex min-h-12 items-center justify-center rounded-lg bg-signal-cyan px-5 py-3 text-sm font-bold text-night-950 shadow-glow transition hover:bg-signal-green"
+              className="inline-flex min-h-14 items-center justify-center rounded-lg bg-signal-cyan px-6 py-4 text-sm font-bold text-night-950 shadow-glow transition hover:bg-signal-green"
               href="#reports"
             >
               Explore Reports
             </a>
             <a
-              className="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/[0.14] bg-white/[0.08] px-5 py-3 text-sm font-bold text-white backdrop-blur transition hover:border-signal-teal/50 hover:bg-signal-teal/[0.12]"
+              className="inline-flex min-h-14 items-center justify-center rounded-lg border border-white/[0.14] bg-white/[0.08] px-6 py-4 text-sm font-bold text-white backdrop-blur transition hover:border-signal-teal/50 hover:bg-signal-teal/[0.12]"
               href="#oracle"
             >
               Ask the Oracle
             </a>
           </div>
-          <p className="mt-7 max-w-2xl rounded-lg border border-white/10 bg-night-950/[0.42] px-4 py-3 text-sm text-slate-300 backdrop-blur">
-            Reports are unverified and source-linked when available.
-          </p>
+          <div className="mt-8 flex max-w-3xl flex-col gap-3 text-sm text-slate-300 sm:flex-row">
+            <p className="rounded-lg border border-white/10 bg-night-950/[0.42] px-4 py-3 backdrop-blur">
+              Reports are unverified and source-linked when available.
+            </p>
+            <p className="rounded-lg border border-signal-amber/[0.22] bg-signal-amber/[0.08] px-4 py-3 text-signal-amber backdrop-blur">
+              Phase 1 preview: sample data only.
+            </p>
+          </div>
         </div>
       </div>
     </section>

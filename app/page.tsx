@@ -19,6 +19,9 @@ export default function Home() {
           <div>
             <p className="font-semibold text-slate-100">OddSkies</p>
             <p>oddskies.com</p>
+            <p className="mt-2 text-xs text-slate-500">
+              A Voynich Tech experiment
+            </p>
           </div>
           <div className="flex flex-wrap gap-5">
             <a className="transition hover:text-signal-cyan" href="#">
@@ -27,7 +30,9 @@ export default function Home() {
             <a className="transition hover:text-signal-cyan" href="#">
               About
             </a>
-            <span>Voynich Tech</span>
+            <a className="transition hover:text-signal-cyan" href="#">
+              Source Policy
+            </a>
           </div>
         </div>
       </footer>

@@ -4,6 +4,8 @@ type Report = {
   date: string;
   summary: string;
   accent: string;
+  icon: string;
+  tone: string;
 };
 
 const reports: Report[] = [
@@ -14,6 +16,8 @@ const reports: Report[] = [
     summary:
       "Two hikers describe a silent triangular light formation moving against wind direction.",
     accent: "text-signal-cyan",
+    icon: "U",
+    tone: "border-signal-cyan/30 bg-signal-cyan/10 text-signal-cyan",
   },
   {
     category: "Strange Lights",
@@ -22,6 +26,8 @@ const reports: Report[] = [
     summary:
       "A late-night shoreline post reports pulsing amber lights over low cloud cover.",
     accent: "text-signal-amber",
+    icon: "L",
+    tone: "border-signal-amber/30 bg-signal-amber/10 text-signal-amber",
   },
   {
     category: "Haunted Place",
@@ -30,6 +36,8 @@ const reports: Report[] = [
     summary:
       "Visitors note repeated cold spots and audio anomalies inside a historic inn.",
     accent: "text-signal-green",
+    icon: "H",
+    tone: "border-signal-green/30 bg-signal-green/10 text-signal-green",
   },
   {
     category: "Paranormal",
@@ -38,6 +46,8 @@ const reports: Report[] = [
     summary:
       "A local forum thread collects several accounts of distant voices near a closed trail.",
     accent: "text-signal-teal",
+    icon: "P",
+    tone: "border-signal-teal/30 bg-signal-teal/10 text-signal-teal",
   },
 ];
 
@@ -57,23 +67,30 @@ export function LatestReports() {
               Source-linked stories, clearly marked as unverified.
             </h2>
           </div>
-          <p className="max-w-md text-sm leading-6 text-slate-400">
-            These are sample reports for the landing page. Live collection comes
-            later.
-          </p>
+          <div className="max-w-md rounded-lg border border-signal-amber/[0.22] bg-signal-amber/[0.08] px-4 py-3 text-sm leading-6 text-signal-amber">
+            Phase 1 preview: these report cards are mocked sample data, not a
+            live feed.
+          </div>
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {reports.map((report) => (
             <article
-              className="glass-panel flex min-h-[280px] flex-col rounded-lg p-5 transition hover:-translate-y-1 hover:border-signal-cyan/25"
+              className="report-card glass-panel flex min-h-[310px] flex-col rounded-lg p-5 transition hover:-translate-y-1 hover:border-signal-cyan/35"
               key={`${report.category}-${report.location}`}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className={`text-sm font-bold ${report.accent}`}>
-                  {report.category}
-                </p>
-                <span className="rounded-md border border-signal-amber/[0.28] bg-signal-amber/10 px-2 py-1 text-xs font-semibold text-signal-amber">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`grid size-9 place-items-center rounded-lg border text-xs font-black ${report.tone}`}
+                  >
+                    {report.icon}
+                  </span>
+                  <p className={`text-sm font-bold ${report.accent}`}>
+                    {report.category}
+                  </p>
+                </div>
+                <span className="rounded-md border border-signal-amber/40 bg-signal-amber/15 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
                   Unverified
                 </span>
               </div>
@@ -85,10 +102,13 @@ export function LatestReports() {
                 {report.summary}
               </p>
               <a
-                className="mt-6 inline-flex items-center text-sm font-semibold text-signal-cyan transition hover:text-signal-green"
+                className="mt-6 inline-flex items-center justify-between gap-3 rounded-md border border-signal-cyan/20 bg-signal-cyan/[0.07] px-3 py-2 text-sm font-semibold text-signal-cyan transition hover:border-signal-green/35 hover:text-signal-green"
                 href="#"
               >
-                Source link placeholder -&gt;
+                <span>Source link placeholder</span>
+                <span className="rounded border border-current/30 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em]">
+                  External
+                </span>
               </a>
             </article>
           ))}

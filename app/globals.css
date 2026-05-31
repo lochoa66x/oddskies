@@ -38,7 +38,7 @@ a {
 }
 
 .glass-panel {
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.13);
   background:
     linear-gradient(180deg, rgba(14, 26, 43, 0.86), rgba(7, 16, 29, 0.78)),
     rgba(7, 16, 29, 0.82);
@@ -50,4 +50,37 @@ a {
     linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
   background-size: 44px 44px;
+}
+
+.heat-cluster {
+  animation: heat-pulse 3.8s ease-in-out infinite;
+  background:
+    radial-gradient(circle, rgba(255, 196, 107, 0.44) 0 18%, rgba(255, 112, 92, 0.28) 35%, rgba(255, 112, 92, 0) 72%);
+  box-shadow: 0 0 46px rgba(255, 112, 92, 0.28);
+}
+
+.report-card {
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.oracle-card {
+  background:
+    linear-gradient(135deg, rgba(83, 229, 245, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(14, 26, 43, 0.9), rgba(7, 16, 29, 0.82)),
+    rgba(7, 16, 29, 0.82);
+}
+
+@keyframes heat-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
 }
