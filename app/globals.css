@@ -320,6 +320,14 @@ a {
   left: 57%;
 }
 
+.atlas-point-label-above {
+  left: 50%;
+  top: auto;
+  bottom: 58%;
+  transform: translate(-50%, -0.55rem);
+  text-align: center;
+}
+
 .atlas-control {
   display: flex;
   gap: 0.35rem;

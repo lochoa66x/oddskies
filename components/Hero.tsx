@@ -2,7 +2,7 @@ const heroPoints = [
   {
     category: "Canada",
     label: "Montreal Orb",
-    labelSide: "right",
+    labelSide: "above",
     left: "25%",
     size: 52,
     tone: "teal",
@@ -38,7 +38,7 @@ const heroPoints = [
   {
     category: "UK / Ireland",
     label: "Dublin Whisper House",
-    labelSide: "left",
+    labelSide: "above",
     left: "47%",
     size: 54,
     tone: "violet",
