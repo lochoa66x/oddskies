@@ -1,5 +1,6 @@
 import { CategoryStrip } from "@/components/CategoryStrip";
 import { Disclaimer } from "@/components/Disclaimer";
+import { FeaturedRegions } from "@/components/FeaturedRegions";
 import { Hero } from "@/components/Hero";
 import { LatestReports } from "@/components/LatestReports";
 import { OddSkiesOracle } from "@/components/OddSkiesOracle";
@@ -10,6 +11,7 @@ export default function Home() {
     <main className="min-h-screen overflow-hidden bg-night-950 text-parchment">
       <Hero />
       <CategoryStrip />
+      <FeaturedRegions />
       <TonightsOddSkies />
       <LatestReports />
       <OddSkiesOracle />

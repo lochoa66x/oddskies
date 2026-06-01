@@ -4,6 +4,7 @@ type Report = {
   eventDateTime: string;
   location: string;
   marker: string;
+  region: string;
   reportedDateTime: string;
   sourceName: string;
   sourceType: string;
@@ -20,6 +21,7 @@ const reports: Report[] = [
     eventDateTime: "May 29, 2026 / 10:42 PM",
     location: "Sedona, Arizona",
     marker: "bg-signal-teal",
+    region: "United States",
     reportedDateTime: "May 30, 2026 / 8:16 AM",
     sourceName: "Public sighting post",
     sourceType: "Social thread",
@@ -35,6 +37,7 @@ const reports: Report[] = [
     eventDateTime: "May 27, 2026 / 12:18 AM",
     location: "Lake Erie, Ohio",
     marker: "bg-signal-amber",
+    region: "United States / Canada",
     reportedDateTime: "May 27, 2026 / 9:44 AM",
     sourceName: "Local shoreline forum",
     sourceType: "Community post",
@@ -47,39 +50,106 @@ const reports: Report[] = [
   {
     category: "Haunted Place",
     confidenceMood: "Eerie but Thin",
-    eventDateTime: "May 23, 2026 / 8:05 PM",
-    location: "Savannah, Georgia",
+    eventDateTime: "May 23, 2026 / 11:15 PM",
+    location: "Dublin, Ireland",
     marker: "bg-signal-violet",
-    reportedDateTime: "May 24, 2026 / 11:02 AM",
-    sourceName: "Historic inn review",
-    sourceType: "Public review",
+    region: "UK & Ireland",
+    reportedDateTime: "May 24, 2026 / 10:21 AM",
+    sourceName: "Neighborhood history thread",
+    sourceType: "Public forum post",
     sourceUrl: "#source-guidelines",
     summary:
-      "Visitors note cold spots and audio anomalies inside a historic inn.",
-    title: "Cold spots and odd audio noted at historic inn",
+      "Residents trade stories about knocks, cold windows, and a stairwell voice.",
+    title: "Dublin whisper house thread resurfaces",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Strange Lights",
+    confidenceMood: "Active Watch",
+    eventDateTime: "May 22, 2026 / 9:03 PM",
+    location: "Puebla, Mexico",
+    marker: "bg-signal-ember",
+    region: "Mexico",
+    reportedDateTime: "May 23, 2026 / 7:42 AM",
+    sourceName: "Volcano watch clip thread",
+    sourceType: "Public video post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Bright point described hovering near the Popocatepetl skyline before fading.",
+    title: "Popocatepetl watch light near skyline",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "UFO / UAP",
+    confidenceMood: "Mildly Odd",
+    eventDateTime: "May 19, 2026 / 1:04 AM",
+    location: "Sao Paulo, Brazil",
+    marker: "bg-signal-teal",
+    region: "Brazil",
+    reportedDateTime: "May 19, 2026 / 8:33 AM",
+    sourceName: "City skywatch thread",
+    sourceType: "Social thread",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Small cluster of pale green lights reported drifting above high-rise rooftops.",
+    title: "Sao Paulo signal above rooftop line",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Unknown",
+    confidenceMood: "Low Context",
+    eventDateTime: "May 18, 2026 / 12:27 AM",
+    location: "Tokyo, Japan",
+    marker: "bg-muted",
+    region: "East Asia",
+    reportedDateTime: "May 18, 2026 / 6:18 AM",
+    sourceName: "Late-night sky post",
+    sourceType: "Social post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Blue-white pulse captured between buildings with little location context.",
+    title: "Tokyo sky pulse between towers",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Local Legends",
+    confidenceMood: "Folklore Signal",
+    eventDateTime: "May 14, 2026 / 10:58 PM",
+    location: "Northern Territory, Australia",
+    marker: "bg-signal-amber",
+    region: "Australia / New Zealand",
+    reportedDateTime: "May 15, 2026 / 4:02 PM",
+    sourceName: "Outback travel log",
+    sourceType: "Public blog post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Orange disc-like glow described low over a distant ridgeline after sundown.",
+    title: "Outback fire disc near remote ridge",
     verificationStatus: "Unverified",
   },
   {
     category: "Paranormal",
-    confidenceMood: "Low Context",
-    eventDateTime: "May 20, 2026 / 1:31 AM",
-    location: "Olympic Peninsula, Washington",
-    marker: "bg-signal-ember",
-    reportedDateTime: "May 21, 2026 / 6:50 PM",
-    sourceName: "Trail discussion thread",
-    sourceType: "Forum post",
+    confidenceMood: "Eerie but Thin",
+    eventDateTime: "May 12, 2026 / 2:11 AM",
+    location: "Black Forest, Germany",
+    marker: "bg-signal-violet",
+    region: "Western Europe",
+    reportedDateTime: "May 12, 2026 / 11:39 AM",
+    sourceName: "Regional mystery board",
+    sourceType: "Community post",
     sourceUrl: "#source-guidelines",
     summary:
-      "Forum thread collects accounts of distant voices near a closed trail.",
-    title: "Distant voices reported near closed forest trail",
+      "Hikers describe repeating knocks and a distant voice near an old trail marker.",
+    title: "Black Forest echo near old trail marker",
     verificationStatus: "Unverified",
   },
 ];
 
-const selected = reports[1];
+const selected = reports[5];
 const detailRows = [
   ["Title", selected.title],
   ["Category", selected.category],
+  ["Region", selected.region],
   ["Location", selected.location],
   ["Event date/time", selected.eventDateTime],
   ["Reported date/time", selected.reportedDateTime],
@@ -172,26 +242,27 @@ export function LatestReports() {
             <div className="atlas-grid detail-atlas relative min-h-[260px] overflow-hidden">
               <svg
                 aria-hidden="true"
-                className="atlas-landmass absolute inset-x-5 top-8 h-[70%] w-[calc(100%-2.5rem)]"
-                viewBox="0 0 620 300"
+                className="atlas-map-base absolute inset-x-5 top-8 h-[70%] w-[calc(100%-2.5rem)]"
+                viewBox="0 0 1000 500"
               >
-                <path d="M44 92c26-36 79-45 125-31 35 11 62 37 100 36 35-1 62-29 100-20 39 9 55 48 40 78-17 36-68 30-102 53-39 27-74 59-124 49-43-9-58-45-89-66-29-20-72-18-87-52-7-17 6-33 37-47Z" />
-                <path d="M390 73c44-31 119-17 151 25 29 38 13 88-34 106-43 16-111 5-143-31-31-36-17-70 26-100Z" />
-                <path d="M398 226c29-22 83-22 107 2 25 24 12 58-24 67-34 9-78-9-91-37-5-11-1-22 8-32Z" />
+                <path d="M100 132c31-46 83-71 141-70 45 1 78 21 114 42 31 18 78 16 99 50 24 40-10 73-48 88-44 17-66 52-92 87-28 39-83 54-126 27-38-23-42-73-76-99-39-30-66-76-12-125Z" />
+                <path d="M286 318c42 14 72 44 84 84 10 36-4 67-25 91-39-17-58-47-78-85-18-34-25-62 19-90Z" />
+                <path d="M430 150c35-35 92-39 135-22 33 13 59 42 94 49 43 9 83-28 130-6 44 21 73 70 63 117-11 54-62 75-112 61-39-11-70-43-112-37-41 6-69 43-112 34-47-10-74-58-67-101 5-34 30-61-19-95Z" />
+                <path d="M715 330c29-23 79-18 116 2 34 19 66 47 69 87-44 22-100 12-141-17-30-21-61-44-44-72Z" />
               </svg>
               <svg
                 aria-hidden="true"
                 className="atlas-route-lines absolute inset-x-8 top-9 h-[58%] w-[calc(100%-4rem)]"
-                viewBox="0 0 560 240"
+                viewBox="0 0 1000 430"
               >
-                <path d="M75 94c73-39 148-35 225 12 50 30 103 31 166 4" />
-                <path d="M166 180c71-52 155-59 252-20" />
+                <path d="M190 184c122-72 235-63 338 27 105 91 218 97 339 21" />
+                <path d="M632 214c71-13 142 7 213 60" />
               </svg>
-              <span className="radar-ring absolute left-[48%] top-[35%] size-28" />
-              <span className="radar-ring absolute left-[68%] top-[57%] size-20 [animation-delay:1.3s]" />
-              <span className="atlas-pin absolute left-[57%] top-[43%] size-3 rounded-full" />
-              <span className="atlas-pin absolute left-[33%] top-[61%] size-2 rounded-full [animation-delay:0.7s]" />
-              <span className="atlas-pin absolute left-[76%] top-[29%] size-2 rounded-full [animation-delay:1.4s]" />
+              <span className="radar-ring absolute left-[81%] top-[43%] size-28" />
+              <span className="radar-ring absolute left-[35%] top-[74%] size-20 [animation-delay:1.3s]" />
+              <span className="atlas-pin absolute left-[81%] top-[43%] size-3 rounded-full" />
+              <span className="atlas-pin absolute left-[47%] top-[33%] size-2 rounded-full [animation-delay:0.7s]" />
+              <span className="atlas-pin absolute left-[80%] top-[75%] size-2 rounded-full [animation-delay:1.4s]" />
               <div className="absolute bottom-4 left-4 right-4 rounded-md border border-night-800 bg-night-950/85 p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`size-2.5 rounded-full ${selected.marker}`} />

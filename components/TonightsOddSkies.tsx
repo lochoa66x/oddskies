@@ -1,7 +1,7 @@
 const tonight = [
   { label: "Most active window", value: "9 PM - 1 AM" },
   { label: "Trending category", value: "Strange Lights" },
-  { label: "Hot region", value: "Northeast corridor" },
+  { label: "Hot region", value: "Global watchlist" },
   { label: "Oracle mood", value: "Suspiciously Interesting" },
 ];
 

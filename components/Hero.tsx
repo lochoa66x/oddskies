@@ -1,51 +1,75 @@
 const heroPoints = [
   {
-    category: "Strange Lights",
-    label: "Green Fireball",
-    left: "31%",
-    size: 78,
+    category: "Canada",
+    label: "Montreal Orb",
+    labelSide: "right",
+    left: "25%",
+    size: 52,
     tone: "teal",
-    top: "25%",
+    top: "29%",
   },
   {
-    category: "UFO / UAP",
-    label: "Triangle Lights",
-    left: "46%",
+    category: "United States",
+    label: "Sedona Triangle",
+    labelSide: "right",
+    left: "19%",
+    size: 60,
+    tone: "amber",
+    top: "43%",
+  },
+  {
+    category: "Mexico",
+    label: "Popocatepetl Watch",
+    labelSide: "right",
+    left: "22%",
+    size: 56,
+    tone: "ember",
+    top: "54%",
+  },
+  {
+    category: "Brazil",
+    label: "Sao Paulo Signal",
+    labelSide: "right",
+    left: "35%",
     size: 64,
-    tone: "amber",
-    top: "48%",
+    tone: "teal",
+    top: "74%",
   },
   {
-    category: "Haunted Places",
-    label: "Silent Hill",
-    left: "57%",
-    size: 94,
+    category: "UK / Ireland",
+    label: "Dublin Whisper House",
+    labelSide: "left",
+    left: "47%",
+    size: 54,
     tone: "violet",
-    top: "42%",
-  },
-  {
-    category: "Strange Lights",
-    label: "Cape Cod Light",
-    left: "76%",
-    size: 58,
-    tone: "amber",
     top: "33%",
   },
   {
-    category: "Local Legends",
-    label: "Whispering Pines",
-    left: "68%",
-    size: 54,
-    tone: "ember",
-    top: "68%",
-  },
-  {
-    category: "Unknown",
-    label: "Sky Disc",
-    left: "22%",
+    category: "Western Europe",
+    label: "Black Forest Echo",
+    labelSide: "right",
+    left: "52%",
     size: 52,
     tone: "muted",
-    top: "58%",
+    top: "39%",
+  },
+  {
+    category: "Japan",
+    label: "Tokyo Sky Pulse",
+    labelSide: "left",
+    left: "81%",
+    size: 58,
+    tone: "amber",
+    top: "43%",
+  },
+  {
+    category: "Oceania",
+    label: "Outback Fire Disc",
+    labelSide: "left",
+    left: "80%",
+    size: 62,
+    tone: "ember",
+    top: "75%",
   },
 ];
 
@@ -141,7 +165,7 @@ export function Hero() {
                 Phase 1 density layer
               </span>
               <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
-                45.5017 N / 73.5673 W
+                Global preview / 8 regions
               </span>
             </div>
           </div>
@@ -151,26 +175,30 @@ export function Hero() {
             <svg
               aria-hidden="true"
               className="atlas-map-base absolute inset-x-5 top-8 h-[72%] w-[calc(100%-2.5rem)]"
-              viewBox="0 0 900 500"
+              viewBox="0 0 1000 500"
             >
-              <path d="M97 161c22-43 70-80 119-92 61-15 93 20 134 28 38 7 68-16 103-5 35 10 48 42 74 60 31 21 78 16 105 43 34 34 20 88-21 106-47 21-98-12-141 14-52 31-83 89-148 88-66-1-78-63-123-93-48-32-124-21-146-76-9-23 9-47 44-73Z" />
-              <path d="M489 137c38-47 107-65 169-48 58 16 85 64 128 92 37 24 81 34 91 77 12 51-33 101-83 111-56 11-96-34-144-30-44 3-78 49-126 38-45-11-70-62-58-104 11-37 55-59 54-91 0-18-44-15-31-45Z" />
-              <path d="M287 344c41 5 71 26 102 50 28 22 76 20 91 57-48 8-96 0-136-22-38-21-62-48-57-85Z" />
-              <path d="M733 89c40-24 95-11 125 23 31 36 16 83-27 101-38 16-99 8-122-27-22-34-9-73 24-97Z" />
+              <path d="M100 132c31-46 83-71 141-70 45 1 78 21 114 42 31 18 78 16 99 50 24 40-10 73-48 88-44 17-66 52-92 87-28 39-83 54-126 27-38-23-42-73-76-99-39-30-66-76-12-125Z" />
+              <path d="M286 318c42 14 72 44 84 84 10 36-4 67-25 91-39-17-58-47-78-85-18-34-25-62 19-90Z" />
+              <path d="M430 150c35-35 92-39 135-22 33 13 59 42 94 49 43 9 83-28 130-6 44 21 73 70 63 117-11 54-62 75-112 61-39-11-70-43-112-37-41 6-69 43-112 34-47-10-74-58-67-101 5-34 30-61-19-95Z" />
+              <path d="M482 285c42 7 73 37 93 74 17 31 43 58 42 99-48 15-103-5-131-46-25-37-50-86-4-127Z" />
+              <path d="M715 330c29-23 79-18 116 2 34 19 66 47 69 87-44 22-100 12-141-17-30-21-61-44-44-72Z" />
+              <path d="M382 70c42-31 99-30 135 2-28 34-79 38-126 33-31-3-41-17-9-35Z" />
             </svg>
             <svg
               aria-hidden="true"
               className="atlas-route-lines absolute inset-x-8 top-12 h-[63%] w-[calc(100%-4rem)]"
-              viewBox="0 0 820 390"
+              viewBox="0 0 1000 430"
             >
-              <path d="M146 116c104-39 214-30 330 54 70 51 144 57 224 14" />
-              <path d="M222 244c91-79 209-94 354-42 54 19 94 11 133-18" />
-              <path d="M112 196c106 27 192 84 266 168" />
-              <path d="M531 92c70 49 129 112 181 190" />
+              <path d="M190 184c122-72 235-63 338 27 105 91 218 97 339 21" />
+              <path d="M258 236c96-45 187-39 273 19 88 59 174 47 260-35" />
+              <path d="M220 318c91 35 155 91 192 168" />
+              <path d="M510 172c81 61 144 141 188 240" />
+              <path d="M632 214c71-13 142 7 213 60" />
             </svg>
-            <span className="radar-ring absolute left-[31%] top-[25%] size-28" />
-            <span className="radar-ring absolute left-[57%] top-[42%] size-36 [animation-delay:1.1s]" />
-            <span className="radar-ring absolute left-[76%] top-[33%] size-24 [animation-delay:2s]" />
+            <span className="radar-ring absolute left-[24%] top-[33%] size-28" />
+            <span className="radar-ring absolute left-[52%] top-[39%] size-32 [animation-delay:1.1s]" />
+            <span className="radar-ring absolute left-[80%] top-[43%] size-24 [animation-delay:2s]" />
+            <span className="radar-ring absolute left-[80%] top-[75%] size-28 [animation-delay:2.6s]" />
 
             <div className="absolute left-5 top-5 rounded-md border border-night-800 bg-night-950/80 px-3 py-2 text-xs text-muted">
               Field layer: public report density
@@ -198,7 +226,9 @@ export function Hero() {
                   <span className="absolute inset-[34%] rounded-full bg-signal-amber shadow-[0_0_30px_rgba(246,180,75,0.9)]" />
                   <span className="absolute inset-[44%] rounded-full bg-parchment/90" />
                 </span>
-                <span className="atlas-point-label">
+                <span
+                  className={`atlas-point-label atlas-point-label-${point.labelSide}`}
+                >
                   <span>{point.label}</span>
                   <small>{point.category}</small>
                 </span>

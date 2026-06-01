@@ -309,6 +309,17 @@ a {
   text-transform: uppercase;
 }
 
+.atlas-point-label-left {
+  left: auto;
+  right: 57%;
+  transform: translate(-0.6rem, -50%);
+  text-align: right;
+}
+
+.atlas-point-label-right {
+  left: 57%;
+}
+
 .atlas-control {
   display: flex;
   gap: 0.35rem;
