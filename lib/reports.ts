@@ -1,0 +1,645 @@
+export const regionFilters = [
+  "All",
+  "North America",
+  "Latin America",
+  "UK & Ireland",
+  "Western Europe",
+  "East Asia",
+  "Oceania",
+] as const;
+
+export type RegionFilter = (typeof regionFilters)[number];
+export type AtlasRegion = Exclude<RegionFilter, "All">;
+
+export type Report = {
+  category: string;
+  confidenceMood: string;
+  eventDateTime: string;
+  eventDateTimeRaw: string;
+  id: string;
+  isDemo?: boolean;
+  latitude: number | null;
+  location: string;
+  longitude: number | null;
+  marker: string;
+  region: AtlasRegion;
+  reportedDateTime: string;
+  shortLabel: string;
+  sourceName: string;
+  sourceType: string;
+  sourceUrl: string;
+  summary: string;
+  title: string;
+  verificationStatus: string;
+};
+
+type SupabaseReportRow = Record<string, unknown>;
+type Tone = "teal" | "amber" | "violet" | "ember" | "muted";
+
+export const regionAnchors: Record<
+  AtlasRegion,
+  { latitude: number; longitude: number }
+> = {
+  "North America": { latitude: 42, longitude: -98 },
+  "Latin America": { latitude: -11, longitude: -67 },
+  "UK & Ireland": { latitude: 54, longitude: -5 },
+  "Western Europe": { latitude: 48, longitude: 8 },
+  "East Asia": { latitude: 36, longitude: 139 },
+  Oceania: { latitude: -31, longitude: 145 },
+};
+
+const demoReports: Report[] = [
+  {
+    category: "UFO / UAP",
+    confidenceMood: "Mildly Odd",
+    eventDateTime: "May 30, 2026 / 11:09 PM",
+    eventDateTimeRaw: "2026-05-31T03:09:00.000Z",
+    id: "demo-montreal-orb",
+    isDemo: true,
+    latitude: 45.5019,
+    location: "Montreal, Canada",
+    longitude: -73.5674,
+    marker: "bg-signal-teal",
+    region: "North America",
+    reportedDateTime: "May 31, 2026 / 8:12 AM",
+    shortLabel: "Montreal Orb",
+    sourceName: "Public skywatch thread",
+    sourceType: "Social thread",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Round teal-white object described hovering above a low cloud shelf before fading.",
+    title: "Montreal Orb above low cloud shelf",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "UFO / UAP",
+    confidenceMood: "Mildly Odd",
+    eventDateTime: "May 29, 2026 / 10:42 PM",
+    eventDateTimeRaw: "2026-05-30T02:42:00.000Z",
+    id: "demo-sedona-triangle",
+    isDemo: true,
+    latitude: 34.8697,
+    location: "Sedona, Arizona",
+    longitude: -111.761,
+    marker: "bg-signal-teal",
+    region: "North America",
+    reportedDateTime: "May 30, 2026 / 8:16 AM",
+    shortLabel: "Sedona Triangle",
+    sourceName: "Public sighting post",
+    sourceType: "Social thread",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Silent triangular light formation reported moving against wind direction.",
+    title: "Sedona Triangle over ridge line",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Strange Lights",
+    confidenceMood: "Active Watch",
+    eventDateTime: "May 22, 2026 / 9:03 PM",
+    eventDateTimeRaw: "2026-05-23T01:03:00.000Z",
+    id: "demo-popocatepetl-watch",
+    isDemo: true,
+    latitude: 19.023,
+    location: "Puebla, Mexico",
+    longitude: -98.622,
+    marker: "bg-signal-ember",
+    region: "Latin America",
+    reportedDateTime: "May 23, 2026 / 7:42 AM",
+    shortLabel: "Popocatepetl Watch",
+    sourceName: "Volcano watch clip thread",
+    sourceType: "Public video post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Bright point described hovering near the Popocatepetl skyline before fading.",
+    title: "Popocatepetl Watch light near skyline",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "UFO / UAP",
+    confidenceMood: "Mildly Odd",
+    eventDateTime: "May 19, 2026 / 1:04 AM",
+    eventDateTimeRaw: "2026-05-19T05:04:00.000Z",
+    id: "demo-sao-paulo-signal",
+    isDemo: true,
+    latitude: -23.5558,
+    location: "Sao Paulo, Brazil",
+    longitude: -46.6396,
+    marker: "bg-signal-teal",
+    region: "Latin America",
+    reportedDateTime: "May 19, 2026 / 8:33 AM",
+    shortLabel: "Sao Paulo Signal",
+    sourceName: "City skywatch thread",
+    sourceType: "Social thread",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Small cluster of pale green lights reported drifting above high-rise rooftops.",
+    title: "Sao Paulo Signal above rooftop line",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Haunted Place",
+    confidenceMood: "Eerie but Thin",
+    eventDateTime: "May 23, 2026 / 11:15 PM",
+    eventDateTimeRaw: "2026-05-24T03:15:00.000Z",
+    id: "demo-dublin-whisper-house",
+    isDemo: true,
+    latitude: 53.3498,
+    location: "Dublin, Ireland",
+    longitude: -6.2603,
+    marker: "bg-signal-violet",
+    region: "UK & Ireland",
+    reportedDateTime: "May 24, 2026 / 10:21 AM",
+    shortLabel: "Dublin Whisper House",
+    sourceName: "Neighborhood history thread",
+    sourceType: "Public forum post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Residents trade stories about knocks, cold windows, and a stairwell voice.",
+    title: "Dublin Whisper House thread resurfaces",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Haunted Place",
+    confidenceMood: "Eerie but Thin",
+    eventDateTime: "May 16, 2026 / 12:48 AM",
+    eventDateTimeRaw: "2026-05-16T04:48:00.000Z",
+    id: "demo-scottish-castle-echo",
+    isDemo: true,
+    latitude: 56.49,
+    location: "Highlands, Scotland",
+    longitude: -4.2,
+    marker: "bg-signal-violet",
+    region: "UK & Ireland",
+    reportedDateTime: "May 16, 2026 / 9:28 AM",
+    shortLabel: "Scottish Castle Echo",
+    sourceName: "Local history post",
+    sourceType: "Public forum post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Late-night footsteps and a repeating knock described near a closed castle wing.",
+    title: "Scottish Castle Echo near closed wing",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Paranormal",
+    confidenceMood: "Eerie but Thin",
+    eventDateTime: "May 12, 2026 / 2:11 AM",
+    eventDateTimeRaw: "2026-05-12T06:11:00.000Z",
+    id: "demo-transylvania-shadow",
+    isDemo: true,
+    latitude: 46.77,
+    location: "Transylvania, Romania",
+    longitude: 23.59,
+    marker: "bg-signal-violet",
+    region: "Western Europe",
+    reportedDateTime: "May 12, 2026 / 11:39 AM",
+    shortLabel: "Transylvania Shadow",
+    sourceName: "Regional mystery board",
+    sourceType: "Community post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Travelers describe a shadow crossing an empty road near a forest trail marker.",
+    title: "Transylvania Shadow near forest road",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Unknown",
+    confidenceMood: "Low Context",
+    eventDateTime: "May 18, 2026 / 12:27 AM",
+    eventDateTimeRaw: "2026-05-18T04:27:00.000Z",
+    id: "demo-tokyo-sky-pulse",
+    isDemo: true,
+    latitude: 35.6762,
+    location: "Tokyo, Japan",
+    longitude: 139.6503,
+    marker: "bg-muted",
+    region: "East Asia",
+    reportedDateTime: "May 18, 2026 / 6:18 AM",
+    shortLabel: "Tokyo Sky Pulse",
+    sourceName: "Late-night sky post",
+    sourceType: "Social post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Blue-white pulse captured between buildings with little location context.",
+    title: "Tokyo Sky Pulse between towers",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Local Legends",
+    confidenceMood: "Folklore Signal",
+    eventDateTime: "May 14, 2026 / 10:58 PM",
+    eventDateTimeRaw: "2026-05-15T02:58:00.000Z",
+    id: "demo-outback-fire-disc",
+    isDemo: true,
+    latitude: -23.698,
+    location: "Northern Territory, Australia",
+    longitude: 133.8807,
+    marker: "bg-signal-amber",
+    region: "Oceania",
+    reportedDateTime: "May 15, 2026 / 4:02 PM",
+    shortLabel: "Outback Fire Disc",
+    sourceName: "Outback travel log",
+    sourceType: "Public blog post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Orange disc-like glow described low over a distant ridgeline after sundown.",
+    title: "Outback Fire Disc near remote ridge",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Strange Lights",
+    confidenceMood: "Suspiciously Interesting",
+    eventDateTime: "May 10, 2026 / 9:41 PM",
+    eventDateTimeRaw: "2026-05-11T01:41:00.000Z",
+    id: "demo-wellington-harbor-lights",
+    isDemo: true,
+    latitude: -41.2865,
+    location: "Wellington, New Zealand",
+    longitude: 174.7762,
+    marker: "bg-signal-amber",
+    region: "Oceania",
+    reportedDateTime: "May 11, 2026 / 7:55 AM",
+    shortLabel: "Wellington Harbor Lights",
+    sourceName: "Harbor watch thread",
+    sourceType: "Community post",
+    sourceUrl: "#source-guidelines",
+    summary:
+      "Three steady lights described moving over the harbor before separating.",
+    title: "Wellington Harbor Lights split apart",
+    verificationStatus: "Unverified",
+  },
+];
+
+export async function getReports(): Promise<Report[]> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !anonKey) {
+    return demoReports;
+  }
+
+  try {
+    const endpoint = new URL("/rest/v1/reports", supabaseUrl);
+    endpoint.searchParams.set("select", "*");
+    endpoint.searchParams.set("order", "event_datetime.desc");
+
+    const response = await fetch(endpoint.toString(), {
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      },
+      next: { revalidate: 300 },
+    });
+
+    if (!response.ok) {
+      return demoReports;
+    }
+
+    const rows = (await response.json()) as SupabaseReportRow[];
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return demoReports;
+    }
+
+    return rows.map(normalizeReport).filter(Boolean);
+  } catch {
+    return demoReports;
+  }
+}
+
+export function filterReportsByRegion(
+  reports: Report[],
+  region: RegionFilter,
+): Report[] {
+  if (region === "All") {
+    return reports;
+  }
+
+  return reports.filter((report) => report.region === region);
+}
+
+export function coordinateToAtlasPosition(
+  latitude: number | null,
+  longitude: number | null,
+): { left: number; top: number } {
+  if (latitude === null || longitude === null) {
+    return { left: 50, top: 50 };
+  }
+
+  const left = 7 + ((longitude + 180) / 360) * 86;
+  const top = 12 + ((90 - latitude) / 180) * 58;
+
+  return {
+    left: clamp(left, 7, 93),
+    top: clamp(top, 12, 70),
+  };
+}
+
+export function getCategoryTone(category: string): Tone {
+  const normalized = category.toLowerCase();
+
+  if (normalized.includes("light")) {
+    return "amber";
+  }
+
+  if (normalized.includes("haunt") || normalized.includes("paranormal")) {
+    return "violet";
+  }
+
+  if (normalized.includes("legend") || normalized.includes("unknown")) {
+    return "ember";
+  }
+
+  return "teal";
+}
+
+function normalizeReport(row: SupabaseReportRow, index: number): Report {
+  const latitude = readNumber(row, "latitude", "lat");
+  const longitude = readNumber(row, "longitude", "lng", "lon");
+  const category = normalizeCategory(
+    readString(row, "category", "report_category", "type") ?? "Unknown",
+  );
+  const title =
+    readString(row, "title", "report_title", "name", "label") ??
+    "Untitled strange report";
+  const eventRaw =
+    readString(row, "event_datetime", "event_at", "event_date") ?? "";
+  const reportedRaw =
+    readString(row, "reported_datetime", "reported_at", "created_at") ?? "";
+  const region = normalizeRegion(
+    readString(row, "region", "report_region", "region_label"),
+    latitude,
+    longitude,
+  );
+
+  return {
+    category,
+    confidenceMood:
+      readString(row, "confidence_mood", "mood", "confidence_label") ??
+      "Suspiciously Interesting",
+    eventDateTime: formatDateTime(eventRaw),
+    eventDateTimeRaw: eventRaw,
+    id:
+      readString(row, "id", "slug", "report_id") ??
+      `${slugify(title)}-${index}`,
+    latitude,
+    location:
+      readString(row, "location", "place", "location_name") ??
+      "Location not listed",
+    longitude,
+    marker: getMarkerClass(category),
+    region,
+    reportedDateTime: formatDateTime(reportedRaw),
+    shortLabel:
+      readString(row, "short_label", "map_label") ?? makeShortLabel(title),
+    sourceName:
+      readString(row, "source_name", "source", "publisher") ??
+      "Source not listed",
+    sourceType:
+      readString(row, "source_type", "source_kind") ?? "Public source",
+    sourceUrl: readString(row, "source_url", "url", "link") ?? "",
+    summary:
+      readString(row, "summary", "description", "body") ??
+      "No summary is available yet.",
+    title,
+    verificationStatus:
+      readString(row, "verification_status", "status") ?? "Unverified",
+  };
+}
+
+function readString(row: SupabaseReportRow, ...keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+
+    if (typeof value === "number") {
+      return String(value);
+    }
+  }
+
+  return undefined;
+}
+
+function readNumber(row: SupabaseReportRow, ...keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const parsed = Number(value);
+
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+
+  return null;
+}
+
+function normalizeCategory(category: string) {
+  const normalized = category.toLowerCase();
+
+  if (normalized.includes("ufo") || normalized.includes("uap")) {
+    return "UFO / UAP";
+  }
+
+  if (normalized.includes("light")) {
+    return "Strange Lights";
+  }
+
+  if (normalized.includes("haunt")) {
+    return "Haunted Place";
+  }
+
+  if (normalized.includes("legend") || normalized.includes("folklore")) {
+    return "Local Legends";
+  }
+
+  if (normalized.includes("paranormal")) {
+    return "Paranormal";
+  }
+
+  if (normalized.includes("unknown")) {
+    return "Unknown";
+  }
+
+  return category;
+}
+
+function normalizeRegion(
+  region: string | undefined,
+  latitude: number | null,
+  longitude: number | null,
+): AtlasRegion {
+  const normalized = region?.toLowerCase() ?? "";
+
+  if (
+    normalized.includes("uk") ||
+    normalized.includes("ireland") ||
+    normalized.includes("scotland") ||
+    normalized.includes("england") ||
+    normalized.includes("wales")
+  ) {
+    return "UK & Ireland";
+  }
+
+  if (
+    normalized.includes("latin") ||
+    normalized.includes("mexico") ||
+    normalized.includes("brazil") ||
+    normalized.includes("south america")
+  ) {
+    return "Latin America";
+  }
+
+  if (
+    normalized.includes("europe") ||
+    normalized.includes("germany") ||
+    normalized.includes("france") ||
+    normalized.includes("romania") ||
+    normalized.includes("spain")
+  ) {
+    return "Western Europe";
+  }
+
+  if (
+    normalized.includes("asia") ||
+    normalized.includes("japan") ||
+    normalized.includes("tokyo")
+  ) {
+    return "East Asia";
+  }
+
+  if (
+    normalized.includes("oceania") ||
+    normalized.includes("australia") ||
+    normalized.includes("zealand")
+  ) {
+    return "Oceania";
+  }
+
+  if (
+    normalized.includes("north america") ||
+    normalized.includes("canada") ||
+    normalized.includes("united states") ||
+    normalized.includes("usa")
+  ) {
+    return "North America";
+  }
+
+  return regionFromCoordinates(latitude, longitude);
+}
+
+function regionFromCoordinates(
+  latitude: number | null,
+  longitude: number | null,
+): AtlasRegion {
+  if (latitude === null || longitude === null) {
+    return "North America";
+  }
+
+  if (latitude >= 14 && latitude <= 33 && longitude >= -118 && longitude <= -86) {
+    return "Latin America";
+  }
+
+  if (latitude >= -60 && latitude <= 15 && longitude >= -90 && longitude <= -30) {
+    return "Latin America";
+  }
+
+  if (latitude >= 49 && latitude <= 61 && longitude >= -12 && longitude <= 3) {
+    return "UK & Ireland";
+  }
+
+  if (latitude >= 35 && latitude <= 61 && longitude >= -12 && longitude <= 35) {
+    return "Western Europe";
+  }
+
+  if (latitude >= 18 && latitude <= 50 && longitude >= 100 && longitude <= 150) {
+    return "East Asia";
+  }
+
+  if (latitude >= -50 && latitude <= -5 && longitude >= 110 && longitude <= 180) {
+    return "Oceania";
+  }
+
+  if (latitude >= 25 && latitude <= 72 && longitude >= -170 && longitude <= -52) {
+    return "North America";
+  }
+
+  return "North America";
+}
+
+function getMarkerClass(category: string) {
+  switch (getCategoryTone(category)) {
+    case "amber":
+      return "bg-signal-amber";
+    case "ember":
+      return "bg-signal-ember";
+    case "muted":
+      return "bg-muted";
+    case "violet":
+      return "bg-signal-violet";
+    case "teal":
+    default:
+      return "bg-signal-teal";
+  }
+}
+
+function makeShortLabel(title: string) {
+  const cleaned = title
+    .replace(/\s+(above|near|over|thread|resurfaces).*/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (cleaned.length <= 24) {
+    return cleaned;
+  }
+
+  return `${cleaned.slice(0, 21).trim()}...`;
+}
+
+function formatDateTime(value: string) {
+  if (!value) {
+    return "Date not listed";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const formatted = new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+  const lastComma = formatted.lastIndexOf(",");
+
+  if (lastComma === -1) {
+    return formatted;
+  }
+
+  return `${formatted.slice(0, lastComma)} /${formatted.slice(lastComma + 1)}`;
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}

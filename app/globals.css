@@ -233,6 +233,20 @@ a {
   transform: translate(-50%, -50%);
 }
 
+.atlas-region-glow {
+  width: var(--cluster-size);
+  height: var(--cluster-size);
+  animation: region-glow 5.4s ease-in-out infinite;
+  background:
+    radial-gradient(circle, rgba(72, 224, 194, 0.12) 0 16%, rgba(246, 180, 75, 0.14) 29%, rgba(249, 115, 91, 0.08) 54%, transparent 73%);
+  border: 1px solid rgba(72, 224, 194, 0.1);
+  box-shadow:
+    inset 0 0 28px rgba(72, 224, 194, 0.06),
+    0 0 48px rgba(249, 115, 91, 0.12);
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
 .heat-cluster {
   animation: heat-pulse 3.8s ease-in-out infinite;
   background:
@@ -329,7 +343,6 @@ a {
 }
 
 .atlas-control {
-  display: flex;
   gap: 0.35rem;
 }
 
@@ -337,6 +350,15 @@ a {
   border: 1px solid rgba(39, 49, 73, 0.9);
   border-radius: 0.28rem;
   padding: 0.35rem 0.45rem;
+}
+
+.atlas-filter {
+  white-space: nowrap;
+}
+
+.atlas-filter:focus-visible {
+  outline: 2px solid rgba(72, 224, 194, 0.8);
+  outline-offset: 2px;
 }
 
 .report-card {
@@ -624,6 +646,19 @@ a {
   }
 }
 
+@keyframes region-glow {
+  0%,
+  100% {
+    opacity: 0.48;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+
+  50% {
+    opacity: 0.92;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
 @keyframes heat-pulse {
   0%,
   100% {
@@ -668,6 +703,10 @@ a {
 
   .atlas-report-point {
     transform: translate(-50%, -50%) scale(0.88);
+  }
+
+  .atlas-region-glow {
+    transform: translate(-50%, -50%) scale(0.82);
   }
 
   .haunted-horizon,

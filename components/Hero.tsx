@@ -1,81 +1,51 @@
-const heroPoints = [
-  {
-    category: "Canada",
-    label: "Montreal Orb",
-    labelSide: "above",
-    left: "25%",
-    size: 52,
-    tone: "teal",
-    top: "29%",
-  },
-  {
-    category: "United States",
-    label: "Sedona Triangle",
-    labelSide: "right",
-    left: "19%",
-    size: 60,
-    tone: "amber",
-    top: "43%",
-  },
-  {
-    category: "Mexico",
-    label: "Popocatepetl Watch",
-    labelSide: "right",
-    left: "22%",
-    size: 56,
-    tone: "ember",
-    top: "54%",
-  },
-  {
-    category: "Brazil",
-    label: "Sao Paulo Signal",
-    labelSide: "right",
-    left: "35%",
-    size: 64,
-    tone: "teal",
-    top: "74%",
-  },
-  {
-    category: "UK / Ireland",
-    label: "Dublin Whisper House",
-    labelSide: "above",
-    left: "47%",
-    size: 54,
-    tone: "violet",
-    top: "33%",
-  },
-  {
-    category: "Western Europe",
-    label: "Black Forest Echo",
-    labelSide: "right",
-    left: "52%",
-    size: 52,
-    tone: "muted",
-    top: "39%",
-  },
-  {
-    category: "Japan",
-    label: "Tokyo Sky Pulse",
-    labelSide: "left",
-    left: "81%",
-    size: 58,
-    tone: "amber",
-    top: "43%",
-  },
-  {
-    category: "Oceania",
-    label: "Outback Fire Disc",
-    labelSide: "left",
-    left: "80%",
-    size: 62,
-    tone: "ember",
-    top: "75%",
-  },
-];
+"use client";
+
+import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
+import {
+  coordinateToAtlasPosition,
+  filterReportsByRegion,
+  getCategoryTone,
+  regionAnchors,
+  regionFilters,
+  type AtlasRegion,
+  type RegionFilter,
+  type Report,
+} from "@/lib/reports";
 
 const heroTags = ["UFO / UAP", "Strange Lights", "Haunted Places", "Unknown"];
 
-export function Hero() {
+type ClusterStyle = CSSProperties & { "--cluster-size": string };
+type LabelSide = "above" | "left" | "right";
+
+export function Hero({ reports }: { reports: Report[] }) {
+  const [activeRegion, setActiveRegion] = useState<RegionFilter>("All");
+  const filteredReports = useMemo(
+    () => filterReportsByRegion(reports, activeRegion),
+    [activeRegion, reports],
+  );
+  const markerReports = filteredReports.slice(0, 16);
+  const labeledReportIds = useMemo(
+    () => new Set(pickLabelIds(markerReports)),
+    [markerReports],
+  );
+  const plottedCount = reports.filter(
+    (report) => report.latitude !== null && report.longitude !== null,
+  ).length;
+  const regionGlows = useMemo(() => {
+    const regions = regionFilters.filter(
+      (region): region is AtlasRegion => region !== "All",
+    );
+
+    return regions
+      .map((region) => ({
+        count: filteredReports.filter((report) => report.region === region)
+          .length,
+        region,
+      }))
+      .filter((entry) => entry.count > 0);
+  }, [filteredReports]);
+
   return (
     <section className="hero-shell relative overflow-hidden border-b border-night-800 bg-night-950">
       <div className="absolute inset-0 bg-star-field opacity-80" />
@@ -147,10 +117,7 @@ export function Hero() {
           </div>
         </div>
 
-        <div
-          className="field-card relative overflow-hidden rounded-lg"
-          id="map"
-        >
+        <div className="field-card relative overflow-hidden rounded-lg" id="map">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-night-800 bg-night-850 px-5 py-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
@@ -165,9 +132,36 @@ export function Hero() {
                 Phase 1 density layer
               </span>
               <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
-                Global preview / 8 regions
+                Global preview / {plottedCount} plotted
               </span>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-3 border-b border-night-800 bg-night-900/70 px-5 py-3">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {regionFilters.map((region) => {
+                const active = region === activeRegion;
+
+                return (
+                  <button
+                    className={`atlas-filter rounded-md border px-3 py-2 text-xs font-semibold transition ${
+                      active
+                        ? "border-signal-teal/60 bg-signal-teal/15 text-parchment"
+                        : "border-night-800 bg-night-950/70 text-muted hover:border-signal-teal/40 hover:text-parchment"
+                    }`}
+                    key={region}
+                    onClick={() => setActiveRegion(region)}
+                    type="button"
+                  >
+                    {region}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs leading-5 text-muted">
+              Global seed reports are concept data for Phase 2. Live collectors
+              are not connected yet.
+            </p>
           </div>
 
           <div className="atlas-grid relative min-h-[360px] overflow-hidden lg:min-h-[410px]">
@@ -195,10 +189,31 @@ export function Hero() {
               <path d="M510 172c81 61 144 141 188 240" />
               <path d="M632 214c71-13 142 7 213 60" />
             </svg>
-            <span className="radar-ring absolute left-[24%] top-[33%] size-28" />
-            <span className="radar-ring absolute left-[52%] top-[39%] size-32 [animation-delay:1.1s]" />
-            <span className="radar-ring absolute left-[80%] top-[43%] size-24 [animation-delay:2s]" />
-            <span className="radar-ring absolute left-[80%] top-[75%] size-28 [animation-delay:2.6s]" />
+            {regionGlows.map(({ count, region }, index) => {
+              const anchor = regionAnchors[region];
+              const position = coordinateToAtlasPosition(
+                anchor.latitude,
+                anchor.longitude,
+              );
+              const size = Math.min(126, 64 + count * 14);
+              const style: ClusterStyle = {
+                "--cluster-size": `${size}px`,
+                left: `${position.left}%`,
+                top: `${position.top}%`,
+              };
+
+              return (
+                <span
+                  aria-hidden="true"
+                  className="atlas-region-glow absolute rounded-full"
+                  key={region}
+                  style={{
+                    ...style,
+                    animationDelay: `${index * 0.55}s`,
+                  }}
+                />
+              );
+            })}
 
             <div className="absolute left-5 top-5 rounded-md border border-night-800 bg-night-950/80 px-3 py-2 text-xs text-muted">
               Field layer: public report density
@@ -207,39 +222,55 @@ export function Hero() {
               Not confirmed events
             </div>
 
-            {heroPoints.map((point, index) => (
-              <div
-                className={`atlas-report-point atlas-report-point-${point.tone}`}
-                key={point.label}
-                style={{
-                  height: point.size,
-                  left: point.left,
-                  top: point.top,
-                  width: point.size,
-                }}
-              >
-                <span
-                  aria-label={`${point.label}, ${point.category}`}
-                  className="heat-cluster absolute inset-0 block rounded-full"
-                  style={{ animationDelay: `${index * 0.42}s` }}
+            {markerReports.map((report, index) => {
+              const position = getReportPosition(report);
+              const size = index < 8 ? 52 : 42;
+              const labelSide = getLabelSide(report, position.left);
+
+              return (
+                <div
+                  className={`atlas-report-point atlas-report-point-${getCategoryTone(
+                    report.category,
+                  )}`}
+                  key={report.id}
+                  style={{
+                    height: size,
+                    left: `${position.left}%`,
+                    top: `${position.top}%`,
+                    width: size,
+                  }}
                 >
-                  <span className="absolute inset-[34%] rounded-full bg-signal-amber shadow-[0_0_30px_rgba(246,180,75,0.9)]" />
-                  <span className="absolute inset-[44%] rounded-full bg-parchment/90" />
-                </span>
-                <span
-                  className={`atlas-point-label atlas-point-label-${point.labelSide}`}
-                >
-                  <span>{point.label}</span>
-                  <small>{point.category}</small>
-                </span>
+                  <span
+                    aria-label={`${report.shortLabel}, ${report.region}`}
+                    className="heat-cluster absolute inset-0 block rounded-full"
+                    style={{ animationDelay: `${index * 0.34}s` }}
+                  >
+                    <span className="absolute inset-[34%] rounded-full bg-signal-amber shadow-[0_0_30px_rgba(246,180,75,0.9)]" />
+                    <span className="absolute inset-[44%] rounded-full bg-parchment/90" />
+                  </span>
+                  {labeledReportIds.has(report.id) ? (
+                    <span
+                      className={`atlas-point-label atlas-point-label-${labelSide}`}
+                    >
+                      <span>{report.shortLabel}</span>
+                      <small>{report.region}</small>
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
+
+            {markerReports.length === 0 ? (
+              <div className="absolute left-5 right-5 top-24 rounded-md border border-night-800 bg-night-950/85 p-4 text-sm text-muted">
+                No plotted reports in this region yet.
               </div>
-            ))}
+            ) : null}
 
             <div className="absolute right-5 bottom-24 hidden rounded-md border border-night-800 bg-night-950/80 px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-muted md:block">
               Sweep 03 / anomalous cluster watch
             </div>
 
-            <div className="atlas-control absolute right-5 top-16 hidden rounded-md border border-night-800 bg-night-950/80 p-2 text-xs text-muted lg:block">
+            <div className="atlas-control absolute right-5 top-16 hidden rounded-md border border-night-800 bg-night-950/80 p-2 text-xs text-muted 2xl:flex">
               <span>Density</span>
               <span>Source links</span>
               <span>48h</span>
@@ -267,4 +298,66 @@ export function Hero() {
       </div>
     </section>
   );
+}
+
+function getReportPosition(report: Report) {
+  if (report.latitude !== null && report.longitude !== null) {
+    return coordinateToAtlasPosition(report.latitude, report.longitude);
+  }
+
+  const anchor = regionAnchors[report.region];
+
+  return coordinateToAtlasPosition(anchor.latitude, anchor.longitude);
+}
+
+function pickLabelIds(reports: Report[]) {
+  const caps: Record<AtlasRegion, number> = {
+    "East Asia": 1,
+    "Latin America": 1,
+    "North America": 1,
+    Oceania: 1,
+    "UK & Ireland": 1,
+    "Western Europe": 1,
+  };
+  const counts: Partial<Record<AtlasRegion, number>> = {};
+  const labels: string[] = [];
+
+  for (const report of reports) {
+    const current = counts[report.region] ?? 0;
+
+    if (current < caps[report.region]) {
+      labels.push(report.id);
+      counts[report.region] = current + 1;
+    }
+
+    if (labels.length >= 8) {
+      break;
+    }
+  }
+
+  return labels;
+}
+
+function getLabelSide(report: Report, left: number): LabelSide {
+  if (
+    report.region === "East Asia" ||
+    report.region === "Oceania" ||
+    left > 72
+  ) {
+    return "left";
+  }
+
+  if (report.region === "UK & Ireland") {
+    return "above";
+  }
+
+  if (report.region === "Western Europe") {
+    return "right";
+  }
+
+  if (left < 30) {
+    return "right";
+  }
+
+  return "above";
 }

@@ -5,15 +5,18 @@ import { Hero } from "@/components/Hero";
 import { LatestReports } from "@/components/LatestReports";
 import { OddSkiesOracle } from "@/components/OddSkiesOracle";
 import { TonightsOddSkies } from "@/components/TonightsOddSkies";
+import { getReports } from "@/lib/reports";
 
-export default function Home() {
+export default async function Home() {
+  const reports = await getReports();
+
   return (
     <main className="min-h-screen overflow-hidden bg-night-950 text-parchment">
-      <Hero />
+      <Hero reports={reports} />
       <CategoryStrip />
       <FeaturedRegions />
       <TonightsOddSkies />
-      <LatestReports />
+      <LatestReports reports={reports} />
       <OddSkiesOracle />
       <Disclaimer />
       <footer className="bg-night-950 px-5 py-10">
