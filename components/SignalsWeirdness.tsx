@@ -193,10 +193,10 @@ function SignalStrip({
   ];
 
   return (
-    <div className="signal-strip grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="signal-strip flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-5">
       {cards.map((card, index) => (
         <article
-          className="field-card relative min-h-32 overflow-hidden rounded-lg p-3.5"
+          className="field-card relative min-h-32 min-w-[14rem] overflow-hidden rounded-lg p-3.5 sm:min-w-0"
           key={card.label}
         >
           <span

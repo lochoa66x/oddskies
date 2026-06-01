@@ -61,10 +61,10 @@ export function WeirdShelf() {
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="weird-shelf-strip flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible xl:grid-cols-4">
           {shelfCards.map((card) => (
             <article
-              className="field-card relative overflow-hidden rounded-lg p-3.5"
+              className="field-card relative min-w-[16rem] overflow-hidden rounded-lg p-3.5 sm:min-w-0"
               key={card.title}
             >
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-signal-teal/45 to-transparent" />
