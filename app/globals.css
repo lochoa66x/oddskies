@@ -221,6 +221,33 @@ a {
   stroke-width: 1.2;
 }
 
+.atlas-map-base .atlas-country-layer {
+  filter:
+    drop-shadow(0 0 15px rgba(72, 224, 194, 0.12))
+    drop-shadow(0 0 42px rgba(139, 92, 246, 0.08));
+}
+
+.atlas-map-base .atlas-country {
+  fill: rgba(72, 224, 194, 0.105);
+  stroke: rgba(184, 255, 240, 0.22);
+  stroke-linejoin: round;
+  stroke-width: 0.65;
+}
+
+.atlas-map-base .atlas-country:nth-child(3n) {
+  fill: rgba(139, 92, 246, 0.075);
+}
+
+.atlas-map-base .atlas-country:nth-child(5n) {
+  fill: rgba(246, 180, 75, 0.055);
+}
+
+.atlas-map-base .atlas-country-antarctica {
+  fill: rgba(167, 173, 188, 0.045);
+  opacity: 0.65;
+  stroke: rgba(167, 173, 188, 0.12);
+}
+
 .atlas-map-base .atlas-landmass-main {
   fill: rgba(72, 224, 194, 0.115);
   stroke: rgba(120, 238, 219, 0.5);
