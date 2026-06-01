@@ -48,23 +48,26 @@ export function LatestReports({ reports }: { reports: Report[] }) {
 
   return (
     <section
-      className="border-y border-night-800 bg-night-900 px-5 py-12 md:py-16"
+      className="border-y border-night-800 bg-night-900 px-5 py-9 md:py-12"
       id="reports"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
-              Report Feed
+              Field Log
+              <span className="ml-2 text-xs normal-case tracking-[0.16em] lg:hidden">
+                swipe -&gt;
+              </span>
             </p>
             <h2 className="mt-3 max-w-3xl text-3xl font-semibold text-parchment md:text-5xl">
-              Latest reports, unverified by default.
+              Latest reports, filed as unverified.
             </h2>
             <p className="mt-3 max-w-xl text-base leading-7 text-muted">
               Source-aware, time-stamped, and linked whenever possible.
             </p>
           </div>
-          <p className="max-w-md rounded-md border border-signal-amber/25 bg-signal-amber/10 px-4 py-3 text-sm text-signal-amber">
+          <p className="max-w-sm rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
             Global seed reports are concept data for Phase 2. Live collectors
             are not connected yet.
           </p>
@@ -91,16 +94,16 @@ export function LatestReports({ reports }: { reports: Report[] }) {
           })}
         </div>
 
-        <div className="grid items-start gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="grid gap-3">
+        <div className="grid items-start gap-4 lg:grid-cols-[0.88fr_1.12fr]">
+          <div className="field-log-list flex gap-3 overflow-x-auto pb-1 lg:grid lg:max-h-[760px] lg:overflow-x-hidden lg:overflow-y-auto lg:pr-1">
             {visibleReports.length > 0 ? (
-              visibleReports.map((report) => {
+              visibleReports.map((report, index) => {
                 const selectedCard = selected?.id === report.id;
 
                 return (
                   <button
                     aria-pressed={selectedCard}
-                    className={`report-card group block w-full rounded-lg border bg-night-850 p-4 text-left transition ${
+                    className={`report-card field-log-card group block w-full min-w-[18rem] rounded-lg border bg-night-850 p-3.5 text-left transition lg:min-w-0 ${
                       selectedCard
                         ? "border-signal-teal/60 shadow-glow"
                         : "border-night-800 hover:border-signal-teal/45"
@@ -109,6 +112,14 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                     onClick={() => setSelectedId(report.id)}
                     type="button"
                   >
+                    <div className="mb-3 flex items-center justify-between gap-3 border-b border-night-800/80 pb-2.5">
+                      <span className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                        Field note {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className="rounded border border-night-800 bg-night-950/60 px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-muted">
+                        Source trail
+                      </span>
+                    </div>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-2">
                         <span
@@ -122,7 +133,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                         Unverified
                       </span>
                     </div>
-                    <h3 className="mt-3 text-lg font-semibold text-parchment transition group-hover:text-signal-teal">
+                    <h3 className="mt-3 text-base font-semibold leading-6 text-parchment transition group-hover:text-signal-teal">
                       {report.title}
                     </h3>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
@@ -136,10 +147,10 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                         {report.confidenceMood}
                       </span>
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-muted">
+                    <p className="field-log-summary mt-3 text-sm leading-6 text-muted">
                       {report.summary}
                     </p>
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                       <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs text-muted">
                         {report.sourceType} · {report.sourceName}
                       </span>
@@ -194,12 +205,12 @@ function ReportDetail({
   const selectedCountry = getCountry(selected.location);
 
   return (
-    <aside className="field-card overflow-hidden rounded-lg">
+    <aside className="field-card field-file-card overflow-hidden rounded-lg">
       <div className="border-b border-night-800 bg-night-850 px-5 py-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
-              Selected Artifact
+              Open Field File
             </p>
             <h3 className="mt-2 text-2xl font-semibold text-parchment">
               {selected.title}
@@ -214,7 +225,7 @@ function ReportDetail({
         </p>
       </div>
 
-      <div className="atlas-grid detail-atlas relative min-h-[260px] overflow-hidden">
+      <div className="atlas-grid detail-atlas relative min-h-[225px] overflow-hidden">
         <WorldMapBase className="absolute inset-x-5 top-8 h-[70%] w-[calc(100%-2.5rem)]" />
         <svg
           aria-hidden="true"
@@ -268,24 +279,15 @@ function ReportDetail({
         </div>
       </div>
 
-      <div className="space-y-4 p-5">
-        <div className="rounded-md border border-night-800 bg-night-950/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-            Summary
-          </p>
-          <p className="mt-3 text-sm leading-6 text-parchment">
-            {selected.summary}
-          </p>
-        </div>
-
-        <dl className="grid gap-3 sm:grid-cols-2">
+      <div className="space-y-3.5 p-4 md:p-5">
+        <dl className="grid grid-cols-2 gap-2.5 xl:grid-cols-3">
           {detailRows.map(([label, value]) => (
             <div
-              className="rounded-md border border-night-800 bg-night-950/55 p-3"
+              className="rounded-md border border-night-800 bg-night-950/55 p-2.5"
               key={label}
             >
-              <dt className="text-xs text-muted">{label}</dt>
-              <dd className="mt-1 text-sm font-semibold text-parchment">
+              <dt className="text-[0.68rem] text-muted">{label}</dt>
+              <dd className="mt-1 text-xs font-semibold leading-5 text-parchment">
                 {value}
               </dd>
             </div>
@@ -293,7 +295,7 @@ function ReportDetail({
         </dl>
 
         <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
-          <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 p-4">
+          <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 p-3.5">
             <p className="text-sm leading-6 text-signal-amber">
               OddSkies has not verified this report. Check the original source
               when available.
@@ -307,22 +309,6 @@ function ReportDetail({
           >
             {selected.sourceUrl ? "Open source" : "Source link placeholder"}
             <span aria-hidden="true">↗</span>
-          </a>
-        </div>
-
-        <div className="rounded-md border border-signal-violet/30 bg-signal-violet/[0.10] p-4">
-          <p className="text-sm font-semibold text-parchment">
-            Think it&apos;s real? Ask our little bro, the OddSkies Oracle.
-          </p>
-          <p className="mt-2 text-xs leading-5 text-muted">
-            Coming soon: playful reality checks, possible normal explanations,
-            and a maybe-weird verdict. No verification magic.
-          </p>
-          <a
-            className="mt-3 inline-flex min-h-10 items-center justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-3 py-2 text-xs font-bold text-parchment transition hover:border-signal-teal/50 hover:bg-signal-teal/10"
-            href="#oracle"
-          >
-            Ask the Oracle
           </a>
         </div>
       </div>

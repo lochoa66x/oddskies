@@ -39,9 +39,9 @@ const shelfCards = [
 
 export function WeirdShelf() {
   return (
-    <section className="bg-night-950 px-5 py-8 md:py-10" id="weird-shelf">
+    <section className="bg-night-950 px-5 py-7 md:py-9" id="weird-shelf">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-violet">
               Culture Shelf
@@ -67,7 +67,7 @@ export function WeirdShelf() {
         <div className="weird-shelf-strip flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible xl:grid-cols-4">
           {shelfCards.map((card) => (
             <article
-              className="field-card relative min-w-[16rem] overflow-hidden rounded-lg p-3.5 sm:min-w-0"
+              className="field-card relative min-w-[15rem] overflow-hidden rounded-lg p-3 sm:min-w-0"
               key={card.title}
             >
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-signal-teal/45 to-transparent" />
@@ -86,7 +86,7 @@ export function WeirdShelf() {
                   {card.code}
                 </span>
               </div>
-              <p className="mt-3 text-sm leading-6 text-muted">{card.copy}</p>
+              <p className="mt-3 text-xs leading-5 text-muted">{card.copy}</p>
               {card.disclaimer ? (
                 <p className="mt-3 border-t border-night-800 pt-3 text-xs leading-5 text-muted">
                   {card.disclaimer}

@@ -64,7 +64,7 @@ export function Hero({ reports }: { reports: Report[] }) {
       <div className="terrain-silhouette absolute inset-x-0 bottom-0 h-36" />
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-signal-teal/50 to-transparent" />
 
-      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5">
         <a className="flex items-center gap-3" href="#">
           <span className="grid size-10 place-items-center rounded-md border border-signal-teal/40 bg-signal-teal/10 text-sm font-black text-signal-teal shadow-glow">
             OS
@@ -90,7 +90,7 @@ export function Hero({ reports }: { reports: Report[] }) {
         </nav>
       </header>
 
-      <div className="relative z-10 mx-auto grid max-w-[88rem] gap-8 px-5 pb-12 pt-5 lg:min-h-[calc(100svh-76px)] lg:grid-cols-[0.66fr_1.34fr] lg:items-center lg:gap-9 lg:pb-14 lg:pt-4">
+      <div className="relative z-10 mx-auto grid max-w-[88rem] gap-7 px-5 pb-10 pt-4 lg:min-h-[calc(100svh-68px)] lg:grid-cols-[0.62fr_1.38fr] lg:items-center lg:gap-8 lg:pb-12 lg:pt-3">
         <div>
           <p className="inline-flex rounded-md border border-signal-amber/30 bg-signal-amber/10 px-3 py-2 text-sm font-semibold text-signal-amber">
             Mystery Atlas / Phase 1 Preview
@@ -124,7 +124,7 @@ export function Hero({ reports }: { reports: Report[] }) {
           </div>
         </div>
 
-        <div className="field-card relative overflow-hidden rounded-lg" id="map">
+        <div className="field-card atlas-hero-card relative overflow-hidden rounded-lg" id="map">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-night-800 bg-night-850 px-5 py-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
@@ -171,7 +171,7 @@ export function Hero({ reports }: { reports: Report[] }) {
             </p>
           </div>
 
-          <div className="atlas-grid relative min-h-[360px] overflow-hidden lg:min-h-[460px] xl:min-h-[500px]">
+          <div className="atlas-grid relative min-h-[350px] overflow-hidden lg:min-h-[455px] xl:min-h-[500px]">
             <div className="atlas-map-texture absolute inset-0" />
             <div className="scan-line absolute left-0 top-20 h-px w-full" />
             <WorldMapBase className="absolute inset-x-4 top-8 h-[72%] w-[calc(100%-2rem)]" />

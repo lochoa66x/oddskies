@@ -1,27 +1,27 @@
 export function OddSkiesOracle() {
   return (
-    <section className="bg-night-950 px-5 py-12 md:py-16" id="oracle">
-      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
+    <section className="bg-night-950 px-5 py-9 md:py-12" id="oracle">
+      <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-violet">
             Feature Preview
           </p>
-          <h2 className="mt-3 max-w-2xl text-3xl font-semibold text-parchment md:text-5xl">
+          <h2 className="mt-2 max-w-2xl text-3xl font-semibold text-parchment md:text-4xl">
             OddSkies Oracle
           </h2>
-          <p className="mt-4 max-w-xl text-xl font-semibold leading-8 text-parchment">
+          <p className="mt-3 max-w-xl text-lg font-semibold leading-7 text-parchment">
             Think it&apos;s real? Ask our little bro, the OddSkies Oracle.
           </p>
-          <p className="mt-5 max-w-xl text-base leading-7 text-muted">
+          <p className="mt-4 max-w-xl text-sm leading-6 text-muted">
             The Oracle will give playful reality checks for strange reports —
             possible normal explanations, weird clues, and a maybe-weird
             verdict. It cannot verify whether something is real.
           </p>
-          <p className="mt-4 max-w-xl rounded-md border border-signal-amber/25 bg-signal-amber/10 px-4 py-3 text-sm leading-6 text-signal-amber">
+          <p className="mt-3 max-w-xl rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
             The Oracle cannot verify whether something is real, AI-generated,
             mistaken, staged, satire, or a joke.
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="mt-5 flex flex-wrap items-center gap-3">
             <button
               aria-disabled="true"
               className="inline-flex min-h-12 cursor-not-allowed items-center justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-5 py-3 text-sm font-bold text-parchment opacity-85"
@@ -38,7 +38,7 @@ export function OddSkiesOracle() {
 
         <div
           aria-label="OddSkies Oracle coming soon preview"
-          className="oracle-card rounded-lg border border-night-800 p-5 md:p-6"
+          className="oracle-card rounded-lg border border-night-800 p-4 md:p-5"
         >
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-night-800 pb-4">
             <div>
@@ -54,7 +54,7 @@ export function OddSkiesOracle() {
             </span>
           </div>
 
-          <div className="mt-5 rounded-md border border-night-800 bg-night-950 p-5 font-mono text-sm leading-7 text-muted">
+          <div className="mt-4 rounded-md border border-night-800 bg-night-950 p-4 font-mono text-sm leading-7 text-muted">
             <p className="text-signal-teal">oddskies-oracle://preview</p>
             <p className="mt-4 text-parchment">
               Could be drones, aircraft, reflection, edited media… or maybe the
@@ -66,7 +66,7 @@ export function OddSkiesOracle() {
             </p>
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
             {["Normal explanations", "Weird clues", "Maybe-weird verdict"].map(
               (item) => (
                 <span

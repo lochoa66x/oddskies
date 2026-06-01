@@ -99,11 +99,11 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
 
   return (
     <section
-      className="border-y border-night-800 bg-night-900 px-5 py-9 md:py-12"
+      className="border-y border-night-800 bg-night-900 px-5 py-8 md:py-10"
       id="signals"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
               Signal Strip
@@ -111,14 +111,14 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
                 swipe -&gt;
               </span>
             </p>
-            <h2 className="mt-3 text-3xl font-semibold text-parchment md:text-5xl">
+            <h2 className="mt-2 text-3xl font-semibold text-parchment md:text-4xl">
               Signals & Weirdness
             </h2>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-muted">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
               Tiny patterns from unverified reports. Not science. Still fun.
             </p>
           </div>
-          <p className="max-w-md rounded-md border border-signal-amber/25 bg-signal-amber/10 px-4 py-3 text-sm leading-6 text-signal-amber">
+          <p className="max-w-sm rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
             These stats are based on unverified reports and demo data. They are
             for curiosity and entertainment, not confirmation.
           </p>
@@ -166,30 +166,35 @@ function SignalStrip({
     {
       accent: "text-signal-amber",
       label: "OddCon",
+      meter: oddCon.level === 3 ? 3 : Math.max(1, 6 - oddCon.level),
       note: `${latestSevenDays} latest-window reports`,
       value: `${oddCon.level} — ${oddCon.name}`,
     },
     {
       accent: "text-signal-teal",
-      label: "Top Category",
+      label: "Category Pulse",
+      meter: Math.min(4, Math.max(1, topCategoryCount)),
       note: categoryMoods[topCategory] ?? "Signal unclear",
       value: `${topCategoryCount} ${topCategory}`,
     },
     {
       accent: "text-signal-violet",
-      label: "Top Region",
+      label: "Region Pulse",
+      meter: Math.min(4, Math.max(1, topRegion?.count ?? 0)),
       note: topRegion?.topCategory ?? "No signal yet",
       value: `${topRegion?.count ?? 0} ${topRegion?.label ?? mostActiveRegion}`,
     },
     {
       accent: "text-signal-ember",
       label: "Peak Window",
+      meter: 2,
       note: "When reports get louder",
       value: peakWindow,
     },
     {
       accent: "text-muted",
       label: "Indexed",
+      meter: Math.min(4, Math.max(1, Math.ceil(reportsCount / 8))),
       note: "Seed/demo activity",
       value: `${reportsCount} reports`,
     },
@@ -199,7 +204,7 @@ function SignalStrip({
     <div className="signal-strip flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-5">
       {cards.map((card, index) => (
         <article
-          className="field-card relative min-h-32 min-w-[14rem] overflow-hidden rounded-lg p-3.5 sm:min-w-0"
+          className="field-card signal-artifact relative min-h-28 min-w-[13.5rem] overflow-hidden rounded-lg p-3 sm:min-w-0"
           key={card.label}
         >
           <span
@@ -218,10 +223,22 @@ function SignalStrip({
               />
             </div>
             <div>
-              <p className={`text-lg font-semibold leading-6 ${card.accent}`}>
+              <p className={`text-base font-semibold leading-6 ${card.accent}`}>
                 {card.value}
               </p>
               <p className="mt-2 text-xs leading-5 text-muted">{card.note}</p>
+              <div className="mt-3 flex gap-1" aria-hidden="true">
+                {Array.from({ length: 4 }).map((_, meterIndex) => (
+                  <span
+                    className={`h-1.5 flex-1 rounded-full border ${
+                      meterIndex < card.meter
+                        ? getSignalMeterClass(index)
+                        : "border-night-800 bg-night-950"
+                    }`}
+                    key={meterIndex}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </article>
@@ -242,26 +259,26 @@ function WeirdnessGrid({
   const gridMinWidth = `${4 + weeks.length * 1.125}rem`;
 
   return (
-    <article className="field-card min-w-0 rounded-lg p-4 md:p-5">
+    <article className="field-card min-w-0 rounded-lg p-3.5 md:p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
             Weirdness Activity
           </p>
-          <h3 className="mt-2 text-2xl font-semibold text-parchment">
+          <h3 className="mt-2 text-xl font-semibold text-parchment md:text-2xl">
             Last 365 days of unverified weird.
           </h3>
-          <p className="mt-2 text-sm leading-6 text-muted">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Tiny squares from unverified reports. Quiet cells are asleep.
             Bright cells mean the map had snacks.
           </p>
         </div>
-        <span className="w-fit rounded-md border border-night-800 bg-night-950 px-3 py-2 text-sm text-muted">
+        <span className="w-fit rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
           {totalReports} reports indexed
         </span>
       </div>
 
-      <div className="mt-6 overflow-x-auto pb-2">
+      <div className="mt-5 overflow-x-auto pb-2">
         <div style={{ minWidth: gridMinWidth }}>
           <div
             className="grid gap-1"
@@ -312,7 +329,7 @@ function WeirdnessGrid({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
         <span>Based on event dates when available.</span>
         <div className="flex items-center gap-2">
           <span>Quiet</span>
@@ -561,6 +578,17 @@ function getSignalGlowClass(index: number) {
     "bg-signal-ember/20",
     "bg-parchment/10",
     "bg-muted/15",
+  ][index % 6];
+}
+
+function getSignalMeterClass(index: number) {
+  return [
+    "border-signal-amber/30 bg-signal-amber/80 shadow-[0_0_12px_rgba(246,180,75,0.35)]",
+    "border-signal-teal/30 bg-signal-teal/70 shadow-[0_0_12px_rgba(72,224,194,0.32)]",
+    "border-signal-violet/30 bg-signal-violet/70 shadow-[0_0_12px_rgba(139,92,246,0.32)]",
+    "border-signal-ember/30 bg-signal-ember/75 shadow-[0_0_12px_rgba(249,115,91,0.32)]",
+    "border-parchment/20 bg-parchment/55 shadow-[0_0_12px_rgba(243,240,232,0.18)]",
+    "border-muted/20 bg-muted/55 shadow-[0_0_12px_rgba(167,173,188,0.16)]",
   ][index % 6];
 }
 
