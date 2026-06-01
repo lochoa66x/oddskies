@@ -1,10 +1,8 @@
 import { CategoryStrip } from "@/components/CategoryStrip";
-import { FeaturedRegions } from "@/components/FeaturedRegions";
 import { Hero } from "@/components/Hero";
 import { LatestReports } from "@/components/LatestReports";
 import { OddSkiesOracle } from "@/components/OddSkiesOracle";
 import { SignalsWeirdness } from "@/components/SignalsWeirdness";
-import { TonightsOddSkies } from "@/components/TonightsOddSkies";
 import { WeirdShelf } from "@/components/WeirdShelf";
 import { getReports } from "@/lib/reports";
 
@@ -15,12 +13,10 @@ export default async function Home() {
     <main className="min-h-screen overflow-hidden bg-night-950 text-parchment">
       <Hero reports={reports} />
       <CategoryStrip />
-      <FeaturedRegions />
-      <SignalsWeirdness reports={reports} />
-      <WeirdShelf />
-      <TonightsOddSkies />
       <LatestReports reports={reports} />
       <OddSkiesOracle />
+      <SignalsWeirdness reports={reports} />
+      <WeirdShelf />
       <footer className="bg-night-950 px-5 py-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 border-t border-night-800 pt-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl">

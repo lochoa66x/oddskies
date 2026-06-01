@@ -25,6 +25,16 @@ const shelfCards = [
     label: "Tin foil advisory: Low",
     title: "Conspiracy Weather",
   },
+  {
+    accent: "text-signal-ember",
+    code: "RW",
+    copy:
+      "Collider Watch: the Large Hadron Collider has scheduled activity. Reality is expected to remain mostly intact.",
+    disclaimer:
+      "OddSkies jokes about reality glitches, but does not claim scientific experiments cause UFOs, hauntings, Mandela Effects, portals, or timeline shifts.",
+    label: "Reality status: Mostly intact",
+    title: "Reality Watch",
+  },
 ];
 
 export function WeirdShelf() {
@@ -51,7 +61,7 @@ export function WeirdShelf() {
           </p>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {shelfCards.map((card) => (
             <article
               className="field-card relative overflow-hidden rounded-lg p-3.5"
