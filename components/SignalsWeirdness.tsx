@@ -16,9 +16,9 @@ type DatedReport = {
 
 type GridCell = {
   count: number;
+  date: Date;
   dateLabel: string;
   intensity: number;
-  monthLabel: string;
 };
 
 type OddConLevel = {
@@ -52,6 +52,8 @@ const timeWindows = [
   { hours: [12, 13, 14, 15, 16, 17], label: "Noon - 6 PM" },
   { hours: [18, 19, 20], label: "6 PM - 9 PM" },
 ];
+
+const weekdayLabels = ["", "Mon", "", "Wed", "", "Fri", ""];
 
 export function SignalsWeirdness({ reports }: { reports: Report[] }) {
   const datedReports = reports
@@ -93,16 +95,16 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
           </p>
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid gap-5">
           <WeirdnessGrid cells={heatmapCells} totalReports={reports.length} />
+        </div>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
           <OddConPanel
             oddCon={oddCon}
             recentCount={latestSevenDays}
             topCategory={topCategory}
           />
-        </div>
-
-        <div className="mt-5 grid gap-5 lg:grid-cols-3">
           <SignalPulse
             eyebrow="Category Pulse"
             items={categoryCounts}
@@ -134,6 +136,10 @@ function WeirdnessGrid({
   cells: GridCell[];
   totalReports: number;
 }) {
+  const weeks = groupCellsByWeek(cells);
+  const monthLabels = getHeatmapMonthLabels(weeks);
+  const gridMinWidth = `${4 + weeks.length * 1.125}rem`;
+
   return (
     <article className="field-card rounded-lg p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -155,32 +161,52 @@ function WeirdnessGrid({
       </div>
 
       <div className="mt-6 overflow-x-auto pb-2">
-        <div className="min-w-[34rem]">
-          <div className="mb-2 grid grid-flow-col grid-rows-1 gap-1">
-            {cells.map((cell, index) => (
+        <div style={{ minWidth: gridMinWidth }}>
+          <div
+            className="grid gap-1"
+            style={{
+              gridTemplateColumns: `3rem repeat(${weeks.length}, 0.875rem)`,
+            }}
+          >
+            <span aria-hidden="true" />
+            {monthLabels.map((label, index) => (
               <span
                 className="h-4 text-[0.62rem] uppercase tracking-[0.12em] text-muted"
-                key={`month-${cell.dateLabel}-${index}`}
+                key={`month-${index}`}
               >
-                {cell.monthLabel}
+                {label}
               </span>
             ))}
           </div>
-          <div className="grid grid-flow-col grid-rows-7 gap-1">
-            {cells.map((cell) => (
-              <span
-                aria-label={`${cell.dateLabel}: ${cell.count} report${
-                  cell.count === 1 ? "" : "s"
-                }`}
-                className={`size-3.5 rounded-[0.18rem] border ${getHeatCellClass(
-                  cell.intensity,
-                )}`}
-                key={cell.dateLabel}
-                title={`${cell.dateLabel}: ${cell.count} report${
-                  cell.count === 1 ? "" : "s"
-                }`}
-              />
-            ))}
+
+          <div className="mt-2 grid grid-cols-[3rem_1fr] gap-1">
+            <div className="grid grid-rows-7 gap-1 text-xs leading-none text-muted">
+              {weekdayLabels.map((label, index) => (
+                <span
+                  className="flex h-3.5 items-center"
+                  key={`${label}-${index}`}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+
+            <div className="grid grid-flow-col grid-rows-7 auto-cols-[0.875rem] gap-1">
+              {weeks.flat().map((cell) => (
+                <span
+                  aria-label={`${cell.dateLabel}: ${cell.count} report${
+                    cell.count === 1 ? "" : "s"
+                  }`}
+                  className={`size-3.5 rounded-[0.18rem] border ${getHeatCellClass(
+                    cell.intensity,
+                  )}`}
+                  key={toDateKey(cell.date)}
+                  title={`${cell.dateLabel}: ${cell.count} report${
+                    cell.count === 1 ? "" : "s"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -430,30 +456,64 @@ function createWeirdnessGrid(
   latestDate: Date,
 ): GridCell[] {
   const counts = new Map<string, number>();
+  const weeksToShow = 52;
 
   for (const { eventDate } of datedReports) {
     const key = toDateKey(eventDate);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
 
-  return Array.from({ length: 56 }, (_, index) => {
-    const date = new Date(latestDate);
-    date.setHours(12, 0, 0, 0);
-    date.setDate(date.getDate() - (55 - index));
+  const endDate = getEndOfWeek(latestDate);
+  const startDate = new Date(endDate);
+  startDate.setDate(endDate.getDate() - weeksToShow * 7 + 1);
 
+  return Array.from({ length: weeksToShow * 7 }, (_, index) => {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + index);
     const key = toDateKey(date);
     const count = counts.get(key) ?? 0;
 
     return {
       count,
+      date,
       dateLabel: new Intl.DateTimeFormat("en-US", {
         day: "numeric",
         month: "short",
+        year: "numeric",
       }).format(date),
       intensity: getHeatIntensity(count),
-      monthLabel: date.getDate() <= 7 ? formatMonth(date) : "",
     };
   });
+}
+
+function groupCellsByWeek(cells: GridCell[]) {
+  return Array.from({ length: Math.ceil(cells.length / 7) }, (_, index) =>
+    cells.slice(index * 7, index * 7 + 7),
+  );
+}
+
+function getHeatmapMonthLabels(weeks: GridCell[][]) {
+  return weeks.map((week, index) => {
+    const monthStart = week.find((cell) => cell.date.getDate() === 1);
+
+    if (monthStart) {
+      return formatMonth(monthStart.date);
+    }
+
+    if (index === 0 && week[0]) {
+      return formatMonth(week[0].date);
+    }
+
+    return "";
+  });
+}
+
+function getEndOfWeek(date: Date) {
+  const endDate = new Date(date);
+  endDate.setHours(12, 0, 0, 0);
+  endDate.setDate(date.getDate() + ((6 - date.getDay() + 7) % 7));
+
+  return endDate;
 }
 
 function getLatestDate(datedReports: DatedReport[]) {
