@@ -23,7 +23,8 @@ export default function Home() {
             </p>
             <p className="mt-2 leading-6">
               OddSkies organizes unverified public reports for curiosity and
-              entertainment. We do not confirm sightings or paranormal claims.
+              entertainment. We do not confirm sightings, paranormal claims, or
+              source authenticity.
             </p>
             <p>oddskies.com</p>
             <p className="mt-2 text-xs text-slate-500">
@@ -34,14 +35,20 @@ export default function Home() {
             <a className="transition hover:text-signal-teal" href="#about">
               About
             </a>
+            <a
+              className="transition hover:text-signal-teal"
+              href="#source-guidelines"
+            >
+              Source Guidelines
+            </a>
             <a className="transition hover:text-signal-teal" href="#">
               Privacy
             </a>
             <a className="transition hover:text-signal-teal" href="#">
               Policy
             </a>
-            <a className="transition hover:text-signal-teal" href="#">
-              Source Guidelines
+            <a className="transition hover:text-signal-teal" href="#oracle">
+              Oracle
             </a>
           </div>
         </div>

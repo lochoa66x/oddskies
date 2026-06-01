@@ -1,47 +1,93 @@
 type Report = {
   category: string;
-  dateTime: string;
+  confidenceMood: string;
+  eventDateTime: string;
   location: string;
   marker: string;
+  reportedDateTime: string;
+  sourceName: string;
+  sourceType: string;
+  sourceUrl: string;
   summary: string;
+  title: string;
+  verificationStatus: string;
 };
 
 const reports: Report[] = [
   {
     category: "UFO / UAP",
-    dateTime: "May 29, 2026 / 10:42 PM",
+    confidenceMood: "Mildly Odd",
+    eventDateTime: "May 29, 2026 / 10:42 PM",
     location: "Sedona, Arizona",
     marker: "bg-signal-teal",
+    reportedDateTime: "May 30, 2026 / 8:16 AM",
+    sourceName: "Public sighting post",
+    sourceType: "Social thread",
+    sourceUrl: "#source-guidelines",
     summary:
       "Silent triangular light formation reported moving against wind direction.",
+    title: "Silent triangular lights over ridge line",
+    verificationStatus: "Unverified",
   },
   {
     category: "Strange Lights",
-    dateTime: "May 27, 2026 / 12:18 AM",
+    confidenceMood: "Suspiciously Interesting",
+    eventDateTime: "May 27, 2026 / 12:18 AM",
     location: "Lake Erie, Ohio",
     marker: "bg-signal-amber",
+    reportedDateTime: "May 27, 2026 / 9:44 AM",
+    sourceName: "Local shoreline forum",
+    sourceType: "Community post",
+    sourceUrl: "#source-guidelines",
     summary:
       "Pulsing amber lights described above low cloud cover near the shoreline.",
+    title: "Amber lights reported above low cloud cover",
+    verificationStatus: "Unverified",
   },
   {
     category: "Haunted Place",
-    dateTime: "May 23, 2026 / 8:05 PM",
+    confidenceMood: "Eerie but Thin",
+    eventDateTime: "May 23, 2026 / 8:05 PM",
     location: "Savannah, Georgia",
     marker: "bg-signal-violet",
+    reportedDateTime: "May 24, 2026 / 11:02 AM",
+    sourceName: "Historic inn review",
+    sourceType: "Public review",
+    sourceUrl: "#source-guidelines",
     summary:
       "Visitors note cold spots and audio anomalies inside a historic inn.",
+    title: "Cold spots and odd audio noted at historic inn",
+    verificationStatus: "Unverified",
   },
   {
     category: "Paranormal",
-    dateTime: "May 20, 2026 / 1:31 AM",
+    confidenceMood: "Low Context",
+    eventDateTime: "May 20, 2026 / 1:31 AM",
     location: "Olympic Peninsula, Washington",
     marker: "bg-signal-ember",
+    reportedDateTime: "May 21, 2026 / 6:50 PM",
+    sourceName: "Trail discussion thread",
+    sourceType: "Forum post",
+    sourceUrl: "#source-guidelines",
     summary:
       "Forum thread collects accounts of distant voices near a closed trail.",
+    title: "Distant voices reported near closed forest trail",
+    verificationStatus: "Unverified",
   },
 ];
 
 const selected = reports[1];
+const detailRows = [
+  ["Title", selected.title],
+  ["Category", selected.category],
+  ["Location", selected.location],
+  ["Event date/time", selected.eventDateTime],
+  ["Reported date/time", selected.reportedDateTime],
+  ["Source name", selected.sourceName],
+  ["Source type", selected.sourceType],
+  ["Verification", selected.verificationStatus],
+  ["Mood label", selected.confidenceMood],
+];
 
 export function LatestReports() {
   return (
@@ -86,9 +132,11 @@ export function LatestReports() {
                   </span>
                 </div>
                 <h3 className="mt-4 text-xl font-semibold text-parchment">
-                  {report.location}
+                  {report.title}
                 </h3>
-                <p className="mt-1 text-sm text-muted">{report.dateTime}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {report.location} · {report.eventDateTime}
+                </p>
                 <p className="mt-4 text-sm leading-6 text-muted">
                   {report.summary}
                 </p>
@@ -108,13 +156,20 @@ export function LatestReports() {
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
                 Selected Detail
               </p>
-              <h3 className="mt-2 text-2xl font-semibold text-parchment">
-                {selected.location}
-              </h3>
-              <p className="mt-1 text-sm text-muted">{selected.dateTime}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <h3 className="text-2xl font-semibold text-parchment">
+                  {selected.title}
+                </h3>
+                <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
+                  Unverified
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-muted">
+                {selected.location} · {selected.eventDateTime}
+              </p>
             </div>
 
-            <div className="atlas-grid relative min-h-[330px] overflow-hidden">
+            <div className="atlas-grid relative min-h-[260px] overflow-hidden">
               <div className="absolute left-[14%] top-[28%] h-20 w-36 rounded-[50%] atlas-shape" />
               <div className="absolute left-[48%] top-[38%] h-28 w-48 rounded-[46%_54%_48%_52%] atlas-shape" />
               <div className="absolute left-[68%] top-[64%] h-16 w-28 rounded-[50%] atlas-shape" />
@@ -134,6 +189,45 @@ export function LatestReports() {
                 <p className="mt-3 text-sm leading-6 text-muted">
                   {selected.summary}
                 </p>
+              </div>
+            </div>
+
+            <div className="space-y-5 p-5">
+              <div className="rounded-md border border-night-800 bg-night-950/70 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                  Summary
+                </p>
+                <p className="mt-3 text-sm leading-6 text-parchment">
+                  {selected.summary}
+                </p>
+              </div>
+
+              <dl className="grid gap-3 sm:grid-cols-2">
+                {detailRows.map(([label, value]) => (
+                  <div
+                    className="rounded-md border border-night-800 bg-night-950/55 p-3"
+                    key={label}
+                  >
+                    <dt className="text-xs text-muted">{label}</dt>
+                    <dd className="mt-1 text-sm font-semibold text-parchment">
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="flex flex-col gap-3 rounded-md border border-signal-amber/25 bg-signal-amber/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm leading-6 text-signal-amber">
+                  OddSkies has not verified this report. Check the original
+                  source when available.
+                </p>
+                <a
+                  className="source-link inline-flex shrink-0 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
+                  href={selected.sourceUrl}
+                >
+                  Source link placeholder
+                  <span aria-hidden="true">↗</span>
+                </a>
               </div>
             </div>
           </aside>
