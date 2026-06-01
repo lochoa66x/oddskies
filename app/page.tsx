@@ -1,5 +1,4 @@
 import { CategoryStrip } from "@/components/CategoryStrip";
-import { Disclaimer } from "@/components/Disclaimer";
 import { FeaturedRegions } from "@/components/FeaturedRegions";
 import { Hero } from "@/components/Hero";
 import { LatestReports } from "@/components/LatestReports";
@@ -22,7 +21,6 @@ export default async function Home() {
       <TonightsOddSkies />
       <LatestReports reports={reports} />
       <OddSkiesOracle />
-      <Disclaimer />
       <footer className="bg-night-950 px-5 py-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 border-t border-night-800 pt-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl">
@@ -41,19 +39,19 @@ export default async function Home() {
             </p>
           </div>
           <div className="flex flex-wrap gap-5">
-            <a className="transition hover:text-signal-teal" href="#about">
+            <a className="transition hover:text-signal-teal" href="/about">
               About
             </a>
             <a
               className="transition hover:text-signal-teal"
-              href="#source-guidelines"
+              href="/about#source-guidelines"
             >
               Source Guidelines
             </a>
             <a className="transition hover:text-signal-teal" href="#">
               Privacy
             </a>
-            <a className="transition hover:text-signal-teal" href="#">
+            <a className="transition hover:text-signal-teal" href="/about#policy">
               Policy
             </a>
             <a className="transition hover:text-signal-teal" href="#oracle">

@@ -15,6 +15,12 @@ import {
 import { WorldMapBase } from "@/components/WorldMapBase";
 
 const heroTags = ["UFO / UAP", "Strange Lights", "Haunted Places", "Unknown"];
+const navItems = [
+  { href: "#map", label: "Map" },
+  { href: "#reports", label: "Reports" },
+  { href: "#oracle", label: "Oracle" },
+  { href: "/about", label: "About" },
+];
 
 type ClusterStyle = CSSProperties & { "--cluster-size": string };
 type LabelSide = "above" | "left" | "right";
@@ -72,13 +78,13 @@ export function Hero({ reports }: { reports: Report[] }) {
         </a>
 
         <nav className="hidden items-center gap-1 rounded-md border border-night-800 bg-night-900/80 p-1 text-sm text-muted md:flex">
-          {["Map", "Reports", "Oracle", "About"].map((item) => (
+          {navItems.map((item) => (
             <a
               className="rounded px-3 py-2 transition hover:bg-night-850 hover:text-parchment"
-              href={`#${item.toLowerCase()}`}
-              key={item}
+              href={item.href}
+              key={item.label}
             >
-              {item}
+              {item.label}
             </a>
           ))}
         </nav>

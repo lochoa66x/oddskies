@@ -70,7 +70,7 @@ export function Disclaimer() {
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[1.04fr_0.96fr]">
-          <div className="field-card rounded-lg p-6 md:p-7">
+          <div className="field-card rounded-lg p-6 md:p-7" id="policy">
             <h3 className="text-2xl font-semibold text-parchment">
               What OddSkies is not
             </h3>
