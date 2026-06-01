@@ -1,9 +1,52 @@
-const heroClusters = [
-  { label: "UFO / UAP", left: "23%", top: "31%", size: 78, delay: "0s" },
-  { label: "Strange Lights", left: "38%", top: "57%", size: 52, delay: "0.6s" },
-  { label: "Haunted Places", left: "58%", top: "43%", size: 96, delay: "1.1s" },
-  { label: "Local Legends", left: "76%", top: "28%", size: 60, delay: "1.7s" },
-  { label: "Unknown", left: "70%", top: "70%", size: 48, delay: "2.2s" },
+const heroPoints = [
+  {
+    category: "Strange Lights",
+    label: "Green Fireball",
+    left: "31%",
+    size: 78,
+    tone: "teal",
+    top: "25%",
+  },
+  {
+    category: "UFO / UAP",
+    label: "Triangle Lights",
+    left: "46%",
+    size: 64,
+    tone: "amber",
+    top: "48%",
+  },
+  {
+    category: "Haunted Places",
+    label: "Silent Hill",
+    left: "57%",
+    size: 94,
+    tone: "violet",
+    top: "42%",
+  },
+  {
+    category: "Strange Lights",
+    label: "Cape Cod Light",
+    left: "76%",
+    size: 58,
+    tone: "amber",
+    top: "33%",
+  },
+  {
+    category: "Local Legends",
+    label: "Whispering Pines",
+    left: "68%",
+    size: 54,
+    tone: "ember",
+    top: "68%",
+  },
+  {
+    category: "Unknown",
+    label: "Sky Disc",
+    left: "22%",
+    size: 52,
+    tone: "muted",
+    top: "58%",
+  },
 ];
 
 const heroTags = ["UFO / UAP", "Strange Lights", "Haunted Places", "Unknown"];
@@ -15,6 +58,8 @@ export function Hero() {
       <div className="paranormal-haze absolute inset-0" />
       <div className="sky-noise absolute inset-0" />
       <div className="ufo-beam absolute right-[9%] top-14 hidden h-[34rem] w-[24rem] md:block" />
+      <div className="saucer-silhouette absolute right-[22%] top-16 hidden md:block" />
+      <div className="haunted-horizon absolute bottom-0 left-[44%] hidden h-52 w-[34rem] lg:block" />
       <div className="terrain-silhouette absolute inset-x-0 bottom-0 h-36" />
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-signal-teal/50 to-transparent" />
 
@@ -62,15 +107,17 @@ export function Hero() {
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <a
-              className="inline-flex min-h-14 items-center justify-center rounded-md bg-signal-teal px-5 py-3 text-sm font-bold text-night-950 shadow-glow transition hover:bg-parchment"
+              className="hero-cta hero-cta-primary inline-flex min-h-14 items-center justify-center gap-3 rounded-md bg-signal-teal px-5 py-3 text-sm font-bold text-night-950 shadow-glow transition hover:bg-parchment"
               href="#map"
             >
+              <span aria-hidden="true" className="cta-glyph cta-glyph-map" />
               Explore the Map
             </a>
             <a
-              className="inline-flex min-h-14 items-center justify-center rounded-md border border-signal-violet/40 bg-signal-violet/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/60 hover:bg-signal-teal/10"
+              className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-violet/40 bg-signal-violet/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/60 hover:bg-signal-teal/10"
               href="#oracle"
             >
+              <span aria-hidden="true" className="cta-glyph cta-glyph-oracle" />
               Ask the Oracle
             </a>
           </div>
@@ -103,26 +150,27 @@ export function Hero() {
             <div className="scan-line absolute left-0 top-20 h-px w-full" />
             <svg
               aria-hidden="true"
-              className="atlas-landmass absolute inset-x-4 top-10 h-[66%] w-[calc(100%-2rem)]"
-              viewBox="0 0 840 430"
+              className="atlas-map-base absolute inset-x-5 top-8 h-[72%] w-[calc(100%-2.5rem)]"
+              viewBox="0 0 900 500"
             >
-              <path d="M62 138C91 87 148 70 204 83c32 7 57 28 88 36 37 10 65-9 102-2 35 7 55 33 51 62-6 38-48 45-78 61-37 19-49 53-86 63-45 13-83-14-119-35-40-24-86-30-111-69-13-21-7-44 11-61Z" />
-              <path d="M360 132c41-41 112-45 159-13 33 22 52 59 86 79 35 21 88 20 110 58 24 42-3 93-47 110-42 17-83-8-118-26-38-20-73-24-114-16-48 10-105-1-126-43-20-41 13-77 48-102 12-9-7-30 2-47Z" />
-              <path d="M634 92c42-31 113-19 141 21 29 41 9 93-38 113-42 18-107 14-139-22-31-36-10-79 36-112Z" />
-              <path d="M580 330c28-26 85-27 116-1 28 24 20 66-15 79-36 14-92-7-109-38-8-15-4-29 8-40Z" />
+              <path d="M97 161c22-43 70-80 119-92 61-15 93 20 134 28 38 7 68-16 103-5 35 10 48 42 74 60 31 21 78 16 105 43 34 34 20 88-21 106-47 21-98-12-141 14-52 31-83 89-148 88-66-1-78-63-123-93-48-32-124-21-146-76-9-23 9-47 44-73Z" />
+              <path d="M489 137c38-47 107-65 169-48 58 16 85 64 128 92 37 24 81 34 91 77 12 51-33 101-83 111-56 11-96-34-144-30-44 3-78 49-126 38-45-11-70-62-58-104 11-37 55-59 54-91 0-18-44-15-31-45Z" />
+              <path d="M287 344c41 5 71 26 102 50 28 22 76 20 91 57-48 8-96 0-136-22-38-21-62-48-57-85Z" />
+              <path d="M733 89c40-24 95-11 125 23 31 36 16 83-27 101-38 16-99 8-122-27-22-34-9-73 24-97Z" />
             </svg>
             <svg
               aria-hidden="true"
-              className="atlas-route-lines absolute inset-x-8 top-12 h-[58%] w-[calc(100%-4rem)]"
-              viewBox="0 0 760 340"
+              className="atlas-route-lines absolute inset-x-8 top-12 h-[63%] w-[calc(100%-4rem)]"
+              viewBox="0 0 820 390"
             >
-              <path d="M116 116C208 62 318 61 429 134c72 48 133 53 207 19" />
-              <path d="M238 238c73-68 166-84 279-48 45 14 82 7 111-19" />
-              <path d="M108 187c84 23 155 63 220 122" />
+              <path d="M146 116c104-39 214-30 330 54 70 51 144 57 224 14" />
+              <path d="M222 244c91-79 209-94 354-42 54 19 94 11 133-18" />
+              <path d="M112 196c106 27 192 84 266 168" />
+              <path d="M531 92c70 49 129 112 181 190" />
             </svg>
-            <span className="radar-ring absolute left-[18%] top-[28%] size-28" />
-            <span className="radar-ring absolute left-[55%] top-[38%] size-36 [animation-delay:1.1s]" />
-            <span className="radar-ring absolute left-[72%] top-[20%] size-24 [animation-delay:2s]" />
+            <span className="radar-ring absolute left-[31%] top-[25%] size-28" />
+            <span className="radar-ring absolute left-[57%] top-[42%] size-36 [animation-delay:1.1s]" />
+            <span className="radar-ring absolute left-[76%] top-[33%] size-24 [animation-delay:2s]" />
 
             <div className="absolute left-5 top-5 rounded-md border border-night-800 bg-night-950/80 px-3 py-2 text-xs text-muted">
               Field layer: public report density
@@ -131,26 +179,40 @@ export function Hero() {
               Not confirmed events
             </div>
 
-            {heroClusters.map((cluster) => (
-              <span
-                aria-label={cluster.label}
-                className="heat-cluster absolute block -translate-x-1/2 -translate-y-1/2 rounded-full"
-                key={cluster.label}
+            {heroPoints.map((point, index) => (
+              <div
+                className={`atlas-report-point atlas-report-point-${point.tone}`}
+                key={point.label}
                 style={{
-                  animationDelay: cluster.delay,
-                  height: cluster.size,
-                  left: cluster.left,
-                  top: cluster.top,
-                  width: cluster.size,
+                  height: point.size,
+                  left: point.left,
+                  top: point.top,
+                  width: point.size,
                 }}
               >
-                <span className="absolute inset-[34%] rounded-full bg-signal-amber shadow-[0_0_30px_rgba(246,180,75,0.9)]" />
-                <span className="absolute inset-[44%] rounded-full bg-parchment/90" />
-              </span>
+                <span
+                  aria-label={`${point.label}, ${point.category}`}
+                  className="heat-cluster absolute inset-0 block rounded-full"
+                  style={{ animationDelay: `${index * 0.42}s` }}
+                >
+                  <span className="absolute inset-[34%] rounded-full bg-signal-amber shadow-[0_0_30px_rgba(246,180,75,0.9)]" />
+                  <span className="absolute inset-[44%] rounded-full bg-parchment/90" />
+                </span>
+                <span className="atlas-point-label">
+                  <span>{point.label}</span>
+                  <small>{point.category}</small>
+                </span>
+              </div>
             ))}
 
-            <div className="absolute right-5 bottom-24 hidden rounded-md border border-night-800 bg-night-950/80 px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-muted sm:block">
+            <div className="absolute right-5 bottom-24 hidden rounded-md border border-night-800 bg-night-950/80 px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-muted md:block">
               Sweep 03 / anomalous cluster watch
+            </div>
+
+            <div className="atlas-control absolute right-5 top-16 hidden rounded-md border border-night-800 bg-night-950/80 p-2 text-xs text-muted lg:block">
+              <span>Density</span>
+              <span>Source links</span>
+              <span>48h</span>
             </div>
 
             <div className="absolute bottom-5 left-5 right-5 flex flex-col gap-3">

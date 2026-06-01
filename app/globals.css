@@ -92,12 +92,72 @@ a {
 
 .ufo-beam {
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(72, 224, 194, 0.22), transparent 17%),
-    linear-gradient(180deg, rgba(72, 224, 194, 0.16), rgba(139, 92, 246, 0.06) 58%, transparent);
-  clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);
+    radial-gradient(ellipse at 50% 0%, rgba(72, 224, 194, 0.24), transparent 17%),
+    linear-gradient(180deg, rgba(72, 224, 194, 0.18), rgba(139, 92, 246, 0.07) 58%, transparent);
+  clip-path: polygon(39% 0, 61% 0, 100% 100%, 0 100%);
   filter: blur(8px);
   opacity: 0.55;
   pointer-events: none;
+}
+
+.saucer-silhouette {
+  width: 8.8rem;
+  height: 2rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 50% 10%, rgba(72, 224, 194, 0.2), transparent 44%),
+    linear-gradient(180deg, rgba(243, 240, 232, 0.1), rgba(8, 12, 20, 0.88));
+  box-shadow:
+    0 0 34px rgba(72, 224, 194, 0.16),
+    inset 0 1px 0 rgba(243, 240, 232, 0.12);
+  opacity: 0.5;
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
+
+.saucer-silhouette::before {
+  position: absolute;
+  left: 2.9rem;
+  top: -0.82rem;
+  width: 3rem;
+  height: 1.25rem;
+  border-radius: 999px 999px 0.4rem 0.4rem;
+  background: rgba(72, 224, 194, 0.12);
+  content: "";
+  box-shadow: inset 0 1px 0 rgba(243, 240, 232, 0.1);
+}
+
+.haunted-horizon {
+  opacity: 0.46;
+  pointer-events: none;
+}
+
+.haunted-horizon::before {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 4rem;
+  width: 6.4rem;
+  height: 5.1rem;
+  background:
+    linear-gradient(90deg, transparent 0 35%, rgba(3, 5, 9, 0.92) 35% 44%, transparent 44% 60%, rgba(3, 5, 9, 0.92) 60% 69%, transparent 69%),
+    linear-gradient(180deg, transparent 0 42%, rgba(3, 5, 9, 0.94) 42%);
+  clip-path: polygon(0 47%, 22% 26%, 34% 38%, 52% 14%, 100% 47%, 100% 100%, 0 100%);
+  content: "";
+  filter: drop-shadow(0 0 22px rgba(139, 92, 246, 0.12));
+}
+
+.haunted-horizon::after {
+  position: absolute;
+  right: 1rem;
+  bottom: 0;
+  width: 30rem;
+  height: 8rem;
+  background:
+    linear-gradient(118deg, transparent 0 11%, rgba(3, 5, 9, 0.88) 11% 15%, transparent 15%),
+    linear-gradient(128deg, transparent 0 18%, rgba(3, 5, 9, 0.82) 18% 21%, transparent 21%),
+    linear-gradient(105deg, transparent 0 31%, rgba(3, 5, 9, 0.86) 31% 34%, transparent 34%),
+    linear-gradient(180deg, transparent 0 58%, rgba(3, 5, 9, 0.95) 58%);
+  content: "";
 }
 
 .terrain-silhouette {
@@ -136,6 +196,20 @@ a {
   stroke-width: 1.4;
 }
 
+.atlas-map-base {
+  color: rgba(72, 224, 194, 0.14);
+  filter:
+    drop-shadow(0 0 20px rgba(72, 224, 194, 0.12))
+    drop-shadow(0 0 54px rgba(139, 92, 246, 0.1));
+  opacity: 0.92;
+}
+
+.atlas-map-base path {
+  fill: currentColor;
+  stroke: rgba(72, 224, 194, 0.26);
+  stroke-width: 1.6;
+}
+
 .atlas-route-lines {
   fill: none;
   opacity: 0.48;
@@ -164,6 +238,86 @@ a {
   background:
     radial-gradient(circle, rgba(246, 180, 75, 0.5) 0 12%, rgba(249, 115, 91, 0.28) 32%, rgba(249, 115, 91, 0.05) 62%, rgba(249, 115, 91, 0) 74%);
   box-shadow: 0 0 46px rgba(249, 115, 91, 0.32);
+}
+
+.atlas-report-point {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.atlas-report-point-teal {
+  --point-accent: #48e0c2;
+  --point-glow: rgba(72, 224, 194, 0.5);
+}
+
+.atlas-report-point-amber {
+  --point-accent: #f6b44b;
+  --point-glow: rgba(246, 180, 75, 0.52);
+}
+
+.atlas-report-point-violet {
+  --point-accent: #8b5cf6;
+  --point-glow: rgba(139, 92, 246, 0.5);
+}
+
+.atlas-report-point-ember {
+  --point-accent: #f9735b;
+  --point-glow: rgba(249, 115, 91, 0.5);
+}
+
+.atlas-report-point-muted {
+  --point-accent: #a7adbc;
+  --point-glow: rgba(167, 173, 188, 0.34);
+}
+
+.atlas-report-point .heat-cluster {
+  background:
+    radial-gradient(circle, var(--point-glow) 0 12%, rgba(249, 115, 91, 0.18) 35%, transparent 72%);
+}
+
+.atlas-report-point .heat-cluster span:first-child {
+  background: var(--point-accent);
+  box-shadow: 0 0 30px var(--point-glow);
+}
+
+.atlas-point-label {
+  position: absolute;
+  left: 57%;
+  top: 50%;
+  min-width: max-content;
+  transform: translate(0.6rem, -50%);
+  border: 1px solid rgba(39, 49, 73, 0.95);
+  border-radius: 0.38rem;
+  background: rgba(7, 10, 18, 0.78);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.22);
+  color: #f3f0e8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.48rem 0.55rem;
+  pointer-events: none;
+}
+
+.atlas-point-label small {
+  display: block;
+  margin-top: 0.3rem;
+  color: #a7adbc;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.atlas-control {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.atlas-control span {
+  border: 1px solid rgba(39, 49, 73, 0.9);
+  border-radius: 0.28rem;
+  padding: 0.35rem 0.45rem;
 }
 
 .report-card {
@@ -211,6 +365,78 @@ a {
   border: 1px solid rgba(72, 224, 194, 0.22);
   background: rgba(72, 224, 194, 0.07);
   color: #48e0c2;
+}
+
+.hero-cta {
+  box-shadow:
+    inset 0 1px 0 rgba(243, 240, 232, 0.18),
+    0 18px 42px rgba(0, 0, 0, 0.24);
+}
+
+.hero-cta-primary {
+  background:
+    radial-gradient(circle at 34% 0%, rgba(243, 240, 232, 0.45), transparent 42%),
+    #48e0c2;
+}
+
+.hero-cta-secondary {
+  box-shadow:
+    inset 0 1px 0 rgba(243, 240, 232, 0.08),
+    0 16px 38px rgba(139, 92, 246, 0.13);
+}
+
+.cta-glyph {
+  position: relative;
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.cta-glyph-map::before,
+.cta-glyph-map::after {
+  position: absolute;
+  content: "";
+}
+
+.cta-glyph-map::before {
+  inset: 0.1rem;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+}
+
+.cta-glyph-map::after {
+  left: 0.42rem;
+  top: 0;
+  width: 0.18rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.35;
+}
+
+.cta-glyph-oracle::before,
+.cta-glyph-oracle::after {
+  position: absolute;
+  border-radius: 999px;
+  content: "";
+}
+
+.cta-glyph-oracle::before {
+  inset: 0.12rem;
+  border: 1.5px solid currentColor;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+}
+
+.cta-glyph-oracle::after {
+  left: 0.42rem;
+  top: 0.42rem;
+  width: 0.18rem;
+  height: 0.18rem;
+  background: currentColor;
+  box-shadow:
+    -0.28rem -0.06rem 0 currentColor,
+    0.28rem 0.06rem 0 currentColor;
 }
 
 .category-chip {
@@ -383,12 +609,12 @@ a {
   0%,
   100% {
     opacity: 0.72;
-    transform: translate(-50%, -50%) scale(0.92);
+    transform: scale(0.92);
   }
 
   50% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.08);
+    transform: scale(1.08);
   }
 }
 
@@ -413,5 +639,20 @@ a {
 
   50% {
     transform: translateX(110%);
+  }
+}
+
+@media (max-width: 760px) {
+  .atlas-point-label {
+    display: none;
+  }
+
+  .atlas-report-point {
+    transform: translate(-50%, -50%) scale(0.88);
+  }
+
+  .haunted-horizon,
+  .saucer-silhouette {
+    display: none;
   }
 }
