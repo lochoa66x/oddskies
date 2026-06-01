@@ -107,6 +107,9 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
               Signal Strip
+              <span className="ml-2 text-xs normal-case tracking-[0.16em] sm:hidden">
+                swipe -&gt;
+              </span>
             </p>
             <h2 className="mt-3 text-3xl font-semibold text-parchment md:text-5xl">
               Signals & Weirdness

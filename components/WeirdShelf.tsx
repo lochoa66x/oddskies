@@ -45,6 +45,9 @@ export function WeirdShelf() {
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-violet">
               Culture Shelf
+              <span className="ml-2 text-xs normal-case tracking-[0.16em] sm:hidden">
+                swipe -&gt;
+              </span>
             </p>
             <h2 className="mt-2 text-3xl font-semibold text-parchment md:text-4xl">
               The Weird Shelf
