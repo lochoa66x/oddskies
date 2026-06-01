@@ -27,9 +27,9 @@ const regions = [
 
 export function FeaturedRegions() {
   return (
-    <section className="border-b border-night-800 bg-night-950 px-5 py-8">
+    <section className="border-b border-night-800 bg-night-950 px-5 py-6">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
               Global Watchlist
@@ -44,10 +44,10 @@ export function FeaturedRegions() {
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
           {regions.map((region) => (
             <article
-              className="field-card rounded-lg p-4 transition hover:border-signal-teal/40"
+              className="field-card min-w-[16rem] rounded-lg p-3.5 transition hover:border-signal-teal/40 sm:min-w-0"
               key={region.label}
             >
               <div className="flex items-center gap-3">
@@ -56,7 +56,7 @@ export function FeaturedRegions() {
                   {region.label}
                 </h3>
               </div>
-              <p className="mt-3 text-sm leading-6 text-muted">
+              <p className="mt-2 text-sm leading-6 text-muted">
                 {region.note}
               </p>
             </article>

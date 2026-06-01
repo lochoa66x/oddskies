@@ -18,16 +18,18 @@ export function LatestReports({ reports }: { reports: Report[] }) {
     () => filterReportsByRegion(reports, activeRegion),
     [activeRegion, reports],
   );
+  const visibleReports = filteredReports.slice(0, 4);
   const selected =
     filteredReports.find((report) => report.id === selectedId) ??
     filteredReports[0] ??
     reports[0];
+  const selectedCountry = selected ? getCountry(selected.location) : "";
   const detailRows = selected
     ? [
-        ["Title", selected.title],
         ["Category", selected.category],
-        ["Region", selected.region],
         ["Location", selected.location],
+        ["Region", selected.region],
+        ["Country", selectedCountry],
         ["Event date/time", selected.eventDateTime],
         ["Reported date/time", selected.reportedDateTime],
         ["Source name", selected.sourceName],
@@ -46,11 +48,11 @@ export function LatestReports({ reports }: { reports: Report[] }) {
 
   return (
     <section
-      className="border-y border-night-800 bg-night-900 px-5 py-16 md:py-24"
+      className="border-y border-night-800 bg-night-900 px-5 py-12 md:py-16"
       id="reports"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
               Report Feed
@@ -68,7 +70,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
           </p>
         </div>
 
-        <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
+        <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
           {regionFilters.map((region) => {
             const active = region === activeRegion;
 
@@ -89,15 +91,16 @@ export function LatestReports({ reports }: { reports: Report[] }) {
           })}
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="space-y-3">
-            {filteredReports.length > 0 ? (
-              filteredReports.map((report) => {
+        <div className="grid items-start gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid gap-3">
+            {visibleReports.length > 0 ? (
+              visibleReports.map((report) => {
                 const selectedCard = selected?.id === report.id;
 
                 return (
                   <button
-                    className={`report-card block w-full rounded-lg border bg-night-850 p-5 text-left transition ${
+                    aria-pressed={selectedCard}
+                    className={`report-card group block w-full rounded-lg border bg-night-850 p-4 text-left transition ${
                       selectedCard
                         ? "border-signal-teal/60 shadow-glow"
                         : "border-night-800 hover:border-signal-teal/45"
@@ -107,11 +110,11 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                     type="button"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
+                      <div className="flex min-w-0 items-center gap-2">
                         <span
-                          className={`size-2.5 rounded-full ${report.marker}`}
+                          className={`size-2.5 shrink-0 rounded-full ${report.marker}`}
                         />
-                        <p className="text-sm font-bold text-parchment">
+                        <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-parchment">
                           {report.category}
                         </p>
                       </div>
@@ -119,21 +122,34 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                         Unverified
                       </span>
                     </div>
-                    <h3 className="mt-4 text-xl font-semibold text-parchment">
+                    <h3 className="mt-3 text-lg font-semibold text-parchment transition group-hover:text-signal-teal">
                       {report.title}
                     </h3>
-                    <p className="mt-1 text-sm text-muted">
-                      {report.location} · {report.eventDateTime}
-                    </p>
-                    <p className="mt-4 text-sm leading-6 text-muted">
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
+                      <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
+                        {report.location}
+                      </span>
+                      <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
+                        {report.eventDateTime}
+                      </span>
+                      <span className="rounded border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-signal-violet">
+                        {report.confidenceMood}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-muted">
                       {report.summary}
                     </p>
-                    <span className="source-link mt-5 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold">
-                      {report.sourceUrl
-                        ? "Source link"
-                        : "Source link placeholder"}
-                      <span aria-hidden="true">↗</span>
-                    </span>
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                      <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs text-muted">
+                        {report.sourceType} · {report.sourceName}
+                      </span>
+                      <span className="source-link inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold">
+                        {report.sourceUrl
+                          ? "Source link"
+                          : "Source link placeholder"}
+                        <span aria-hidden="true">↗</span>
+                      </span>
+                    </div>
                   </button>
                 );
               })
@@ -142,6 +158,12 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                 No reports are listed for this region yet.
               </div>
             )}
+            {filteredReports.length > visibleReports.length ? (
+              <p className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs leading-5 text-muted">
+                Showing {visibleReports.length} preview artifacts from this
+                filter. More report browsing comes later.
+              </p>
+            ) : null}
           </div>
 
           {selected ? (
@@ -169,23 +191,26 @@ function ReportDetail({
   const selectedPosition = getReportPosition(selected);
   const sourceHref = selected.sourceUrl || "#source-guidelines";
   const external = sourceHref.startsWith("http");
+  const selectedCountry = getCountry(selected.location);
 
   return (
     <aside className="field-card overflow-hidden rounded-lg">
       <div className="border-b border-night-800 bg-night-850 px-5 py-4">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
-          Selected Detail
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <h3 className="text-2xl font-semibold text-parchment">
-            {selected.title}
-          </h3>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
+              Selected Artifact
+            </p>
+            <h3 className="mt-2 text-2xl font-semibold text-parchment">
+              {selected.title}
+            </h3>
+          </div>
           <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
             Unverified
           </span>
         </div>
         <p className="mt-1 text-sm text-muted">
-          {selected.location} · {selected.eventDateTime}
+          {selected.location} · {selected.region} · {selectedCountry}
         </p>
       </div>
 
@@ -243,7 +268,7 @@ function ReportDetail({
         </div>
       </div>
 
-      <div className="space-y-5 p-5">
+      <div className="space-y-4 p-5">
         <div className="rounded-md border border-night-800 bg-night-950/70 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
             Summary
@@ -267,19 +292,37 @@ function ReportDetail({
           ))}
         </dl>
 
-        <div className="flex flex-col gap-3 rounded-md border border-signal-amber/25 bg-signal-amber/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm leading-6 text-signal-amber">
-            OddSkies has not verified this report. Check the original source
-            when available.
-          </p>
+        <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 p-4">
+            <p className="text-sm leading-6 text-signal-amber">
+              OddSkies has not verified this report. Check the original source
+              when available.
+            </p>
+          </div>
           <a
-            className="source-link inline-flex shrink-0 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
+            className="source-link inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
             href={sourceHref}
             rel={external ? "noreferrer" : undefined}
             target={external ? "_blank" : undefined}
           >
             {selected.sourceUrl ? "Open source" : "Source link placeholder"}
             <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+
+        <div className="rounded-md border border-signal-violet/30 bg-signal-violet/[0.10] p-4">
+          <p className="text-sm font-semibold text-parchment">
+            Think it&apos;s real? Ask our little bro, the OddSkies Oracle.
+          </p>
+          <p className="mt-2 text-xs leading-5 text-muted">
+            Coming soon: playful reality checks, possible normal explanations,
+            and a maybe-weird verdict. No verification magic.
+          </p>
+          <a
+            className="mt-3 inline-flex min-h-10 items-center justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-3 py-2 text-xs font-bold text-parchment transition hover:border-signal-teal/50 hover:bg-signal-teal/10"
+            href="#oracle"
+          >
+            Ask the Oracle
           </a>
         </div>
       </div>
@@ -295,4 +338,8 @@ function getReportPosition(report: Report) {
   const anchor = regionAnchors[report.region];
 
   return coordinateToAtlasPosition(anchor.latitude, anchor.longitude);
+}
+
+function getCountry(location: string) {
+  return location.split(",").at(-1)?.trim() || "Unknown";
 }

@@ -9,11 +9,11 @@ const categories = [
 
 export function CategoryStrip() {
   return (
-    <section className="border-b border-night-800 bg-night-950 px-5 py-5">
+    <section className="border-b border-night-800 bg-night-950 px-5 py-4">
       <div className="mx-auto flex max-w-7xl gap-3 overflow-x-auto pb-1">
         {categories.map((category) => (
           <button
-            className="category-chip inline-flex shrink-0 items-center gap-2 rounded-md border border-night-800 bg-night-900 px-4 py-3 text-sm font-semibold text-parchment transition hover:border-signal-teal/50 hover:bg-night-850"
+            className="category-chip inline-flex shrink-0 items-center gap-2 rounded-md border border-night-800 bg-night-900 px-3.5 py-2.5 text-sm font-semibold text-parchment transition hover:border-signal-teal/50 hover:bg-night-850"
             key={category.label}
             type="button"
           >

@@ -1,6 +1,6 @@
 export function OddSkiesOracle() {
   return (
-    <section className="bg-night-950 px-5 py-16 md:py-24" id="oracle">
+    <section className="bg-night-950 px-5 py-12 md:py-16" id="oracle">
       <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-violet">
@@ -21,7 +21,7 @@ export function OddSkiesOracle() {
             The Oracle cannot verify whether something is real, AI-generated,
             mistaken, staged, satire, or a joke.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               aria-disabled="true"
               className="inline-flex min-h-12 cursor-not-allowed items-center justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-5 py-3 text-sm font-bold text-parchment opacity-85"

@@ -98,11 +98,11 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
 
   return (
     <section
-      className="border-y border-night-800 bg-night-900 px-5 py-12 md:py-16"
+      className="border-y border-night-800 bg-night-900 px-5 py-10 md:py-14"
       id="signals"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
               Signal Board
@@ -120,28 +120,24 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
           </p>
         </div>
 
-        <div className="grid gap-5">
+        <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(18rem,0.45fr)]">
           <WeirdnessGrid cells={heatmapCells} totalReports={reports.length} />
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <OddConPanel
+              oddCon={oddCon}
+              recentCount={latestSevenDays}
+              topCategory={topCategory}
+            />
+            <PeakWindowCard
+              mostActiveRegion={mostActiveRegion}
+              peakWindow={peakWindow}
+            />
+          </div>
         </div>
 
-        <div className="mt-5 grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-4">
-          <OddConPanel
-            oddCon={oddCon}
-            recentCount={latestSevenDays}
-            topCategory={topCategory}
-          />
-          <CategoryPulse
-            items={categoryCounts}
-            className="xl:col-span-3"
-          />
-          <RegionPulse
-            regions={regionSummaries}
-            className="xl:col-span-3"
-          />
-          <PeakWindowCard
-            mostActiveRegion={mostActiveRegion}
-            peakWindow={peakWindow}
-          />
+        <div className="mt-4 grid min-w-0 items-start gap-4 lg:grid-cols-2">
+          <CategoryPulse items={categoryCounts} />
+          <RegionPulse regions={regionSummaries} />
         </div>
 
         <RealityDisturbanceWatch />
@@ -162,18 +158,18 @@ function WeirdnessGrid({
   const gridMinWidth = `${4 + weeks.length * 1.125}rem`;
 
   return (
-    <article className="field-card rounded-lg p-5">
+    <article className="field-card min-w-0 rounded-lg p-4 md:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
             Weirdness Activity
           </p>
           <h3 className="mt-2 text-2xl font-semibold text-parchment">
-            Tiny squares of public weird
+            Last 365 days of unverified weird.
           </h3>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Each cell is a day of unverified report activity. Empty squares are
-            quiet. Bright squares mean the map had snacks.
+            Tiny squares from unverified reports. Quiet cells are asleep.
+            Bright cells mean the map had snacks.
           </p>
         </div>
         <span className="w-fit rounded-md border border-night-800 bg-night-950 px-3 py-2 text-sm text-muted">
@@ -235,7 +231,7 @@ function WeirdnessGrid({
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
         <span>Based on event dates when available.</span>
         <div className="flex items-center gap-2">
-          <span>Less weird</span>
+          <span>Quiet</span>
           {[0, 1, 2, 3, 4].map((intensity) => (
             <span
               className={`size-3 rounded-[0.18rem] border ${getHeatCellClass(
@@ -244,7 +240,7 @@ function WeirdnessGrid({
               key={intensity}
             />
           ))}
-          <span>More weird</span>
+          <span>Sky is spicy</span>
         </div>
       </div>
     </article>
@@ -261,7 +257,7 @@ function OddConPanel({
   topCategory: string;
 }) {
   return (
-    <article className="field-card rounded-lg p-4">
+    <article className="oddcon-card field-card rounded-lg p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
@@ -350,14 +346,14 @@ function CategoryPulse({
         </span>
       </div>
 
-      <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 grid grid-cols-2 gap-2 xl:grid-cols-3">
         {items.map((item, index) => {
           const width = getMeterWidth(item.count, max);
           const level = getSignalLevel(item.count, max);
 
           return (
             <div
-              className="relative overflow-hidden rounded-md border border-night-800 bg-night-950/50 p-3"
+              className="signal-tile relative overflow-hidden rounded-md border border-night-800 bg-night-950/50 p-3"
               key={`category-${item.label}`}
             >
               <span
@@ -373,7 +369,7 @@ function CategoryPulse({
                       index,
                     )}`}
                   />
-                  <p className="truncate text-sm font-semibold text-parchment">
+                  <p className="truncate text-xs font-semibold text-parchment sm:text-sm">
                     {item.label}
                   </p>
                 </div>
@@ -384,13 +380,13 @@ function CategoryPulse({
               <p className="relative mt-3 text-xs leading-5 text-muted">
                 {categoryMoods[item.label] ?? "Signal unclear"}
               </p>
-              <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-night-800">
+              <div className="relative mt-3 h-1 overflow-hidden rounded-full bg-night-800">
                 <div
                   className={`h-full rounded-full ${getSignalMeterClass(index)}`}
                   style={{ width }}
                 />
               </div>
-              <div className="relative mt-3 flex gap-1">
+              <div className="relative mt-2 flex gap-1">
                 {Array.from({ length: 5 }, (_, signalIndex) => (
                   <span
                     className={`h-1.5 flex-1 rounded-full border ${
@@ -438,14 +434,14 @@ function RegionPulse({
         </span>
       </div>
 
-      <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 grid grid-cols-2 gap-2 xl:grid-cols-3">
         {regions.map((region, index) => {
           const width = getMeterWidth(region.count, max);
           const level = getSignalLevel(region.count, max);
 
           return (
             <div
-              className="relative overflow-hidden rounded-md border border-night-800 bg-night-950/50 p-3"
+              className="signal-tile relative overflow-hidden rounded-md border border-night-800 bg-night-950/50 p-3"
               key={`region-${region.label}`}
             >
               <span
@@ -456,7 +452,7 @@ function RegionPulse({
               />
               <div className="relative flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-parchment">
+                  <p className="truncate text-xs font-semibold text-parchment sm:text-sm">
                     {region.label}
                   </p>
                   <p className="mt-1 text-xs leading-5 text-muted">
@@ -475,7 +471,7 @@ function RegionPulse({
                 />
                 <span className="truncate">Top: {region.topCategory}</span>
               </div>
-              <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-night-800">
+              <div className="relative mt-3 h-1 overflow-hidden rounded-full bg-night-800">
                 <div
                   className={`h-full rounded-full ${getSignalMeterClass(
                     index + 1,
@@ -483,7 +479,7 @@ function RegionPulse({
                   style={{ width }}
                 />
               </div>
-              <div className="relative mt-3 grid grid-cols-5 gap-1">
+              <div className="relative mt-2 grid grid-cols-5 gap-1">
                 {Array.from({ length: 5 }, (_, signalIndex) => (
                   <span
                     className={`h-1.5 rounded-full border ${
@@ -550,7 +546,7 @@ function RealityDisturbanceWatch() {
           <div className="rounded-md border border-signal-amber/20 bg-night-950/45 p-3">
             <p className="font-semibold text-parchment">Collider Watch</p>
             <p className="mt-2 text-sm leading-6 text-signal-amber">
-              When the Large Hadron Collider has scheduled activity, reality is
+              The Large Hadron Collider has scheduled activity. Reality is
               expected to remain mostly intact.
             </p>
           </div>

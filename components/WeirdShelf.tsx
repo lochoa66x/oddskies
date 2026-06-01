@@ -29,7 +29,7 @@ const shelfCards = [
 
 export function WeirdShelf() {
   return (
-    <section className="bg-night-950 px-5 py-10 md:py-12" id="weird-shelf">
+    <section className="bg-night-950 px-5 py-8 md:py-10" id="weird-shelf">
       <div className="mx-auto max-w-7xl">
         <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
@@ -54,7 +54,7 @@ export function WeirdShelf() {
         <div className="grid gap-3 lg:grid-cols-3">
           {shelfCards.map((card) => (
             <article
-              className="field-card relative overflow-hidden rounded-lg p-4"
+              className="field-card relative overflow-hidden rounded-lg p-3.5"
               key={card.title}
             >
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-signal-teal/45 to-transparent" />
@@ -73,7 +73,7 @@ export function WeirdShelf() {
                   {card.code}
                 </span>
               </div>
-              <p className="mt-4 text-sm leading-6 text-muted">{card.copy}</p>
+              <p className="mt-3 text-sm leading-6 text-muted">{card.copy}</p>
               {card.disclaimer ? (
                 <p className="mt-3 border-t border-night-800 pt-3 text-xs leading-5 text-muted">
                   {card.disclaimer}
