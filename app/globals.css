@@ -228,10 +228,10 @@ a {
 }
 
 .atlas-map-base .atlas-country {
-  fill: rgba(72, 224, 194, 0.105);
-  stroke: rgba(184, 255, 240, 0.22);
+  fill: rgba(72, 224, 194, 0.13);
+  stroke: rgba(184, 255, 240, 0.26);
   stroke-linejoin: round;
-  stroke-width: 0.65;
+  stroke-width: 0.7;
 }
 
 .atlas-map-base .atlas-country:nth-child(3n) {

@@ -84,12 +84,12 @@ export function Hero({ reports }: { reports: Report[] }) {
         </nav>
       </header>
 
-      <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 pb-12 pt-5 lg:min-h-[calc(100svh-76px)] lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:gap-10 lg:pb-14 lg:pt-4">
+      <div className="relative z-10 mx-auto grid max-w-[88rem] gap-8 px-5 pb-12 pt-5 lg:min-h-[calc(100svh-76px)] lg:grid-cols-[0.66fr_1.34fr] lg:items-center lg:gap-9 lg:pb-14 lg:pt-4">
         <div>
           <p className="inline-flex rounded-md border border-signal-amber/30 bg-signal-amber/10 px-3 py-2 text-sm font-semibold text-signal-amber">
             Mystery Atlas / Phase 1 Preview
           </p>
-          <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[0.95] text-parchment sm:text-6xl lg:text-7xl">
+          <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[0.95] text-parchment sm:text-6xl lg:text-6xl xl:text-7xl">
             Explore the weird side of the map.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-muted md:text-lg">
@@ -165,10 +165,10 @@ export function Hero({ reports }: { reports: Report[] }) {
             </p>
           </div>
 
-          <div className="atlas-grid relative min-h-[360px] overflow-hidden lg:min-h-[410px]">
+          <div className="atlas-grid relative min-h-[360px] overflow-hidden lg:min-h-[460px] xl:min-h-[500px]">
             <div className="atlas-map-texture absolute inset-0" />
             <div className="scan-line absolute left-0 top-20 h-px w-full" />
-            <WorldMapBase className="absolute inset-x-5 top-9 h-[70%] w-[calc(100%-2.5rem)]" />
+            <WorldMapBase className="absolute inset-x-4 top-8 h-[72%] w-[calc(100%-2rem)]" />
             <svg
               aria-hidden="true"
               className="atlas-route-lines absolute inset-x-8 top-12 h-[61%] w-[calc(100%-4rem)]"

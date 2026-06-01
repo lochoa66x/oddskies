@@ -98,11 +98,11 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
 
   return (
     <section
-      className="border-y border-night-800 bg-night-900 px-5 py-14 md:py-20"
+      className="border-y border-night-800 bg-night-900 px-5 py-12 md:py-16"
       id="signals"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
               Signal Board
@@ -124,7 +124,7 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
           <WeirdnessGrid cells={heatmapCells} totalReports={reports.length} />
         </div>
 
-        <div className="mt-5 grid items-start gap-5 lg:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-4">
           <OddConPanel
             oddCon={oddCon}
             recentCount={latestSevenDays}
@@ -261,16 +261,16 @@ function OddConPanel({
   topCategory: string;
 }) {
   return (
-    <article className="field-card rounded-lg p-5">
-      <div className="flex items-start justify-between gap-4">
+    <article className="field-card rounded-lg p-4">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
             OddCon
           </p>
-          <h3 className="mt-3 text-4xl font-semibold text-parchment">
+          <h3 className="mt-3 text-3xl font-semibold text-parchment">
             OddCon {oddCon.level}
           </h3>
-          <p className="mt-2 text-lg font-semibold text-signal-amber">
+          <p className="mt-1 text-sm font-semibold text-signal-amber">
             {oddCon.name}
             {oddCon.footnote ? "*" : ""}
           </p>
@@ -280,44 +280,41 @@ function OddConPanel({
         </span>
       </div>
 
-      <div className="mt-6 grid gap-2">
+      <div className="mt-5 grid grid-cols-5 gap-1.5">
         {oddConLevels.map((level) => {
           const active = level.level === oddCon.level;
 
           return (
             <div
-              className={`grid grid-cols-[5.5rem_1fr_auto] items-center gap-3 rounded-md border px-3 py-2 text-sm ${
+              className={`rounded-md border px-2 py-2 text-center ${
                 active
                   ? "border-signal-amber/50 bg-signal-amber/10"
                   : "border-night-800 bg-night-950/55"
               }`}
               key={level.level}
+              title={`OddCon ${level.level}: ${level.name}`}
             >
-              <span className="font-semibold text-parchment">
-                OddCon {level.level}
-              </span>
-              <span className="text-muted">
-                {level.name}
-                {level.footnote ? "*" : ""}
-              </span>
-              <span className="hidden text-xs text-muted sm:inline">
-                {level.range}
+              <span className="block text-xs font-semibold text-parchment">
+                {level.level}
               </span>
             </div>
           );
         })}
       </div>
-
-      <div className="mt-5 rounded-md border border-night-800 bg-night-950/60 p-4">
-        <p className="text-sm leading-6 text-muted">
-          Seed activity says {recentCount} reports in the latest 7-day window.
-          The panel is held at Suspiciously Interesting so demo data does not
-          start yelling.
-        </p>
-        <p className="mt-2 text-xs text-muted">Current loudest signal: {topCategory}</p>
+      <div className="mt-2 flex items-center justify-between text-[0.62rem] uppercase tracking-[0.12em] text-muted">
+        <span>Quiet</span>
+        <span>Spicy</span>
       </div>
 
-      <p className="mt-4 text-xs leading-5 text-muted">
+      <div className="mt-4 rounded-md border border-night-800 bg-night-950/60 p-3">
+        <p className="text-xs leading-5 text-muted">
+          {recentCount} latest-window reports. Held at Suspiciously Interesting
+          so demo data does not start yelling.
+        </p>
+        <p className="mt-2 text-xs text-muted">Loudest signal: {topCategory}</p>
+      </div>
+
+      <p className="mt-3 text-xs leading-5 text-muted">
         *Probably. OddSkies does not confirm invasions, hauntings, saucers,
         portals, ghosts, or suspiciously dramatic clouds.
       </p>
@@ -335,7 +332,7 @@ function CategoryPulse({
   const max = Math.max(...items.map((item) => item.count), 1);
 
   return (
-    <article className={`field-card rounded-lg p-5 ${className}`}>
+    <article className={`field-card rounded-lg p-4 ${className}`}>
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
         Category Pulse
       </p>
@@ -353,7 +350,7 @@ function CategoryPulse({
         </span>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((item, index) => {
           const width = getMeterWidth(item.count, max);
           const level = getSignalLevel(item.count, max);
@@ -423,7 +420,7 @@ function RegionPulse({
   const max = Math.max(...regions.map((region) => region.count), 1);
 
   return (
-    <article className={`field-card rounded-lg p-5 ${className}`}>
+    <article className={`field-card rounded-lg p-4 ${className}`}>
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
         Region Pulse
       </p>
@@ -441,7 +438,7 @@ function RegionPulse({
         </span>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
         {regions.map((region, index) => {
           const width = getMeterWidth(region.count, max);
           const level = getSignalLevel(region.count, max);
@@ -514,18 +511,18 @@ function PeakWindowCard({
   peakWindow: string;
 }) {
   return (
-    <article className="field-card rounded-lg p-5">
+    <article className="field-card rounded-lg p-4">
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-violet">
         Peak Weirdness Window
       </p>
-      <h3 className="mt-3 text-3xl font-semibold text-parchment">
+      <h3 className="mt-3 text-2xl font-semibold text-parchment">
         {peakWindow}
       </h3>
-      <p className="mt-4 text-sm leading-6 text-muted">
+      <p className="mt-3 text-sm leading-6 text-muted">
         Reports tend to get louder around this window. Could be nightlife,
         skywatching, folklore energy, or people looking up from their phones.
       </p>
-      <div className="mt-5 rounded-md border border-night-800 bg-night-950/60 p-4">
+      <div className="mt-4 rounded-md border border-night-800 bg-night-950/60 p-3">
         <p className="text-xs uppercase tracking-[0.16em] text-muted">
           Region twitch
         </p>
@@ -539,29 +536,29 @@ function PeakWindowCard({
 
 function RealityDisturbanceWatch() {
   return (
-    <article className="mt-5 rounded-lg border border-signal-amber/25 bg-signal-amber/10 p-5">
-      <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+    <article className="mt-4 rounded-lg border border-signal-amber/25 bg-signal-amber/10 p-4">
+      <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
             Reality Disturbance Watch
           </p>
-          <h3 className="mt-3 text-2xl font-semibold text-parchment">
+          <h3 className="mt-3 text-xl font-semibold text-parchment">
             Reality is expected to remain mostly intact.
           </h3>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-md border border-signal-amber/20 bg-night-950/45 p-4">
+        <div className="grid gap-2.5 md:grid-cols-2">
+          <div className="rounded-md border border-signal-amber/20 bg-night-950/45 p-3">
             <p className="font-semibold text-parchment">Collider Watch</p>
-            <p className="mt-3 text-sm leading-6 text-signal-amber">
+            <p className="mt-2 text-sm leading-6 text-signal-amber">
               When the Large Hadron Collider has scheduled activity, reality is
               expected to remain mostly intact.
             </p>
           </div>
-          <div className="rounded-md border border-signal-amber/20 bg-night-950/45 p-4">
+          <div className="rounded-md border border-signal-amber/20 bg-night-950/45 p-3">
             <p className="font-semibold text-parchment">
               Mandela Effect Advisory
             </p>
-            <p className="mt-3 text-sm leading-6 text-signal-amber">
+            <p className="mt-2 text-sm leading-6 text-signal-amber">
               Low to Medium. If your favorite movie quote changes, please check
               three sources before blaming the collider.
             </p>
