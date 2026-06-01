@@ -221,6 +221,42 @@ a {
   stroke-width: 1.2;
 }
 
+.atlas-map-base .atlas-landmass-main {
+  fill: rgba(72, 224, 194, 0.115);
+  stroke: rgba(120, 238, 219, 0.5);
+  stroke-width: 1.35;
+}
+
+.atlas-map-base .atlas-island {
+  fill: rgba(139, 92, 246, 0.15);
+  stroke: rgba(191, 167, 255, 0.52);
+  stroke-width: 1.15;
+}
+
+.atlas-map-base .atlas-graticule path {
+  fill: none;
+  stroke: rgba(167, 173, 188, 0.11);
+  stroke-dasharray: 1 12;
+  stroke-linecap: round;
+  stroke-width: 0.9;
+}
+
+.atlas-map-base .atlas-coast-detail path {
+  fill: none;
+  stroke: rgba(243, 240, 232, 0.2);
+  stroke-dasharray: 3 8;
+  stroke-linecap: round;
+  stroke-width: 1;
+}
+
+.atlas-map-base .atlas-antarctic-edge {
+  fill: none;
+  stroke: rgba(167, 173, 188, 0.12);
+  stroke-dasharray: 6 10;
+  stroke-linecap: round;
+  stroke-width: 1.2;
+}
+
 .atlas-map-base .atlas-coastline {
   fill: none;
   stroke: rgba(243, 240, 232, 0.16);

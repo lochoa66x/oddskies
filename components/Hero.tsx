@@ -12,6 +12,7 @@ import {
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
+import { WorldMapBase } from "@/components/WorldMapBase";
 
 const heroTags = ["UFO / UAP", "Strange Lights", "Haunted Places", "Unknown"];
 
@@ -167,25 +168,7 @@ export function Hero({ reports }: { reports: Report[] }) {
           <div className="atlas-grid relative min-h-[360px] overflow-hidden lg:min-h-[410px]">
             <div className="atlas-map-texture absolute inset-0" />
             <div className="scan-line absolute left-0 top-20 h-px w-full" />
-            <svg
-              aria-hidden="true"
-              className="atlas-map-base absolute inset-x-5 top-9 h-[70%] w-[calc(100%-2.5rem)]"
-              viewBox="0 0 1000 500"
-            >
-              <path d="M57 142c23-30 58-50 96-55 42-5 75 7 107 27 29 18 42 46 75 56 32 10 62 31 63 65 1 33-31 50-60 56-27 6-48 6-68 26-19 19-36 52-66 45-24-6-31-38-51-53-25-19-56-17-77-42-21-26-36-68-19-125Z" />
-              <path d="M171 82c38-20 81-16 118 0 19 8 42 11 61 1 9 22-12 39-35 43-40 7-83-3-122 12-27 11-53-14-22-56Z" />
-              <path d="M305 285c38 15 70 45 84 84 15 42 0 82-28 114-31-17-48-50-62-84-12-29-39-74 6-114Z" />
-              <path d="M462 146c33-18 72-16 104-3 24 10 49 15 75 10 2 28-27 45-54 44-28-1-48 18-75 22-31 5-61-12-74-38-8-16 6-27 24-35Z" />
-              <path d="M494 221c36-18 82-5 104 29 23 34 31 77 18 119-14 45-43 72-81 78-31-40-44-86-42-136 1-35-22-68 1-90Z" />
-              <path d="M590 134c44-20 95-20 140-4 49 17 84 49 132 66 39 14 76 43 70 87-5 41-48 65-89 58-45-7-77-39-121-36-48 4-91 38-139 16-38-17-55-55-37-92 15-30 2-73 44-95Z" />
-              <path d="M697 344c45-19 101-11 139 18 35 26 62 51 56 96-50 16-111 4-154-29-35-27-64-52-41-85Z" />
-              <path d="M863 185c26-8 55-1 75 15 22 17 27 43 9 63-26-4-54-15-74-34-14-13-31-32-10-44Z" />
-              <path d="M944 391c17-8 34-1 45 12 4 18-9 31-27 32-17 1-30-7-35-22 2-10 8-17 17-22Z" />
-              <path className="atlas-coastline" d="M86 159c36 10 74 7 115-7 33-12 65 1 94 38 16 21 42 26 77 16" />
-              <path className="atlas-coastline" d="M522 156c18 26 33 57 45 93 10 32 6 70-12 114" />
-              <path className="atlas-coastline" d="M627 171c40 25 73 55 99 91 31-4 67 3 108 21" />
-              <path className="atlas-coastline" d="M724 371c37 6 78 7 124 2" />
-            </svg>
+            <WorldMapBase className="absolute inset-x-5 top-9 h-[70%] w-[calc(100%-2.5rem)]" />
             <svg
               aria-hidden="true"
               className="atlas-route-lines absolute inset-x-8 top-12 h-[61%] w-[calc(100%-4rem)]"
@@ -223,11 +206,13 @@ export function Hero({ reports }: { reports: Report[] }) {
               );
             })}
 
-            <div className="absolute left-5 top-5 rounded-md border border-night-800 bg-night-950/80 px-3 py-2 text-xs text-muted">
-              Field layer: public report density
-            </div>
-            <div className="absolute right-5 top-5 rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs font-semibold text-signal-amber">
-              Not confirmed events
+            <div className="absolute left-5 right-5 top-5 z-[3] flex flex-wrap items-start justify-between gap-2">
+              <div className="max-w-[13rem] rounded-md border border-night-800 bg-night-950/80 px-3 py-2 text-xs text-muted">
+                Field layer: public report density
+              </div>
+              <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs font-semibold text-signal-amber">
+                Not confirmed events
+              </div>
             </div>
 
             {markerReports.map((report, index) => {
@@ -360,7 +345,7 @@ function getLabelSide(report: Report, left: number): LabelSide {
   }
 
   if (report.region === "Western Europe") {
-    return "right";
+    return "left";
   }
 
   if (left < 30) {

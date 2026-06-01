@@ -9,6 +9,7 @@ import {
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
+import { WorldMapBase } from "@/components/WorldMapBase";
 
 export function LatestReports({ reports }: { reports: Report[] }) {
   const [activeRegion, setActiveRegion] = useState<RegionFilter>("All");
@@ -189,16 +190,7 @@ function ReportDetail({
       </div>
 
       <div className="atlas-grid detail-atlas relative min-h-[260px] overflow-hidden">
-        <svg
-          aria-hidden="true"
-          className="atlas-map-base absolute inset-x-5 top-8 h-[70%] w-[calc(100%-2.5rem)]"
-          viewBox="0 0 1000 500"
-        >
-          <path d="M100 132c31-46 83-71 141-70 45 1 78 21 114 42 31 18 78 16 99 50 24 40-10 73-48 88-44 17-66 52-92 87-28 39-83 54-126 27-38-23-42-73-76-99-39-30-66-76-12-125Z" />
-          <path d="M286 318c42 14 72 44 84 84 10 36-4 67-25 91-39-17-58-47-78-85-18-34-25-62 19-90Z" />
-          <path d="M430 150c35-35 92-39 135-22 33 13 59 42 94 49 43 9 83-28 130-6 44 21 73 70 63 117-11 54-62 75-112 61-39-11-70-43-112-37-41 6-69 43-112 34-47-10-74-58-67-101 5-34 30-61-19-95Z" />
-          <path d="M715 330c29-23 79-18 116 2 34 19 66 47 69 87-44 22-100 12-141-17-30-21-61-44-44-72Z" />
-        </svg>
+        <WorldMapBase className="absolute inset-x-5 top-8 h-[70%] w-[calc(100%-2.5rem)]" />
         <svg
           aria-hidden="true"
           className="atlas-route-lines absolute inset-x-8 top-9 h-[58%] w-[calc(100%-4rem)]"
