@@ -172,14 +172,24 @@ a {
 
 .atlas-grid {
   background:
-    radial-gradient(circle at 22% 36%, rgba(72, 224, 194, 0.1), transparent 19%),
-    radial-gradient(circle at 68% 42%, rgba(139, 92, 246, 0.13), transparent 22%),
-    radial-gradient(circle at 58% 70%, rgba(249, 115, 91, 0.12), transparent 16%),
-    repeating-radial-gradient(circle at 58% 45%, rgba(72, 224, 194, 0.08) 0 1px, transparent 1px 46px),
+    radial-gradient(circle at 23% 38%, rgba(72, 224, 194, 0.08), transparent 16%),
+    radial-gradient(circle at 58% 39%, rgba(139, 92, 246, 0.11), transparent 18%),
+    radial-gradient(circle at 84% 55%, rgba(249, 115, 91, 0.09), transparent 15%),
+    repeating-radial-gradient(circle at 58% 45%, rgba(72, 224, 194, 0.07) 0 1px, transparent 1px 46px),
     linear-gradient(rgba(167, 173, 188, 0.075) 1px, transparent 1px),
     linear-gradient(90deg, rgba(167, 173, 188, 0.075) 1px, transparent 1px),
     #101522;
   background-size: auto, auto, auto, auto, 36px 36px, 36px 36px, auto;
+}
+
+.atlas-map-texture {
+  background:
+    linear-gradient(12deg, transparent 0 47%, rgba(72, 224, 194, 0.08) 47% 47.25%, transparent 47.25%),
+    linear-gradient(118deg, transparent 0 62%, rgba(139, 92, 246, 0.08) 62% 62.22%, transparent 62.22%),
+    radial-gradient(ellipse at 50% 47%, transparent 0 54%, rgba(72, 224, 194, 0.06) 54.4% 55%, transparent 55.6%),
+    radial-gradient(ellipse at 50% 47%, transparent 0 68%, rgba(72, 224, 194, 0.04) 68.3% 69%, transparent 69.7%);
+  opacity: 0.88;
+  pointer-events: none;
 }
 
 .atlas-landmass {
@@ -197,17 +207,26 @@ a {
 }
 
 .atlas-map-base {
-  color: rgba(72, 224, 194, 0.14);
+  color: rgba(72, 224, 194, 0.12);
   filter:
-    drop-shadow(0 0 20px rgba(72, 224, 194, 0.12))
-    drop-shadow(0 0 54px rgba(139, 92, 246, 0.1));
-  opacity: 0.92;
+    drop-shadow(0 0 16px rgba(72, 224, 194, 0.12))
+    drop-shadow(0 0 44px rgba(139, 92, 246, 0.09));
+  opacity: 0.96;
 }
 
 .atlas-map-base path {
   fill: currentColor;
-  stroke: rgba(72, 224, 194, 0.26);
-  stroke-width: 1.6;
+  stroke: rgba(72, 224, 194, 0.34);
+  stroke-linejoin: round;
+  stroke-width: 1.2;
+}
+
+.atlas-map-base .atlas-coastline {
+  fill: none;
+  stroke: rgba(243, 240, 232, 0.16);
+  stroke-dasharray: 2 7;
+  stroke-linecap: round;
+  stroke-width: 1.1;
 }
 
 .atlas-route-lines {
@@ -238,11 +257,11 @@ a {
   height: var(--cluster-size);
   animation: region-glow 5.4s ease-in-out infinite;
   background:
-    radial-gradient(circle, rgba(72, 224, 194, 0.12) 0 16%, rgba(246, 180, 75, 0.14) 29%, rgba(249, 115, 91, 0.08) 54%, transparent 73%);
+    radial-gradient(circle, rgba(246, 180, 75, 0.22) 0 9%, rgba(249, 115, 91, 0.16) 24%, rgba(72, 224, 194, 0.08) 48%, transparent 73%);
   border: 1px solid rgba(72, 224, 194, 0.1);
   box-shadow:
-    inset 0 0 28px rgba(72, 224, 194, 0.06),
-    0 0 48px rgba(249, 115, 91, 0.12);
+    inset 0 0 18px rgba(72, 224, 194, 0.05),
+    0 0 34px rgba(249, 115, 91, 0.12);
   transform: translate(-50%, -50%);
   z-index: 1;
 }
@@ -250,8 +269,8 @@ a {
 .heat-cluster {
   animation: heat-pulse 3.8s ease-in-out infinite;
   background:
-    radial-gradient(circle, rgba(246, 180, 75, 0.5) 0 12%, rgba(249, 115, 91, 0.28) 32%, rgba(249, 115, 91, 0.05) 62%, rgba(249, 115, 91, 0) 74%);
-  box-shadow: 0 0 46px rgba(249, 115, 91, 0.32);
+    radial-gradient(circle, rgba(246, 180, 75, 0.44) 0 10%, rgba(249, 115, 91, 0.22) 29%, rgba(249, 115, 91, 0.05) 58%, rgba(249, 115, 91, 0) 72%);
+  box-shadow: 0 0 30px rgba(249, 115, 91, 0.24);
 }
 
 .atlas-report-point {

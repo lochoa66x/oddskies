@@ -165,29 +165,37 @@ export function Hero({ reports }: { reports: Report[] }) {
           </div>
 
           <div className="atlas-grid relative min-h-[360px] overflow-hidden lg:min-h-[410px]">
+            <div className="atlas-map-texture absolute inset-0" />
             <div className="scan-line absolute left-0 top-20 h-px w-full" />
             <svg
               aria-hidden="true"
-              className="atlas-map-base absolute inset-x-5 top-8 h-[72%] w-[calc(100%-2.5rem)]"
+              className="atlas-map-base absolute inset-x-5 top-9 h-[70%] w-[calc(100%-2.5rem)]"
               viewBox="0 0 1000 500"
             >
-              <path d="M100 132c31-46 83-71 141-70 45 1 78 21 114 42 31 18 78 16 99 50 24 40-10 73-48 88-44 17-66 52-92 87-28 39-83 54-126 27-38-23-42-73-76-99-39-30-66-76-12-125Z" />
-              <path d="M286 318c42 14 72 44 84 84 10 36-4 67-25 91-39-17-58-47-78-85-18-34-25-62 19-90Z" />
-              <path d="M430 150c35-35 92-39 135-22 33 13 59 42 94 49 43 9 83-28 130-6 44 21 73 70 63 117-11 54-62 75-112 61-39-11-70-43-112-37-41 6-69 43-112 34-47-10-74-58-67-101 5-34 30-61-19-95Z" />
-              <path d="M482 285c42 7 73 37 93 74 17 31 43 58 42 99-48 15-103-5-131-46-25-37-50-86-4-127Z" />
-              <path d="M715 330c29-23 79-18 116 2 34 19 66 47 69 87-44 22-100 12-141-17-30-21-61-44-44-72Z" />
-              <path d="M382 70c42-31 99-30 135 2-28 34-79 38-126 33-31-3-41-17-9-35Z" />
+              <path d="M57 142c23-30 58-50 96-55 42-5 75 7 107 27 29 18 42 46 75 56 32 10 62 31 63 65 1 33-31 50-60 56-27 6-48 6-68 26-19 19-36 52-66 45-24-6-31-38-51-53-25-19-56-17-77-42-21-26-36-68-19-125Z" />
+              <path d="M171 82c38-20 81-16 118 0 19 8 42 11 61 1 9 22-12 39-35 43-40 7-83-3-122 12-27 11-53-14-22-56Z" />
+              <path d="M305 285c38 15 70 45 84 84 15 42 0 82-28 114-31-17-48-50-62-84-12-29-39-74 6-114Z" />
+              <path d="M462 146c33-18 72-16 104-3 24 10 49 15 75 10 2 28-27 45-54 44-28-1-48 18-75 22-31 5-61-12-74-38-8-16 6-27 24-35Z" />
+              <path d="M494 221c36-18 82-5 104 29 23 34 31 77 18 119-14 45-43 72-81 78-31-40-44-86-42-136 1-35-22-68 1-90Z" />
+              <path d="M590 134c44-20 95-20 140-4 49 17 84 49 132 66 39 14 76 43 70 87-5 41-48 65-89 58-45-7-77-39-121-36-48 4-91 38-139 16-38-17-55-55-37-92 15-30 2-73 44-95Z" />
+              <path d="M697 344c45-19 101-11 139 18 35 26 62 51 56 96-50 16-111 4-154-29-35-27-64-52-41-85Z" />
+              <path d="M863 185c26-8 55-1 75 15 22 17 27 43 9 63-26-4-54-15-74-34-14-13-31-32-10-44Z" />
+              <path d="M944 391c17-8 34-1 45 12 4 18-9 31-27 32-17 1-30-7-35-22 2-10 8-17 17-22Z" />
+              <path className="atlas-coastline" d="M86 159c36 10 74 7 115-7 33-12 65 1 94 38 16 21 42 26 77 16" />
+              <path className="atlas-coastline" d="M522 156c18 26 33 57 45 93 10 32 6 70-12 114" />
+              <path className="atlas-coastline" d="M627 171c40 25 73 55 99 91 31-4 67 3 108 21" />
+              <path className="atlas-coastline" d="M724 371c37 6 78 7 124 2" />
             </svg>
             <svg
               aria-hidden="true"
-              className="atlas-route-lines absolute inset-x-8 top-12 h-[63%] w-[calc(100%-4rem)]"
+              className="atlas-route-lines absolute inset-x-8 top-12 h-[61%] w-[calc(100%-4rem)]"
               viewBox="0 0 1000 430"
             >
-              <path d="M190 184c122-72 235-63 338 27 105 91 218 97 339 21" />
-              <path d="M258 236c96-45 187-39 273 19 88 59 174 47 260-35" />
-              <path d="M220 318c91 35 155 91 192 168" />
-              <path d="M510 172c81 61 144 141 188 240" />
-              <path d="M632 214c71-13 142 7 213 60" />
+              <path d="M176 206c119-73 238-60 356 38 103 86 210 84 322-8" />
+              <path d="M252 256c104-33 203-19 298 43 86 57 174 48 264-27" />
+              <path d="M318 330c51 27 95 69 132 127" />
+              <path d="M608 180c74 61 133 139 176 234" />
+              <path d="M661 226c66-17 131-5 196 36" />
             </svg>
             {regionGlows.map(({ count, region }, index) => {
               const anchor = regionAnchors[region];
@@ -195,7 +203,7 @@ export function Hero({ reports }: { reports: Report[] }) {
                 anchor.latitude,
                 anchor.longitude,
               );
-              const size = Math.min(126, 64 + count * 14);
+              const size = Math.min(82, 40 + count * 8);
               const style: ClusterStyle = {
                 "--cluster-size": `${size}px`,
                 left: `${position.left}%`,
@@ -224,7 +232,7 @@ export function Hero({ reports }: { reports: Report[] }) {
 
             {markerReports.map((report, index) => {
               const position = getReportPosition(report);
-              const size = index < 8 ? 52 : 42;
+              const size = index < 8 ? 36 : 28;
               const labelSide = getLabelSide(report, position.left);
 
               return (

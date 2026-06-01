@@ -392,7 +392,8 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     region,
     reportedDateTime: formatDateTime(reportedRaw),
     shortLabel:
-      readString(row, "short_label", "map_label") ?? makeShortLabel(title),
+      readString(row, "short_label", "map_label") ??
+      makeShortLabel(title, readString(row, "location", "place", "location_name")),
     sourceName:
       readString(row, "source_name", "source", "publisher") ??
       "Source not listed",
@@ -593,7 +594,41 @@ function getMarkerClass(category: string) {
   }
 }
 
-function makeShortLabel(title: string) {
+function makeShortLabel(title: string, location?: string) {
+  const source = `${title} ${location ?? ""}`.toLowerCase();
+
+  if (source.includes("montreal")) {
+    return "Montreal Orb";
+  }
+
+  if (source.includes("sedona")) {
+    return "Sedona Triangle";
+  }
+
+  if (source.includes("popocatepetl") || source.includes("popocat")) {
+    return "Popocatepetl Watch";
+  }
+
+  if (source.includes("sao paulo") || source.includes("sao")) {
+    return "Sao Paulo Signal";
+  }
+
+  if (source.includes("scottish") || source.includes("scotland")) {
+    return "Scottish Castle Echo";
+  }
+
+  if (source.includes("tokyo")) {
+    return "Tokyo Sky Pulse";
+  }
+
+  if (source.includes("outback") || source.includes("northern territory")) {
+    return "Outback Fire Disc";
+  }
+
+  if (source.includes("transylvania")) {
+    return "Transylvania Shadow";
+  }
+
   const cleaned = title
     .replace(/\s+(above|near|over|thread|resurfaces).*/i, "")
     .replace(/\s+/g, " ")
