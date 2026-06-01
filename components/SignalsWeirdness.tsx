@@ -28,6 +28,11 @@ type OddConLevel = {
   range: string;
 };
 
+type RegionSummary = CountItem & {
+  mood: string;
+  topCategory: string;
+};
+
 const categoryLabels = [
   "UFO / UAP",
   "Strange Lights",
@@ -55,6 +60,25 @@ const timeWindows = [
 
 const weekdayLabels = ["", "Mon", "", "Wed", "", "Fri", ""];
 
+const categoryMoods: Record<string, string> = {
+  "Haunted Places": "Quietly haunted",
+  "Local Legends": "Folklore warming up",
+  Paranormal: "Explainable-ish",
+  "Strange Lights": "Glowing suspiciously",
+  UFO: "Sky is blinking",
+  "UFO / UAP": "Sky is blinking",
+  Unknown: "Needs more witnesses",
+};
+
+const regionMoods: Record<Exclude<RegionFilter, "All">, string> = {
+  "East Asia": "Sky pulse detected",
+  "Latin America": "Volcano watch",
+  "North America": "Active skies",
+  Oceania: "Outback signal",
+  "UK & Ireland": "Quietly haunted",
+  "Western Europe": "Old stones, odd signals",
+};
+
 export function SignalsWeirdness({ reports }: { reports: Report[] }) {
   const datedReports = reports
     .map((report) => ({ report, eventDate: parseReportDate(report) }))
@@ -64,6 +88,7 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
   const latestDate = getLatestDate(datedReports) ?? new Date();
   const latestSevenDays = countReportsSince(datedReports, latestDate, 7);
   const regionCounts = countRegions(reports);
+  const regionSummaries = getRegionSummaries(reports);
   const categoryCounts = countCategories(reports);
   const heatmapCells = createWeirdnessGrid(datedReports, latestDate);
   const peakWindow = getPeakWindow(datedReports);
@@ -99,23 +124,19 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
           <WeirdnessGrid cells={heatmapCells} totalReports={reports.length} />
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid items-start gap-5 lg:grid-cols-2 xl:grid-cols-4">
           <OddConPanel
             oddCon={oddCon}
             recentCount={latestSevenDays}
             topCategory={topCategory}
           />
-          <SignalPulse
-            eyebrow="Category Pulse"
+          <CategoryPulse
             items={categoryCounts}
-            title="What kind of weird?"
-            variant="category"
+            className="xl:col-span-3"
           />
-          <SignalPulse
-            eyebrow="Region Pulse"
-            items={regionCounts}
-            title="Where the map twitches"
-            variant="region"
+          <RegionPulse
+            regions={regionSummaries}
+            className="xl:col-span-3"
           />
           <PeakWindowCard
             mostActiveRegion={mostActiveRegion}
@@ -304,46 +325,178 @@ function OddConPanel({
   );
 }
 
-function SignalPulse({
-  eyebrow,
+function CategoryPulse({
+  className = "",
   items,
-  title,
-  variant,
 }: {
-  eyebrow: string;
+  className?: string;
   items: CountItem[];
-  title: string;
-  variant: "category" | "region";
 }) {
   const max = Math.max(...items.map((item) => item.count), 1);
 
   return (
-    <article className="field-card rounded-lg p-5">
+    <article className={`field-card rounded-lg p-5 ${className}`}>
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
-        {eyebrow}
+        Category Pulse
       </p>
-      <h3 className="mt-2 text-xl font-semibold text-parchment">{title}</h3>
-      <div className="mt-5 space-y-3">
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h3 className="text-xl font-semibold text-parchment">
+            What kind of weird?
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-muted">
+            Counts are real. Conclusions are not.
+          </p>
+        </div>
+        <span className="w-fit rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs text-muted">
+          Public report activity
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((item, index) => {
-          const width = `${Math.max((item.count / max) * 100, item.count > 0 ? 8 : 0)}%`;
+          const width = getMeterWidth(item.count, max);
+          const level = getSignalLevel(item.count, max);
 
           return (
             <div
-              className="rounded-md border border-night-800 bg-night-950/50 p-3"
-              key={`${variant}-${item.label}`}
+              className="relative overflow-hidden rounded-md border border-night-800 bg-night-950/50 p-3"
+              key={`category-${item.label}`}
             >
-              <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-                <span className="truncate text-muted">{item.label}</span>
-                <span className="font-semibold text-parchment">{item.count}</span>
+              <span
+                aria-hidden="true"
+                className={`absolute -right-6 -top-6 size-16 rounded-full blur-2xl ${getSignalGlowClass(
+                  index,
+                )}`}
+              />
+              <div className="relative flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className={`size-2.5 shrink-0 rounded-full ${getSignalDotClass(
+                      index,
+                    )}`}
+                  />
+                  <p className="truncate text-sm font-semibold text-parchment">
+                    {item.label}
+                  </p>
+                </div>
+                <span className="rounded border border-night-800 bg-night-900 px-2 py-1 text-xs font-semibold text-muted">
+                  {item.count}
+                </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-night-800">
+              <p className="relative mt-3 text-xs leading-5 text-muted">
+                {categoryMoods[item.label] ?? "Signal unclear"}
+              </p>
+              <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-night-800">
                 <div
-                  className={`h-full rounded-full ${getPulseClass(
-                    variant,
-                    index,
+                  className={`h-full rounded-full ${getSignalMeterClass(index)}`}
+                  style={{ width }}
+                />
+              </div>
+              <div className="relative mt-3 flex gap-1">
+                {Array.from({ length: 5 }, (_, signalIndex) => (
+                  <span
+                    className={`h-1.5 flex-1 rounded-full border ${
+                      signalIndex < level
+                        ? getSignalSegmentClass(index)
+                        : "border-night-800 bg-night-900"
+                    }`}
+                    key={signalIndex}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </article>
+  );
+}
+
+function RegionPulse({
+  className = "",
+  regions,
+}: {
+  className?: string;
+  regions: RegionSummary[];
+}) {
+  const max = Math.max(...regions.map((region) => region.count), 1);
+
+  return (
+    <article className={`field-card rounded-lg p-5 ${className}`}>
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
+        Region Pulse
+      </p>
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h3 className="text-xl font-semibold text-parchment">
+            Where the map twitches
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-muted">
+            The map twitches where the weird gathers.
+          </p>
+        </div>
+        <span className="w-fit rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs text-signal-amber">
+          Unverified by default
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {regions.map((region, index) => {
+          const width = getMeterWidth(region.count, max);
+          const level = getSignalLevel(region.count, max);
+
+          return (
+            <div
+              className="relative overflow-hidden rounded-md border border-night-800 bg-night-950/50 p-3"
+              key={`region-${region.label}`}
+            >
+              <span
+                aria-hidden="true"
+                className={`absolute -right-8 -top-8 size-20 rounded-full blur-2xl ${getSignalGlowClass(
+                  index + 1,
+                )}`}
+              />
+              <div className="relative flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-parchment">
+                    {region.label}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted">
+                    {region.mood}
+                  </p>
+                </div>
+                <span className="rounded border border-night-800 bg-night-900 px-2 py-1 text-xs font-semibold text-muted">
+                  {region.count}
+                </span>
+              </div>
+              <div className="relative mt-3 flex items-center gap-2 text-xs text-muted">
+                <span
+                  className={`size-2 rounded-full ${getSignalDotClass(
+                    index + 1,
+                  )}`}
+                />
+                <span className="truncate">Top: {region.topCategory}</span>
+              </div>
+              <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-night-800">
+                <div
+                  className={`h-full rounded-full ${getSignalMeterClass(
+                    index + 1,
                   )}`}
                   style={{ width }}
                 />
+              </div>
+              <div className="relative mt-3 grid grid-cols-5 gap-1">
+                {Array.from({ length: 5 }, (_, signalIndex) => (
+                  <span
+                    className={`h-1.5 rounded-full border ${
+                      signalIndex < level
+                        ? getSignalSegmentClass(index + 1)
+                        : "border-night-800 bg-night-900"
+                    }`}
+                    key={signalIndex}
+                  />
+                ))}
               </div>
             </div>
           );
@@ -449,6 +602,24 @@ function countRegions(reports: Report[]) {
       count: reports.filter((report) => report.region === region).length,
       label: region,
     }));
+}
+
+function getRegionSummaries(reports: Report[]): RegionSummary[] {
+  return regionFilters
+    .filter((region): region is Exclude<RegionFilter, "All"> => region !== "All")
+    .map((region) => {
+      const regionReports = reports.filter((report) => report.region === region);
+      const topCategory =
+        getTopItem(countCategories(regionReports).filter((item) => item.count > 0))
+          ?.label ?? "No signal yet";
+
+      return {
+        count: regionReports.length,
+        label: region,
+        mood: regionMoods[region],
+        topCategory,
+      };
+    });
 }
 
 function createWeirdnessGrid(
@@ -613,21 +784,64 @@ function getHeatCellClass(intensity: number) {
   ][intensity];
 }
 
-function getPulseClass(variant: "category" | "region", index: number) {
-  if (variant === "category") {
-    return [
-      "bg-signal-teal",
-      "bg-signal-amber",
-      "bg-signal-violet",
-      "bg-signal-ember",
-      "bg-parchment/70",
-      "bg-muted",
-    ][index % 6];
+function getMeterWidth(count: number, max: number) {
+  if (count === 0) {
+    return "0%";
   }
 
-  return index % 2 === 0
-    ? "bg-gradient-to-r from-signal-teal/50 to-signal-teal"
-    : "bg-gradient-to-r from-signal-violet/55 to-signal-amber";
+  return `${Math.max((count / max) * 100, 18)}%`;
+}
+
+function getSignalLevel(count: number, max: number) {
+  if (count === 0) {
+    return 0;
+  }
+
+  return Math.max(1, Math.ceil((count / max) * 5));
+}
+
+function getSignalDotClass(index: number) {
+  return [
+    "bg-signal-teal shadow-[0_0_18px_rgba(72,224,194,0.55)]",
+    "bg-signal-amber shadow-[0_0_18px_rgba(246,180,75,0.5)]",
+    "bg-signal-violet shadow-[0_0_18px_rgba(139,92,246,0.5)]",
+    "bg-signal-ember shadow-[0_0_18px_rgba(249,115,91,0.5)]",
+    "bg-parchment/80 shadow-[0_0_18px_rgba(243,240,232,0.24)]",
+    "bg-muted shadow-[0_0_18px_rgba(167,173,188,0.28)]",
+  ][index % 6];
+}
+
+function getSignalGlowClass(index: number) {
+  return [
+    "bg-signal-teal/20",
+    "bg-signal-amber/20",
+    "bg-signal-violet/20",
+    "bg-signal-ember/20",
+    "bg-parchment/10",
+    "bg-muted/15",
+  ][index % 6];
+}
+
+function getSignalMeterClass(index: number) {
+  return [
+    "bg-gradient-to-r from-signal-teal/40 to-signal-teal",
+    "bg-gradient-to-r from-signal-amber/40 to-signal-amber",
+    "bg-gradient-to-r from-signal-violet/40 to-signal-violet",
+    "bg-gradient-to-r from-signal-ember/40 to-signal-ember",
+    "bg-gradient-to-r from-parchment/30 to-parchment/80",
+    "bg-gradient-to-r from-muted/30 to-muted",
+  ][index % 6];
+}
+
+function getSignalSegmentClass(index: number) {
+  return [
+    "border-signal-teal/40 bg-signal-teal/45",
+    "border-signal-amber/40 bg-signal-amber/45",
+    "border-signal-violet/40 bg-signal-violet/45",
+    "border-signal-ember/40 bg-signal-ember/45",
+    "border-parchment/30 bg-parchment/35",
+    "border-muted/35 bg-muted/35",
+  ][index % 6];
 }
 
 function toDateKey(date: Date) {
