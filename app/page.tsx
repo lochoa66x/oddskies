@@ -6,6 +6,7 @@ import { LatestReports } from "@/components/LatestReports";
 import { OddSkiesOracle } from "@/components/OddSkiesOracle";
 import { SignalsWeirdness } from "@/components/SignalsWeirdness";
 import { TonightsOddSkies } from "@/components/TonightsOddSkies";
+import { WeirdShelf } from "@/components/WeirdShelf";
 import { getReports } from "@/lib/reports";
 
 export default async function Home() {
@@ -17,6 +18,7 @@ export default async function Home() {
       <CategoryStrip />
       <FeaturedRegions />
       <SignalsWeirdness reports={reports} />
+      <WeirdShelf />
       <TonightsOddSkies />
       <LatestReports reports={reports} />
       <OddSkiesOracle />
