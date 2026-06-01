@@ -19,9 +19,10 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 16% 8%, rgba(72, 224, 194, 0.1), transparent 26rem),
-    radial-gradient(circle at 80% 10%, rgba(139, 92, 246, 0.12), transparent 24rem),
-    radial-gradient(circle at 68% 76%, rgba(249, 115, 91, 0.08), transparent 24rem),
+    radial-gradient(circle at 12% 4%, rgba(72, 224, 194, 0.13), transparent 24rem),
+    radial-gradient(circle at 82% 8%, rgba(139, 92, 246, 0.16), transparent 24rem),
+    radial-gradient(circle at 70% 76%, rgba(249, 115, 91, 0.1), transparent 24rem),
+    linear-gradient(180deg, rgba(7, 10, 18, 0.2), rgba(7, 10, 18, 0.96)),
     #070a12;
   color: #f3f0e8;
   font-family:
@@ -54,21 +55,114 @@ a {
   background-size: 42px 42px;
 }
 
+.hero-shell::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    radial-gradient(ellipse at 68% 21%, rgba(72, 224, 194, 0.12), transparent 18rem),
+    radial-gradient(ellipse at 52% 105%, rgba(246, 180, 75, 0.09), transparent 24rem),
+    linear-gradient(115deg, rgba(72, 224, 194, 0.04), transparent 34%, rgba(139, 92, 246, 0.07));
+  pointer-events: none;
+}
+
+.paranormal-haze {
+  background:
+    radial-gradient(ellipse at 17% 72%, rgba(72, 224, 194, 0.08), transparent 24rem),
+    radial-gradient(ellipse at 77% 42%, rgba(139, 92, 246, 0.11), transparent 27rem),
+    linear-gradient(180deg, rgba(7, 10, 18, 0), rgba(7, 10, 18, 0.62));
+  filter: blur(0.2px);
+  pointer-events: none;
+}
+
+.sky-noise {
+  background-image:
+    radial-gradient(circle, rgba(243, 240, 232, 0.18) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(72, 224, 194, 0.2) 0 1px, transparent 1.5px);
+  background-position:
+    0 0,
+    24px 36px;
+  background-size:
+    120px 120px,
+    170px 170px;
+  mask-image: linear-gradient(180deg, black, transparent 70%);
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.ufo-beam {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(72, 224, 194, 0.22), transparent 17%),
+    linear-gradient(180deg, rgba(72, 224, 194, 0.16), rgba(139, 92, 246, 0.06) 58%, transparent);
+  clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);
+  filter: blur(8px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.terrain-silhouette {
+  background:
+    radial-gradient(ellipse at 12% 100%, rgba(72, 224, 194, 0.06), transparent 18rem),
+    linear-gradient(156deg, transparent 0 36%, rgba(9, 13, 23, 0.9) 36% 47%, transparent 47%),
+    linear-gradient(168deg, transparent 0 46%, rgba(6, 9, 16, 0.95) 46% 61%, transparent 61%),
+    linear-gradient(180deg, transparent, rgba(3, 5, 9, 0.82));
+  opacity: 0.66;
+  pointer-events: none;
+}
+
 .atlas-grid {
   background:
-    radial-gradient(circle at 22% 36%, rgba(72, 224, 194, 0.1), transparent 22%),
-    radial-gradient(circle at 68% 42%, rgba(139, 92, 246, 0.12), transparent 24%),
-    radial-gradient(circle at 58% 70%, rgba(249, 115, 91, 0.12), transparent 18%),
+    radial-gradient(circle at 22% 36%, rgba(72, 224, 194, 0.1), transparent 19%),
+    radial-gradient(circle at 68% 42%, rgba(139, 92, 246, 0.13), transparent 22%),
+    radial-gradient(circle at 58% 70%, rgba(249, 115, 91, 0.12), transparent 16%),
+    repeating-radial-gradient(circle at 58% 45%, rgba(72, 224, 194, 0.08) 0 1px, transparent 1px 46px),
     linear-gradient(rgba(167, 173, 188, 0.075) 1px, transparent 1px),
     linear-gradient(90deg, rgba(167, 173, 188, 0.075) 1px, transparent 1px),
     #101522;
-  background-size: auto, auto, auto, 36px 36px, 36px 36px, auto;
+  background-size: auto, auto, auto, auto, 36px 36px, 36px 36px, auto;
+}
+
+.atlas-landmass {
+  color: rgba(72, 224, 194, 0.14);
+  filter:
+    drop-shadow(0 0 22px rgba(72, 224, 194, 0.1))
+    drop-shadow(0 0 48px rgba(139, 92, 246, 0.08));
+  opacity: 0.85;
+}
+
+.atlas-landmass path {
+  fill: currentColor;
+  stroke: rgba(72, 224, 194, 0.22);
+  stroke-width: 1.4;
+}
+
+.atlas-route-lines {
+  fill: none;
+  opacity: 0.48;
+}
+
+.atlas-route-lines path {
+  animation: route-glow 5.6s ease-in-out infinite;
+  stroke: rgba(72, 224, 194, 0.42);
+  stroke-dasharray: 5 11;
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+.radar-ring {
+  animation: radar-breathe 4.8s ease-in-out infinite;
+  border: 1px solid rgba(72, 224, 194, 0.18);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 0 28px rgba(72, 224, 194, 0.06),
+    0 0 28px rgba(72, 224, 194, 0.08);
+  transform: translate(-50%, -50%);
 }
 
 .heat-cluster {
   animation: heat-pulse 3.8s ease-in-out infinite;
   background:
-    radial-gradient(circle, rgba(246, 180, 75, 0.5) 0 18%, rgba(249, 115, 91, 0.3) 35%, rgba(249, 115, 91, 0) 72%);
+    radial-gradient(circle, rgba(246, 180, 75, 0.5) 0 12%, rgba(249, 115, 91, 0.28) 32%, rgba(249, 115, 91, 0.05) 62%, rgba(249, 115, 91, 0) 74%);
   box-shadow: 0 0 46px rgba(249, 115, 91, 0.32);
 }
 
@@ -93,6 +187,10 @@ a {
   filter: drop-shadow(0 0 22px rgba(72, 224, 194, 0.08));
 }
 
+.detail-atlas .atlas-landmass {
+  color: rgba(72, 224, 194, 0.12);
+}
+
 .atlas-pin {
   animation: pin-pulse 3.2s ease-in-out infinite;
   background: #f6b44b;
@@ -115,9 +213,170 @@ a {
   color: #48e0c2;
 }
 
+.category-chip {
+  box-shadow: inset 0 1px 0 rgba(243, 240, 232, 0.035);
+}
+
+.category-symbol {
+  position: relative;
+  display: inline-block;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  border: 1px solid rgba(72, 224, 194, 0.22);
+  border-radius: 0.35rem;
+  background: rgba(7, 10, 18, 0.42);
+}
+
+.category-symbol::before,
+.category-symbol::after {
+  position: absolute;
+  content: "";
+}
+
+.category-symbol-ufo::before {
+  left: 0.25rem;
+  top: 0.47rem;
+  width: 0.8rem;
+  height: 0.34rem;
+  border: 1px solid rgba(72, 224, 194, 0.9);
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(72, 224, 194, 0.45);
+}
+
+.category-symbol-ufo::after {
+  left: 0.47rem;
+  top: 0.74rem;
+  width: 0.38rem;
+  height: 0.42rem;
+  background: linear-gradient(180deg, rgba(72, 224, 194, 0.35), transparent);
+  clip-path: polygon(36% 0, 64% 0, 100% 100%, 0 100%);
+}
+
+.category-symbol-lights::before,
+.category-symbol-lights::after {
+  border-radius: 999px;
+  background: #f6b44b;
+  box-shadow: 0 0 10px rgba(246, 180, 75, 0.72);
+}
+
+.category-symbol-lights::before {
+  left: 0.32rem;
+  top: 0.36rem;
+  width: 0.3rem;
+  height: 0.3rem;
+}
+
+.category-symbol-lights::after {
+  right: 0.28rem;
+  bottom: 0.34rem;
+  width: 0.42rem;
+  height: 0.42rem;
+}
+
+.category-symbol-haunted::before {
+  left: 0.35rem;
+  top: 0.31rem;
+  width: 0.64rem;
+  height: 0.78rem;
+  border: 1px solid rgba(139, 92, 246, 0.9);
+  border-radius: 0.4rem 0.4rem 0.12rem 0.12rem;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+}
+
+.category-symbol-haunted::after {
+  left: 0.53rem;
+  top: 0.58rem;
+  width: 0.09rem;
+  height: 0.09rem;
+  border-radius: 999px;
+  background: #f3f0e8;
+  box-shadow: 0.24rem 0 #f3f0e8;
+}
+
+.category-symbol-paranormal::before {
+  inset: 0.32rem;
+  border: 1px solid rgba(249, 115, 91, 0.9);
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(249, 115, 91, 0.44);
+}
+
+.category-symbol-paranormal::after {
+  left: 0.6rem;
+  top: 0.22rem;
+  width: 0.14rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: rgba(249, 115, 91, 0.8);
+  transform: rotate(28deg);
+}
+
+.category-symbol-legends::before {
+  left: 0.33rem;
+  top: 0.34rem;
+  width: 0.7rem;
+  height: 0.68rem;
+  border: 1px solid rgba(243, 240, 232, 0.82);
+  border-radius: 0.12rem;
+}
+
+.category-symbol-legends::after {
+  left: 0.67rem;
+  top: 0.37rem;
+  width: 1px;
+  height: 0.62rem;
+  background: rgba(243, 240, 232, 0.72);
+}
+
+.category-symbol-unknown::before {
+  left: 0.55rem;
+  top: 0.24rem;
+  width: 0.28rem;
+  height: 0.56rem;
+  border: 1px solid rgba(167, 173, 188, 0.9);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+  transform: rotate(32deg);
+}
+
+.category-symbol-unknown::after {
+  left: 0.63rem;
+  bottom: 0.28rem;
+  width: 0.12rem;
+  height: 0.12rem;
+  border-radius: 999px;
+  background: rgba(167, 173, 188, 0.95);
+}
+
 .scan-line {
   background: linear-gradient(90deg, transparent, rgba(72, 224, 194, 0.38), transparent);
   animation: scan 5.5s ease-in-out infinite;
+}
+
+@keyframes radar-breathe {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: translate(-50%, -50%) scale(0.86);
+  }
+
+  50% {
+    opacity: 0.72;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+@keyframes route-glow {
+  0%,
+  100% {
+    opacity: 0.32;
+    stroke-dashoffset: 0;
+  }
+
+  50% {
+    opacity: 0.72;
+    stroke-dashoffset: -26;
+  }
 }
 
 @keyframes heat-pulse {

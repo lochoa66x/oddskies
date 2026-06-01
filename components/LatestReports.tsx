@@ -169,10 +169,26 @@ export function LatestReports() {
               </p>
             </div>
 
-            <div className="atlas-grid relative min-h-[260px] overflow-hidden">
-              <div className="absolute left-[14%] top-[28%] h-20 w-36 rounded-[50%] atlas-shape" />
-              <div className="absolute left-[48%] top-[38%] h-28 w-48 rounded-[46%_54%_48%_52%] atlas-shape" />
-              <div className="absolute left-[68%] top-[64%] h-16 w-28 rounded-[50%] atlas-shape" />
+            <div className="atlas-grid detail-atlas relative min-h-[260px] overflow-hidden">
+              <svg
+                aria-hidden="true"
+                className="atlas-landmass absolute inset-x-5 top-8 h-[70%] w-[calc(100%-2.5rem)]"
+                viewBox="0 0 620 300"
+              >
+                <path d="M44 92c26-36 79-45 125-31 35 11 62 37 100 36 35-1 62-29 100-20 39 9 55 48 40 78-17 36-68 30-102 53-39 27-74 59-124 49-43-9-58-45-89-66-29-20-72-18-87-52-7-17 6-33 37-47Z" />
+                <path d="M390 73c44-31 119-17 151 25 29 38 13 88-34 106-43 16-111 5-143-31-31-36-17-70 26-100Z" />
+                <path d="M398 226c29-22 83-22 107 2 25 24 12 58-24 67-34 9-78-9-91-37-5-11-1-22 8-32Z" />
+              </svg>
+              <svg
+                aria-hidden="true"
+                className="atlas-route-lines absolute inset-x-8 top-9 h-[58%] w-[calc(100%-4rem)]"
+                viewBox="0 0 560 240"
+              >
+                <path d="M75 94c73-39 148-35 225 12 50 30 103 31 166 4" />
+                <path d="M166 180c71-52 155-59 252-20" />
+              </svg>
+              <span className="radar-ring absolute left-[48%] top-[35%] size-28" />
+              <span className="radar-ring absolute left-[68%] top-[57%] size-20 [animation-delay:1.3s]" />
               <span className="atlas-pin absolute left-[57%] top-[43%] size-3 rounded-full" />
               <span className="atlas-pin absolute left-[33%] top-[61%] size-2 rounded-full [animation-delay:0.7s]" />
               <span className="atlas-pin absolute left-[76%] top-[29%] size-2 rounded-full [animation-delay:1.4s]" />
