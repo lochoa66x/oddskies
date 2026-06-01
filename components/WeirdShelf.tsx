@@ -83,43 +83,11 @@ export function WeirdShelf() {
           ))}
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-[0.82fr_1.18fr]">
-          <article className="field-card rounded-lg p-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
-              Reality Disturbance Watch
-            </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-md border border-night-800 bg-night-950/60 p-4">
-                <p className="font-semibold text-parchment">Collider Watch</p>
-                <p className="mt-3 text-sm leading-6 text-muted">
-                  When the Large Hadron Collider has scheduled activity,
-                  reality is expected to remain mostly intact.
-                </p>
-              </div>
-              <div className="rounded-md border border-night-800 bg-night-950/60 p-4">
-                <p className="font-semibold text-parchment">
-                  Mandela Effect Advisory
-                </p>
-                <p className="mt-3 text-sm leading-6 text-muted">
-                  Low to Medium. If your favorite movie quote changes, please
-                  check three sources before blaming the collider.
-                </p>
-              </div>
-            </div>
-          </article>
-
-          <article className="rounded-lg border border-signal-amber/25 bg-signal-amber/10 p-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
-              Honesty Line
-            </p>
-            <p className="mt-3 text-sm leading-6 text-signal-amber">
-              OddSkies jokes about reality glitches and internet weirdness, but
-              we do not claim that conspiracies, scientific experiments, moon
-              phases, or cosmic events cause UFOs, hauntings, Mandela Effects,
-              portals, or timeline shifts.
-            </p>
-          </article>
-        </div>
+        <p className="mt-5 rounded-lg border border-night-800 bg-night-900/70 p-4 text-sm leading-6 text-muted">
+          Weird Shelf is culture flavor, not evidence. OddSkies treats folklore,
+          memory glitches, and internet weirdness as odd little artifacts, not
+          confirmed truth.
+        </p>
       </div>
     </section>
   );

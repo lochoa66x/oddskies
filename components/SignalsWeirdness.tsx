@@ -9,6 +9,18 @@ type CountItem = {
   label: string;
 };
 
+type DatedReport = {
+  eventDate: Date;
+  report: Report;
+};
+
+type GridCell = {
+  count: number;
+  dateLabel: string;
+  intensity: number;
+  monthLabel: string;
+};
+
 type OddConLevel = {
   footnote?: boolean;
   level: number;
@@ -45,33 +57,17 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
   const datedReports = reports
     .map((report) => ({ report, eventDate: parseReportDate(report) }))
     .filter(
-      (entry): entry is { report: Report; eventDate: Date } =>
-        entry.eventDate !== null,
+      (entry): entry is DatedReport => entry.eventDate !== null,
     );
-  const now = new Date();
-  const lastSevenDays = datedReports.filter(
-    ({ eventDate }) => now.getTime() - eventDate.getTime() <= 7 * 24 * 60 * 60 * 1000,
-  ).length;
+  const latestDate = getLatestDate(datedReports) ?? new Date();
+  const latestSevenDays = countReportsSince(datedReports, latestDate, 7);
   const regionCounts = countRegions(reports);
   const categoryCounts = countCategories(reports);
-  const activityOverTime = countByDay(datedReports);
+  const heatmapCells = createWeirdnessGrid(datedReports, latestDate);
+  const peakWindow = getPeakWindow(datedReports);
   const mostActiveRegion = getTopItem(regionCounts)?.label ?? "Region unclear";
   const topCategory = getTopItem(categoryCounts)?.label ?? "Unknown";
-  const peakWindow = getPeakWindow(datedReports);
-  const oddCon = getOddConLevel(lastSevenDays);
-
-  const stats = [
-    { label: "Total reports", value: reports.length.toString() },
-    { label: "Last 7 days", value: lastSevenDays.toString() },
-    { label: "Most active region", value: mostActiveRegion },
-    { label: "Top category", value: topCategory },
-    { label: "Peak weirdness window", value: peakWindow },
-    {
-      label: "OddSkies activity level",
-      value: `OddCon ${oddCon.level}`,
-      subvalue: oddCon.name,
-    },
-  ];
+  const oddCon = oddConLevels[2];
 
   return (
     <section
@@ -82,7 +78,7 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
-              Field Patterns
+              Signal Board
             </p>
             <h2 className="mt-3 text-3xl font-semibold text-parchment md:text-5xl">
               Signals & Weirdness
@@ -97,91 +93,229 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {stats.map((stat) => (
-            <article
-              className="field-card rounded-lg p-4"
-              key={stat.label}
-            >
-              <p className="text-sm text-muted">{stat.label}</p>
-              <p className="mt-3 text-2xl font-semibold text-parchment">
-                {stat.value}
-              </p>
-              {stat.subvalue ? (
-                <p className="mt-1 text-sm font-semibold text-signal-amber">
-                  {stat.subvalue}
-                </p>
-              ) : null}
-            </article>
-          ))}
+        <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+          <WeirdnessGrid cells={heatmapCells} totalReports={reports.length} />
+          <OddConPanel
+            oddCon={oddCon}
+            recentCount={latestSevenDays}
+            topCategory={topCategory}
+          />
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-          <ChartCard
-            items={activityOverTime}
-            note="Based on unverified public/demo reports."
-            title="Report activity over time"
-          />
-          <ChartCard
+        <div className="mt-5 grid gap-5 lg:grid-cols-3">
+          <SignalPulse
+            eyebrow="Category Pulse"
             items={categoryCounts}
-            title="Report mix by category"
+            title="What kind of weird?"
             variant="category"
           />
-        </div>
-
-        <div className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <ChartCard
+          <SignalPulse
+            eyebrow="Region Pulse"
             items={regionCounts}
-            title="Featured mystery regions"
+            title="Where the map twitches"
             variant="region"
           />
-          <OddConPanel oddCon={oddCon} recentCount={lastSevenDays} />
+          <PeakWindowCard
+            mostActiveRegion={mostActiveRegion}
+            peakWindow={peakWindow}
+          />
         </div>
+
+        <RealityDisturbanceWatch />
       </div>
     </section>
   );
 }
 
-function ChartCard({
-  items,
-  note,
-  title,
-  variant = "time",
+function WeirdnessGrid({
+  cells,
+  totalReports,
 }: {
+  cells: GridCell[];
+  totalReports: number;
+}) {
+  return (
+    <article className="field-card rounded-lg p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
+            Weirdness Activity
+          </p>
+          <h3 className="mt-2 text-2xl font-semibold text-parchment">
+            Tiny squares of public weird
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            Each cell is a day of unverified report activity. Empty squares are
+            quiet. Bright squares mean the map had snacks.
+          </p>
+        </div>
+        <span className="w-fit rounded-md border border-night-800 bg-night-950 px-3 py-2 text-sm text-muted">
+          {totalReports} reports indexed
+        </span>
+      </div>
+
+      <div className="mt-6 overflow-x-auto pb-2">
+        <div className="min-w-[34rem]">
+          <div className="mb-2 grid grid-flow-col grid-rows-1 gap-1">
+            {cells.map((cell, index) => (
+              <span
+                className="h-4 text-[0.62rem] uppercase tracking-[0.12em] text-muted"
+                key={`month-${cell.dateLabel}-${index}`}
+              >
+                {cell.monthLabel}
+              </span>
+            ))}
+          </div>
+          <div className="grid grid-flow-col grid-rows-7 gap-1">
+            {cells.map((cell) => (
+              <span
+                aria-label={`${cell.dateLabel}: ${cell.count} report${
+                  cell.count === 1 ? "" : "s"
+                }`}
+                className={`size-3.5 rounded-[0.18rem] border ${getHeatCellClass(
+                  cell.intensity,
+                )}`}
+                key={cell.dateLabel}
+                title={`${cell.dateLabel}: ${cell.count} report${
+                  cell.count === 1 ? "" : "s"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
+        <span>Based on event dates when available.</span>
+        <div className="flex items-center gap-2">
+          <span>Less weird</span>
+          {[0, 1, 2, 3, 4].map((intensity) => (
+            <span
+              className={`size-3 rounded-[0.18rem] border ${getHeatCellClass(
+                intensity,
+              )}`}
+              key={intensity}
+            />
+          ))}
+          <span>More weird</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function OddConPanel({
+  oddCon,
+  recentCount,
+  topCategory,
+}: {
+  oddCon: OddConLevel;
+  recentCount: number;
+  topCategory: string;
+}) {
+  return (
+    <article className="field-card rounded-lg p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
+            OddCon
+          </p>
+          <h3 className="mt-3 text-4xl font-semibold text-parchment">
+            OddCon {oddCon.level}
+          </h3>
+          <p className="mt-2 text-lg font-semibold text-signal-amber">
+            {oddCon.name}
+            {oddCon.footnote ? "*" : ""}
+          </p>
+        </div>
+        <span className="rounded-md border border-signal-amber/30 bg-signal-amber/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-signal-amber">
+          Calibrated
+        </span>
+      </div>
+
+      <div className="mt-6 grid gap-2">
+        {oddConLevels.map((level) => {
+          const active = level.level === oddCon.level;
+
+          return (
+            <div
+              className={`grid grid-cols-[5.5rem_1fr_auto] items-center gap-3 rounded-md border px-3 py-2 text-sm ${
+                active
+                  ? "border-signal-amber/50 bg-signal-amber/10"
+                  : "border-night-800 bg-night-950/55"
+              }`}
+              key={level.level}
+            >
+              <span className="font-semibold text-parchment">
+                OddCon {level.level}
+              </span>
+              <span className="text-muted">
+                {level.name}
+                {level.footnote ? "*" : ""}
+              </span>
+              <span className="hidden text-xs text-muted sm:inline">
+                {level.range}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 rounded-md border border-night-800 bg-night-950/60 p-4">
+        <p className="text-sm leading-6 text-muted">
+          Seed activity says {recentCount} reports in the latest 7-day window.
+          The panel is held at Suspiciously Interesting so demo data does not
+          start yelling.
+        </p>
+        <p className="mt-2 text-xs text-muted">Current loudest signal: {topCategory}</p>
+      </div>
+
+      <p className="mt-4 text-xs leading-5 text-muted">
+        *Probably. OddSkies does not confirm invasions, hauntings, saucers,
+        portals, ghosts, or suspiciously dramatic clouds.
+      </p>
+    </article>
+  );
+}
+
+function SignalPulse({
+  eyebrow,
+  items,
+  title,
+  variant,
+}: {
+  eyebrow: string;
   items: CountItem[];
-  note?: string;
   title: string;
-  variant?: "category" | "region" | "time";
+  variant: "category" | "region";
 }) {
   const max = Math.max(...items.map((item) => item.count), 1);
 
   return (
     <article className="field-card rounded-lg p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="text-xl font-semibold text-parchment">{title}</h3>
-          {note ? <p className="mt-1 text-sm text-muted">{note}</p> : null}
-        </div>
-        <span className="w-fit rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
-          Unverified inputs
-        </span>
-      </div>
-
-      <div className="mt-6 space-y-4">
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
+        {eyebrow}
+      </p>
+      <h3 className="mt-2 text-xl font-semibold text-parchment">{title}</h3>
+      <div className="mt-5 space-y-3">
         {items.map((item, index) => {
-          const width = `${Math.max((item.count / max) * 100, item.count > 0 ? 9 : 0)}%`;
+          const width = `${Math.max((item.count / max) * 100, item.count > 0 ? 8 : 0)}%`;
 
           return (
-            <div key={`${variant}-${item.label}`}>
+            <div
+              className="rounded-md border border-night-800 bg-night-950/50 p-3"
+              key={`${variant}-${item.label}`}
+            >
               <div className="mb-2 flex items-center justify-between gap-3 text-sm">
                 <span className="truncate text-muted">{item.label}</span>
-                <span className="font-semibold text-parchment">
-                  {item.count}
-                </span>
+                <span className="font-semibold text-parchment">{item.count}</span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full border border-night-800 bg-night-950">
+              <div className="h-2 overflow-hidden rounded-full bg-night-800">
                 <div
-                  className={`h-full rounded-full ${getBarClass(variant, index)}`}
+                  className={`h-full rounded-full ${getPulseClass(
+                    variant,
+                    index,
+                  )}`}
                   style={{ width }}
                 />
               </div>
@@ -193,65 +327,72 @@ function ChartCard({
   );
 }
 
-function OddConPanel({
-  oddCon,
-  recentCount,
+function PeakWindowCard({
+  mostActiveRegion,
+  peakWindow,
 }: {
-  oddCon: OddConLevel;
-  recentCount: number;
+  mostActiveRegion: string;
+  peakWindow: string;
 }) {
   return (
     <article className="field-card rounded-lg p-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-violet">
+        Peak Weirdness Window
+      </p>
+      <h3 className="mt-3 text-3xl font-semibold text-parchment">
+        {peakWindow}
+      </h3>
+      <p className="mt-4 text-sm leading-6 text-muted">
+        Reports tend to get louder around this window. Could be nightlife,
+        skywatching, folklore energy, or people looking up from their phones.
+      </p>
+      <div className="mt-5 rounded-md border border-night-800 bg-night-950/60 p-4">
+        <p className="text-xs uppercase tracking-[0.16em] text-muted">
+          Region twitch
+        </p>
+        <p className="mt-2 text-lg font-semibold text-signal-teal">
+          {mostActiveRegion}
+        </p>
+      </div>
+    </article>
+  );
+}
+
+function RealityDisturbanceWatch() {
+  return (
+    <article className="mt-5 rounded-lg border border-signal-amber/25 bg-signal-amber/10 p-5">
+      <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
-            OddSkies Activity Level
+            Reality Disturbance Watch
           </p>
-          <h3 className="mt-2 text-3xl font-semibold text-parchment">
-            OddCon {oddCon.level}
+          <h3 className="mt-3 text-2xl font-semibold text-parchment">
+            Reality is expected to remain mostly intact.
           </h3>
-          <p className="mt-2 text-lg font-semibold text-signal-amber">
-            {oddCon.name}
-            {oddCon.footnote ? "*" : ""}
-          </p>
         </div>
-        <span className="rounded-md border border-signal-teal/25 bg-signal-teal/10 px-3 py-2 text-sm text-signal-teal">
-          {recentCount} recent report{recentCount === 1 ? "" : "s"}
-        </span>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-md border border-signal-amber/20 bg-night-950/45 p-4">
+            <p className="font-semibold text-parchment">Collider Watch</p>
+            <p className="mt-3 text-sm leading-6 text-signal-amber">
+              When the Large Hadron Collider has scheduled activity, reality is
+              expected to remain mostly intact.
+            </p>
+          </div>
+          <div className="rounded-md border border-signal-amber/20 bg-night-950/45 p-4">
+            <p className="font-semibold text-parchment">
+              Mandela Effect Advisory
+            </p>
+            <p className="mt-3 text-sm leading-6 text-signal-amber">
+              Low to Medium. If your favorite movie quote changes, please check
+              three sources before blaming the collider.
+            </p>
+          </div>
+        </div>
       </div>
-
-      <div className="mt-6 grid gap-2 sm:grid-cols-5">
-        {oddConLevels.map((level) => {
-          const active = level.level === oddCon.level;
-
-          return (
-            <div
-              className={`rounded-md border p-3 ${
-                active
-                  ? "border-signal-amber/50 bg-signal-amber/10"
-                  : "border-night-800 bg-night-950/55"
-              }`}
-              key={level.level}
-            >
-              <p className="text-sm font-semibold text-parchment">
-                OddCon {level.level}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-muted">
-                {level.name}
-                {level.footnote ? "*" : ""}
-              </p>
-            </div>
-          );
-        })}
-      </div>
-
-      <p className="mt-5 text-sm leading-6 text-muted">
-        Current level is based on reports from the last 7 days. Quiet feed,
-        quiet skies. Busy feed, spicy skies.
-      </p>
-      <p className="mt-3 text-xs leading-5 text-muted">
-        *Probably. OddSkies does not confirm invasions, hauntings, saucers,
-        portals, ghosts, or suspiciously dramatic clouds.
+      <p className="mt-4 border-t border-signal-amber/20 pt-4 text-xs leading-5 text-signal-amber">
+        OddSkies jokes about reality glitches, but we do not claim scientific
+        experiments cause UFOs, hauntings, Mandela Effects, portals, or timeline
+        shifts.
       </p>
     </article>
   );
@@ -284,37 +425,61 @@ function countRegions(reports: Report[]) {
     }));
 }
 
-function countByDay(
-  datedReports: { eventDate: Date; report: Report }[],
-): CountItem[] {
-  const grouped = new Map<string, { count: number; date: Date }>();
+function createWeirdnessGrid(
+  datedReports: DatedReport[],
+  latestDate: Date,
+): GridCell[] {
+  const counts = new Map<string, number>();
 
   for (const { eventDate } of datedReports) {
-    const key = eventDate.toISOString().slice(0, 10);
-    const current = grouped.get(key);
-
-    grouped.set(key, {
-      count: (current?.count ?? 0) + 1,
-      date: eventDate,
-    });
+    const key = toDateKey(eventDate);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
   }
 
-  const items = Array.from(grouped.values())
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .slice(-8)
-    .map(({ count, date }) => ({
+  return Array.from({ length: 56 }, (_, index) => {
+    const date = new Date(latestDate);
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() - (55 - index));
+
+    const key = toDateKey(date);
+    const count = counts.get(key) ?? 0;
+
+    return {
       count,
-      label: new Intl.DateTimeFormat("en-US", {
+      dateLabel: new Intl.DateTimeFormat("en-US", {
         day: "numeric",
         month: "short",
       }).format(date),
-    }));
+      intensity: getHeatIntensity(count),
+      monthLabel: date.getDate() <= 7 ? formatMonth(date) : "",
+    };
+  });
+}
 
-  if (items.length > 0) {
-    return items;
+function getLatestDate(datedReports: DatedReport[]) {
+  if (datedReports.length === 0) {
+    return null;
   }
 
-  return [{ count: 0, label: "No dated reports" }];
+  return new Date(
+    Math.max(...datedReports.map(({ eventDate }) => eventDate.getTime())),
+  );
+}
+
+function countReportsSince(
+  datedReports: DatedReport[],
+  latestDate: Date,
+  days: number,
+) {
+  const start = new Date(latestDate);
+  start.setDate(start.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(latestDate);
+  end.setHours(23, 59, 59, 999);
+
+  return datedReports.filter(
+    ({ eventDate }) => eventDate >= start && eventDate <= end,
+  ).length;
 }
 
 function getCategoryLabel(category: string) {
@@ -343,7 +508,7 @@ function getCategoryLabel(category: string) {
   return "Unknown";
 }
 
-function getPeakWindow(datedReports: { eventDate: Date; report: Report }[]) {
+function getPeakWindow(datedReports: DatedReport[]) {
   const counts = timeWindows.map((window) => ({
     count: datedReports.filter(({ eventDate }) =>
       window.hours.includes(eventDate.getHours()),
@@ -358,27 +523,37 @@ function getTopItem(items: CountItem[]) {
   return [...items].sort((a, b) => b.count - a.count)[0];
 }
 
-function getOddConLevel(recentCount: number) {
-  if (recentCount >= 10) {
-    return oddConLevels[4];
+function getHeatIntensity(count: number) {
+  if (count >= 4) {
+    return 4;
   }
 
-  if (recentCount >= 6) {
-    return oddConLevels[3];
+  if (count >= 3) {
+    return 3;
   }
 
-  if (recentCount >= 3) {
-    return oddConLevels[2];
+  if (count >= 2) {
+    return 2;
   }
 
-  if (recentCount >= 1) {
-    return oddConLevels[1];
+  if (count >= 1) {
+    return 1;
   }
 
-  return oddConLevels[0];
+  return 0;
 }
 
-function getBarClass(variant: "category" | "region" | "time", index: number) {
+function getHeatCellClass(intensity: number) {
+  return [
+    "border-night-800 bg-night-950",
+    "border-signal-teal/20 bg-signal-teal/25",
+    "border-signal-teal/35 bg-signal-teal/55",
+    "border-signal-amber/45 bg-signal-amber/75",
+    "border-signal-ember/55 bg-signal-ember",
+  ][intensity];
+}
+
+function getPulseClass(variant: "category" | "region", index: number) {
   if (variant === "category") {
     return [
       "bg-signal-teal",
@@ -390,11 +565,15 @@ function getBarClass(variant: "category" | "region" | "time", index: number) {
     ][index % 6];
   }
 
-  if (variant === "region") {
-    return index % 2 === 0
-      ? "bg-gradient-to-r from-signal-teal/50 to-signal-teal"
-      : "bg-gradient-to-r from-signal-violet/55 to-signal-amber";
-  }
+  return index % 2 === 0
+    ? "bg-gradient-to-r from-signal-teal/50 to-signal-teal"
+    : "bg-gradient-to-r from-signal-violet/55 to-signal-amber";
+}
 
-  return "bg-gradient-to-r from-signal-teal via-signal-amber to-signal-ember";
+function toDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatMonth(date: Date) {
+  return new Intl.DateTimeFormat("en-US", { month: "short" }).format(date);
 }
