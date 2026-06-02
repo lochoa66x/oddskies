@@ -194,6 +194,79 @@ normalized_summary
 last_scored_at
 ```
 
+## Location Normalization
+
+V1.7 adds deterministic, dictionary-based location normalization for internal
+review. This is a safe prep step for mapping; it does not call an external
+geocoder, does not use AI, and does not verify reports.
+
+Principle:
+
+```text
+Locations are approximate review hints, not confirmed places.
+```
+
+The normalizer can fill:
+
+```text
+normalized_location_name
+normalized_region
+normalized_country
+normalized_latitude
+normalized_longitude
+location_confidence
+location_resolution
+location_warnings
+last_location_normalized_at
+```
+
+Run a preview:
+
+```bash
+npm run normalize:locations
+npm run normalize:locations -- --limit 20 --dry-run
+npm run normalize:locations -- --status new
+npm run normalize:locations -- --id <raw_source_id>
+```
+
+Write location fields only after review:
+
+```bash
+npm run normalize:locations -- --limit 20 --confirm
+npm run normalize:locations -- --id <raw_source_id> --confirm
+```
+
+The protected admin review UI can also normalize the selected raw source. That
+action updates only location fields on `public.raw_sources`.
+
+Safety notes:
+
+- No status changes happen during location normalization.
+- Nothing is inserted into `public.reports`.
+- Coordinates are approximate city, region, or public-landmark level.
+- Private-looking addresses, contact details, apartment/unit details, or
+  sensitive personal-location phrases are flagged as `private_or_sensitive`.
+- Rows with private/sensitive location warnings are blocked from promotion by
+  default.
+
+Useful SQL after normalization:
+
+```sql
+select
+  id,
+  status,
+  raw_title,
+  normalized_location_name,
+  normalized_region,
+  normalized_country,
+  location_confidence,
+  location_resolution,
+  location_warnings
+from public.raw_sources
+order by last_location_normalized_at desc nulls last
+limit 50;
+```
+
 ## Manual Promotion Helper
 
 Step 1: collect or insert a raw source into `public.raw_sources`.
@@ -202,7 +275,9 @@ Step 2: review pending raw sources. Reject unsafe, duplicate, private,
 low-context, joke-like, or synthetic-looking rows before anything reaches the
 public map.
 
-Step 3: dry-run a public report draft:
+Step 3: refresh curation score and normalize location when useful.
+
+Step 4: dry-run a public report draft:
 
 ```bash
 npm run promote:raw -- --id <raw_source_id> --dry-run
@@ -214,7 +289,7 @@ List recent staged rows:
 npm run promote:raw -- --list
 ```
 
-Step 4: publish only after review by adding `--confirm`:
+Step 5: publish only after review by adding `--confirm`:
 
 ```bash
 npm run promote:raw -- --id <raw_source_id> --confirm
@@ -237,7 +312,7 @@ The helper defaults to preview mode. It creates a `public.reports` row only
 with `--confirm`, then marks the staged `raw_sources` row as `approved` and
 stores the new report id in `approved_report_id`.
 
-Step 5: confirm the new row appears in `public.reports`. The public site can
+Step 6: confirm the new row appears in `public.reports`. The public site can
 display it as unverified, source-linked report data.
 
 Promotion requires server-only credentials:
@@ -287,11 +362,12 @@ Manual review flow:
 2. Open `/admin/raw-sources`.
 3. Filter pending sources.
 4. Review source text, URL, metadata, notes, and reason fields.
-5. Reject unsafe, junk, private, sensitive, harassing, doxxing, exact personal-location, duplicate, joke-like, AI-generated, or low-context items.
-6. Dry-run promotion and inspect the public report draft.
-7. Promote only good candidates.
-8. Confirm the promoted item appears in `public.reports`.
-9. The public site displays it as unverified report data.
+5. Refresh curation score and normalize approximate location when useful.
+6. Reject unsafe, junk, private, sensitive, harassing, doxxing, exact personal-location, duplicate, joke-like, AI-generated, or low-context items.
+7. Dry-run promotion and inspect the public report draft.
+8. Promote only good candidates.
+9. Confirm the promoted item appears in `public.reports`.
+10. The public site displays it as unverified report data.
 
 Protection model:
 

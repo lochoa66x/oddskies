@@ -14,8 +14,14 @@ export async function GET(request: NextRequest) {
     const rows = await listRawSources({
       categoryGuess: searchParams.get("categoryGuess") ?? undefined,
       curationLabel: searchParams.get("curationLabel") ?? undefined,
+      hasNormalizedLocation:
+        searchParams.get("hasNormalizedLocation") ?? undefined,
       hasLocationHint: searchParams.get("hasLocationHint") ?? undefined,
       limit: Number(searchParams.get("limit") ?? 50),
+      locationConfidence:
+        searchParams.get("locationConfidence") ?? undefined,
+      locationResolution:
+        searchParams.get("locationResolution") ?? undefined,
       platform: searchParams.get("platform") ?? undefined,
       possibleAiGenerated: searchParams.get("possibleAiGenerated") ?? undefined,
       possibleJoke: searchParams.get("possibleJoke") ?? undefined,

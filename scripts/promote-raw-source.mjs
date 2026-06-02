@@ -12,6 +12,9 @@ const REPORT_COLUMNS = [
   "country",
   "latitude",
   "longitude",
+  "location_confidence",
+  "location_resolution",
+  "location_warnings",
   "event_datetime",
   "reported_datetime",
   "source_name",
@@ -233,6 +236,16 @@ function getSafetyErrors(rawSource) {
     errors.push("Raw source has no usable title or text.");
   }
 
+  if (
+    rawSource.possible_private_location ||
+    rawSource.location_resolution === "private_or_sensitive" ||
+    rawSource.location_warnings?.includes("possible_private_location")
+  ) {
+    errors.push(
+      "This raw source has a private/sensitive location warning and cannot be promoted by default.",
+    );
+  }
+
   return errors;
 }
 
@@ -252,7 +265,11 @@ function buildReportDraft(rawSource, runtimeOptions) {
     category,
     confidence_label:
       runtimeOptions.overrides.confidenceLabel ?? "Needs human review",
-    country: runtimeOptions.overrides.country ?? null,
+    country:
+      runtimeOptions.overrides.country ??
+      readString(rawSource.normalized_country) ??
+      readString(rawSource.extracted_country_guess) ??
+      null,
     event_datetime:
       runtimeOptions.overrides.eventDateTime ??
       readString(rawSource.event_datetime_guess) ??
@@ -260,14 +277,25 @@ function buildReportDraft(rawSource, runtimeOptions) {
       readString(rawSource.collected_at),
     has_media: Boolean(readString(rawSource.raw_media_url)),
     is_featured: false,
-    latitude: runtimeOptions.overrides.latitude ?? null,
+    latitude:
+      runtimeOptions.overrides.latitude ?? readNumber(rawSource.normalized_latitude),
+    location_confidence: readString(rawSource.location_confidence),
     location_name:
       runtimeOptions.overrides.locationName ??
+      readString(rawSource.normalized_location_name) ??
+      readString(rawSource.extracted_location_text) ??
       readString(rawSource.location_hint) ??
       "Location under review",
-    longitude: runtimeOptions.overrides.longitude ?? null,
+    location_resolution: readString(rawSource.location_resolution),
+    location_warnings: rawSource.location_warnings ?? [],
+    longitude:
+      runtimeOptions.overrides.longitude ?? readNumber(rawSource.normalized_longitude),
     media_url: readString(rawSource.raw_media_url),
-    region: runtimeOptions.overrides.region ?? "Unknown",
+    region:
+      runtimeOptions.overrides.region ??
+      readString(rawSource.normalized_region) ??
+      readString(rawSource.extracted_region_guess) ??
+      "Unknown",
     reported_datetime:
       runtimeOptions.overrides.reportedDateTime ??
       readString(rawSource.posted_at) ??

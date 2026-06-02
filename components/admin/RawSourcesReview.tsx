@@ -21,8 +21,17 @@ type RawSource = {
   has_time_hint: boolean | null;
   id: string;
   language: string | null;
+  last_location_normalized_at: string | null;
   last_scored_at: string | null;
   location_hint: string | null;
+  location_confidence: string | null;
+  location_resolution: string | null;
+  location_warnings: string[] | null;
+  normalized_country: string | null;
+  normalized_latitude: number | null;
+  normalized_location_name: string | null;
+  normalized_longitude: number | null;
+  normalized_region: string | null;
   normalized_summary: string | null;
   normalized_title: string | null;
   platform: string;
@@ -48,7 +57,10 @@ type ReportDraft = {
   country: string | null;
   event_datetime: string | null;
   has_media: boolean;
+  location_confidence: string | null;
   location_name: string;
+  location_resolution: string | null;
+  location_warnings: string[];
   region: string;
   reported_datetime: string | null;
   source_name: string;
@@ -70,6 +82,20 @@ type RawSourceScoreResult = {
     curation_label: string;
     curation_reasons: string[];
     curation_score: number;
+  };
+};
+
+type RawSourceLocationResult = {
+  id: string;
+  location: {
+    location_confidence: string;
+    location_resolution: string;
+    location_warnings: string[];
+    normalized_country: string | null;
+    normalized_latitude: number | null;
+    normalized_location_name: string | null;
+    normalized_longitude: number | null;
+    normalized_region: string | null;
   };
 };
 
@@ -150,6 +176,19 @@ const curationLabelOptions = [
   "Strong candidate",
 ] as const;
 
+const locationConfidenceOptions = ["", "none", "low", "medium", "high"] as const;
+
+const locationResolutionOptions = [
+  "",
+  "none",
+  "city",
+  "region",
+  "country",
+  "landmark",
+  "approximate",
+  "private_or_sensitive",
+] as const;
+
 const booleanFilterOptions = [
   ["", "Any"],
   ["true", "Yes"],
@@ -170,6 +209,9 @@ export function RawSourcesReview() {
   const [categoryGuess, setCategoryGuess] = useState("");
   const [curationLabel, setCurationLabel] = useState("");
   const [hasLocationHint, setHasLocationHint] = useState("");
+  const [hasNormalizedLocation, setHasNormalizedLocation] = useState("");
+  const [locationConfidence, setLocationConfidence] = useState("");
+  const [locationResolution, setLocationResolution] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [possibleAiGenerated, setPossibleAiGenerated] = useState("");
   const [possibleJoke, setPossibleJoke] = useState("");
@@ -220,6 +262,18 @@ export function RawSourcesReview() {
         params.set("hasLocationHint", hasLocationHint.trim());
       }
 
+      if (hasNormalizedLocation.trim()) {
+        params.set("hasNormalizedLocation", hasNormalizedLocation.trim());
+      }
+
+      if (locationConfidence.trim()) {
+        params.set("locationConfidence", locationConfidence.trim());
+      }
+
+      if (locationResolution.trim()) {
+        params.set("locationResolution", locationResolution.trim());
+      }
+
       if (possiblePrivateLocation.trim()) {
         params.set("possiblePrivateLocation", possiblePrivateLocation.trim());
       }
@@ -257,6 +311,9 @@ export function RawSourcesReview() {
     categoryGuess,
     curationLabel,
     hasLocationHint,
+    hasNormalizedLocation,
+    locationConfidence,
+    locationResolution,
     platform,
     possibleAiGenerated,
     possibleJoke,
@@ -430,6 +487,29 @@ export function RawSourcesReview() {
     }
   }
 
+  async function normalizeSelectedLocation() {
+    if (!selected) {
+      return;
+    }
+
+    setActionLoading("normalize-location");
+    setError("");
+
+    try {
+      await adminFetch<RawSourceLocationResult>(
+        `/api/admin/raw-sources/${selected.id}/normalize-location`,
+        {
+          method: "POST",
+        },
+      );
+      await loadSources();
+    } catch (locationError) {
+      setError(formatError(locationError));
+    } finally {
+      setActionLoading("");
+    }
+  }
+
   return (
     <section className="space-y-5">
       <div className="rounded-lg border border-night-800 bg-night-900 p-4">
@@ -478,6 +558,39 @@ export function RawSourcesReview() {
               {booleanFilterOptions.map(([value, label]) => (
                 <option key={value || "any-location"} value={value}>
                   {label}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect
+              label="Normalized"
+              onChange={setHasNormalizedLocation}
+              value={hasNormalizedLocation}
+            >
+              {booleanFilterOptions.map(([value, label]) => (
+                <option key={value || "any-normalized"} value={value}>
+                  {label}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect
+              label="Loc confidence"
+              onChange={setLocationConfidence}
+              value={locationConfidence}
+            >
+              {locationConfidenceOptions.map((option) => (
+                <option key={option || "any-location-confidence"} value={option}>
+                  {option || "Any confidence"}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect
+              label="Loc resolution"
+              onChange={setLocationResolution}
+              value={locationResolution}
+            >
+              {locationResolutionOptions.map((option) => (
+                <option key={option || "any-location-resolution"} value={option}>
+                  {option ? option.replace(/_/g, " ") : "Any resolution"}
                 </option>
               ))}
             </FilterSelect>
@@ -624,6 +737,7 @@ export function RawSourcesReview() {
                     label={row.curation_label}
                     score={row.curation_score}
                   />
+                  <LocationBadge source={row} />
                   <span className="rounded-full border border-night-800 px-2 py-1 text-xs text-muted">
                     {row.platform}
                   </span>
@@ -671,12 +785,15 @@ export function RawSourcesReview() {
                     label={selected.curation_label}
                     score={selected.curation_score}
                   />
+                  <LocationBadge source={selected} />
                 </div>
               </div>
 
               <WarningList source={selected} preview={preview} />
 
               <CurationPanel source={selected} />
+
+              <LocationPanel source={selected} />
 
               <div className="rounded-lg border border-night-800 bg-night-950 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
@@ -730,6 +847,15 @@ export function RawSourcesReview() {
                     onClick={() => void refreshSelectedScore()}
                   >
                     {actionLoading === "score" ? "Scoring..." : "Refresh score"}
+                  </button>
+                  <button
+                    className={secondaryButtonClass}
+                    disabled={Boolean(actionLoading)}
+                    onClick={() => void normalizeSelectedLocation()}
+                  >
+                    {actionLoading === "normalize-location"
+                      ? "Normalizing..."
+                      : "Normalize location"}
                   </button>
                   {reviewActions.map(([value, label]) => (
                     <button
@@ -909,6 +1035,102 @@ function CurationBadge({
     >
       {displayLabel} - {displayScore}
     </span>
+  );
+}
+
+function LocationBadge({ source }: { source: RawSource }) {
+  const confidence = source.location_confidence ?? "none";
+  const resolution = source.location_resolution ?? "none";
+
+  if (resolution === "private_or_sensitive") {
+    return (
+      <span className="rounded-full border border-signal-ember/40 bg-signal-ember/10 px-2 py-1 text-xs text-signal-ember">
+        Private location
+      </span>
+    );
+  }
+
+  if (source.normalized_location_name) {
+    return (
+      <span className={`rounded-full border px-2 py-1 text-xs ${locationClass(confidence)}`}>
+        Loc {confidence} · {resolution}
+      </span>
+    );
+  }
+
+  return (
+    <span className="rounded-full border border-night-800 px-2 py-1 text-xs text-muted">
+      Loc pending
+    </span>
+  );
+}
+
+function LocationPanel({ source }: { source: RawSource }) {
+  const warnings = readStringArray(source.location_warnings);
+  const latitude = readFiniteNumber(source.normalized_latitude);
+  const longitude = readFiniteNumber(source.normalized_longitude);
+  const coordinate =
+    latitude !== null && longitude !== null
+      ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+      : null;
+  const hasNormalizedLocation = Boolean(
+    source.normalized_location_name ||
+      source.normalized_region ||
+      source.normalized_country ||
+      coordinate,
+  );
+
+  return (
+    <div className="rounded-lg border border-night-800 bg-night-950 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-teal">
+            Location normalization
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Approximate review hint only. No geocoder, no verification.
+          </p>
+        </div>
+        <LocationBadge source={source} />
+      </div>
+
+      <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+        <DetailItem
+          label="Normalized location"
+          value={source.normalized_location_name}
+        />
+        <DetailItem label="Normalized region" value={source.normalized_region} />
+        <DetailItem label="Normalized country" value={source.normalized_country} />
+        <DetailItem label="Approx coordinates" value={coordinate} />
+        <DetailItem
+          label="Confidence"
+          value={source.location_confidence ?? "none"}
+        />
+        <DetailItem
+          label="Resolution"
+          value={(source.location_resolution ?? "none").replace(/_/g, " ")}
+        />
+      </div>
+
+      {warnings.length > 0 ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {warnings.map((warning) => (
+            <span
+              className={hintClass(
+                warning === "possible_private_location" ? "danger" : "warn",
+              )}
+              key={warning}
+            >
+              {warning.replace(/_/g, " ")}
+            </span>
+          ))}
+        </div>
+      ) : !hasNormalizedLocation ? (
+        <p className="mt-4 rounded-lg border border-night-800 bg-night-900 p-3 text-sm text-muted">
+          No normalized location yet. Use Normalize location after scoring.
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -1131,6 +1353,15 @@ function WarningList({
       ? "Curation label is Low context."
       : "",
     !source.has_location_hint ? "No location hint found yet." : "",
+    source.location_resolution === "private_or_sensitive"
+      ? "Location normalizer found private/sensitive details. Do not promote by default."
+      : "",
+    source.location_confidence === "low"
+      ? "Location confidence is low. Review before mapping."
+      : "",
+    ...(source.location_warnings ?? []).map(
+      (warning) => `Location warning: ${warning.replace(/_/g, " ")}.`,
+    ),
     !source.has_time_hint ? "No time hint found yet." : "",
     source.possible_private_location
       ? "Private/sensitive location warning. Do not promote by default."
@@ -1162,23 +1393,23 @@ function DetailItem({
   value,
 }: {
   label: string;
-  value: string | null | undefined;
+  value: unknown;
 }) {
-  const content = value || "Unknown";
+  const content = formatDetailValue(value);
 
   return (
     <div className="rounded-lg border border-night-800 bg-night-950 p-3">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
         {label}
       </p>
-      {value?.startsWith("http") ? (
+      {content.startsWith("http") ? (
         <a
           className="mt-2 block break-words text-sm text-signal-teal transition hover:text-parchment"
-          href={value}
+          href={content}
           rel="noreferrer"
           target="_blank"
         >
-          {value}
+          {content}
         </a>
       ) : (
         <p className="mt-2 break-words text-sm text-parchment">{content}</p>
@@ -1217,6 +1448,22 @@ function curationClass(label: string) {
   }
 
   if (label === "Low context") {
+    return "border-signal-ember/35 bg-signal-ember/10 text-signal-ember";
+  }
+
+  return "border-night-800 bg-night-950 text-muted";
+}
+
+function locationClass(confidence: string) {
+  if (confidence === "high") {
+    return "border-signal-teal/40 bg-signal-teal/15 text-signal-teal";
+  }
+
+  if (confidence === "medium") {
+    return "border-signal-amber/40 bg-signal-amber/10 text-signal-amber";
+  }
+
+  if (confidence === "low") {
     return "border-signal-ember/35 bg-signal-ember/10 text-signal-ember";
   }
 
@@ -1296,6 +1543,36 @@ function formatDate(value: string | null) {
 
 function formatError(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function formatDetailValue(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return "Unknown";
+  }
+
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value.map(String).join(", ") : "Unknown";
+  }
+
+  return String(value);
+}
+
+function readFiniteNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const number = Number(value);
+
+  return Number.isFinite(number) ? number : null;
+}
+
+function readStringArray(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === "string");
 }
 
 const secondaryButtonClass =

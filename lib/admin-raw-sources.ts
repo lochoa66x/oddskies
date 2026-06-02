@@ -2,6 +2,8 @@ import "server-only";
 
 import { scoreRawSource } from "@/lib/curation/scoreRawSource";
 import type { RawSourceCurationScore } from "@/lib/curation/scoreRawSource";
+import { normalizeLocation } from "@/lib/location/normalizeLocation";
+import type { LocationNormalization } from "@/lib/location/normalizeLocation";
 
 export const rawSourceStatuses = [
   "new",
@@ -37,7 +39,16 @@ export type RawSourceRow = {
   id: string;
   language: string | null;
   last_scored_at: string | null;
+  last_location_normalized_at: string | null;
   location_hint: string | null;
+  location_confidence: string | null;
+  location_resolution: string | null;
+  location_warnings: string[] | null;
+  normalized_country: string | null;
+  normalized_latitude: number | null;
+  normalized_location_name: string | null;
+  normalized_longitude: number | null;
+  normalized_region: string | null;
   normalized_summary: string | null;
   normalized_title: string | null;
   platform: string;
@@ -66,7 +77,10 @@ export type ReportDraft = {
   has_media: boolean;
   is_featured: boolean;
   latitude: number | null;
+  location_confidence: string | null;
   location_name: string;
+  location_resolution: string | null;
+  location_warnings: string[];
   longitude: number | null;
   media_url: string | null;
   region: string;
@@ -99,8 +113,11 @@ export type ReportDraftOverrides = Partial<{
 export type RawSourceFilters = Partial<{
   categoryGuess: string;
   curationLabel: string;
+  hasNormalizedLocation: string;
   hasLocationHint: string;
   limit: number;
+  locationConfidence: string;
+  locationResolution: string;
   platform: string;
   possibleAiGenerated: string;
   possibleJoke: string;
@@ -123,6 +140,9 @@ const REPORT_COLUMNS = [
   "country",
   "latitude",
   "longitude",
+  "location_confidence",
+  "location_resolution",
+  "location_warnings",
   "event_datetime",
   "reported_datetime",
   "source_name",
@@ -179,6 +199,26 @@ export async function listRawSources(filters: RawSourceFilters = {}) {
     endpoint.searchParams.set("curation_label", `eq.${filters.curationLabel}`);
   }
 
+  if (filters.locationConfidence) {
+    endpoint.searchParams.set(
+      "location_confidence",
+      `eq.${filters.locationConfidence}`,
+    );
+  }
+
+  if (filters.locationResolution) {
+    endpoint.searchParams.set(
+      "location_resolution",
+      `eq.${filters.locationResolution}`,
+    );
+  }
+
+  if (filters.hasNormalizedLocation === "true") {
+    endpoint.searchParams.set("normalized_location_name", "not.is.null");
+  } else if (filters.hasNormalizedLocation === "false") {
+    endpoint.searchParams.set("normalized_location_name", "is.null");
+  }
+
   setOptionalBooleanFilter(endpoint, "has_location_hint", filters.hasLocationHint);
   setOptionalBooleanFilter(
     endpoint,
@@ -211,6 +251,18 @@ export async function scoreRawSourceById(id: string) {
   return {
     id,
     score,
+  };
+}
+
+export async function normalizeRawSourceLocationById(id: string) {
+  const rawSource = await requireRawSource(id);
+  const location = await normalizeLocation(rawSource);
+
+  await patchRawSource(id, pickLocationColumns(location));
+
+  return {
+    id,
+    location,
   };
 }
 
@@ -328,6 +380,7 @@ export function buildReportDraft(
       readString(overrides.confidence_label) ?? "Needs human review",
     country:
       readString(overrides.country) ??
+      readString(rawSource.normalized_country) ??
       readString(rawSource.extracted_country_guess),
     event_datetime:
       readString(overrides.event_datetime) ??
@@ -336,16 +389,21 @@ export function buildReportDraft(
       readString(rawSource.collected_at),
     has_media: Boolean(readString(rawSource.raw_media_url)),
     is_featured: false,
-    latitude: overrides.latitude ?? null,
+    latitude: overrides.latitude ?? readNumber(rawSource.normalized_latitude),
+    location_confidence: readString(rawSource.location_confidence),
     location_name:
       readString(overrides.location_name) ??
+      readString(rawSource.normalized_location_name) ??
       readString(rawSource.extracted_location_text) ??
       readString(rawSource.location_hint) ??
       "Location under review",
-    longitude: overrides.longitude ?? null,
+    location_resolution: readString(rawSource.location_resolution),
+    location_warnings: rawSource.location_warnings ?? [],
+    longitude: overrides.longitude ?? readNumber(rawSource.normalized_longitude),
     media_url: readString(rawSource.raw_media_url),
     region:
       readString(overrides.region) ??
+      readString(rawSource.normalized_region) ??
       readString(rawSource.extracted_region_guess) ??
       "Unknown",
     reported_datetime:
@@ -410,6 +468,21 @@ export function getPromotionWarnings(rawSource: RawSourceRow, draft: ReportDraft
     warnings.push("Location still needs review.");
   }
 
+  if (
+    rawSource.location_confidence === "none" ||
+    rawSource.location_confidence === "low"
+  ) {
+    warnings.push("Normalized location confidence is low or missing.");
+  }
+
+  if (rawSource.location_resolution === "private_or_sensitive") {
+    warnings.push("Location normalization flagged private/sensitive details.");
+  }
+
+  if (rawSource.location_warnings?.length) {
+    warnings.push(`Location warnings: ${rawSource.location_warnings.join(", ")}.`);
+  }
+
   if (!readString(draft.category) || draft.category === "Unknown") {
     warnings.push("Category is unknown.");
   }
@@ -465,6 +538,15 @@ function getPromotionSafetyErrors(rawSource: RawSourceRow) {
   if (rawSource.possible_private_location) {
     errors.push(
       "This raw source has a private/sensitive location warning and cannot be promoted by default.",
+    );
+  }
+
+  if (
+    rawSource.location_resolution === "private_or_sensitive" ||
+    rawSource.location_warnings?.includes("possible_private_location")
+  ) {
+    errors.push(
+      "Location normalization found private/sensitive details. Keep this out of public reports unless it is redacted and reviewed.",
     );
   }
 
@@ -563,6 +645,22 @@ function pickCurationColumns(score: RawSourceCurationScore): Partial<RawSourceRo
     possible_duplicate: score.possible_duplicate,
     possible_joke: score.possible_joke,
     possible_private_location: score.possible_private_location,
+  };
+}
+
+function pickLocationColumns(
+  location: LocationNormalization,
+): Partial<RawSourceRow> {
+  return {
+    last_location_normalized_at: location.last_location_normalized_at,
+    location_confidence: location.location_confidence,
+    location_resolution: location.location_resolution,
+    location_warnings: location.location_warnings,
+    normalized_country: location.normalized_country,
+    normalized_latitude: location.normalized_latitude,
+    normalized_location_name: location.normalized_location_name,
+    normalized_longitude: location.normalized_longitude,
+    normalized_region: location.normalized_region,
   };
 }
 
@@ -744,6 +842,16 @@ function makeTitle(text: string) {
 
 function readString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function readNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const number = Number(value);
+
+  return Number.isFinite(number) ? number : null;
 }
 
 async function readResponseText(response: Response) {
