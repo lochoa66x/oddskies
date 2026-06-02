@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "collect:bluesky": "node scripts/collect-bluesky.mjs",
+    "promote:raw-source": "node scripts/promote-raw-source.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

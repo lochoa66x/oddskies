@@ -73,6 +73,43 @@ It does not:
 - expose collected posts in the public UI
 - use AI classification
 
+## Manual Promotion Helper
+
+After reviewing a staged row, preview a public report draft:
+
+```bash
+npm run promote:raw-source -- --id <raw_source_id>
+```
+
+List recent staged rows:
+
+```bash
+npm run promote:raw-source -- --list
+```
+
+Publish only after review by adding `--confirm`:
+
+```bash
+npm run promote:raw-source -- --id <raw_source_id> --confirm
+```
+
+Useful overrides:
+
+```bash
+npm run promote:raw-source -- --id <raw_source_id> \
+  --title "Short public title" \
+  --summary "Reviewed public summary" \
+  --category "Strange Lights" \
+  --location "Montreal, Quebec" \
+  --region "Quebec" \
+  --country "Canada" \
+  --confidence "Suspiciously Interesting"
+```
+
+The helper defaults to preview mode. It creates a `public.reports` row only
+with `--confirm`, then marks the staged `raw_sources` row as `approved` and
+stores the new report id in `approved_report_id`.
+
 ## Review Helper SQL
 
 ```sql
