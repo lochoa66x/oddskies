@@ -1,5 +1,8 @@
 import "server-only";
 
+import { scoreRawSource } from "@/lib/curation/scoreRawSource";
+import type { RawSourceCurationScore } from "@/lib/curation/scoreRawSource";
+
 export const rawSourceStatuses = [
   "new",
   "needs_review",
@@ -20,11 +23,28 @@ export type RawSourceRow = {
   category_guess: string | null;
   collected_at: string;
   created_at?: string | null;
+  curation_label: string | null;
+  curation_reasons: string[] | null;
+  curation_score: number | null;
   event_datetime_guess: string | null;
+  extracted_country_guess: string | null;
+  extracted_event_datetime_text: string | null;
+  extracted_location_text: string | null;
+  extracted_region_guess: string | null;
+  has_location_hint: boolean | null;
+  has_media_hint: boolean | null;
+  has_time_hint: boolean | null;
   id: string;
   language: string | null;
+  last_scored_at: string | null;
   location_hint: string | null;
+  normalized_summary: string | null;
+  normalized_title: string | null;
   platform: string;
+  possible_ai_generated: boolean | null;
+  possible_duplicate: boolean | null;
+  possible_joke: boolean | null;
+  possible_private_location: boolean | null;
   posted_at: string | null;
   raw_media_url: string | null;
   raw_text: string | null;
@@ -78,37 +98,21 @@ export type ReportDraftOverrides = Partial<{
 
 export type RawSourceFilters = Partial<{
   categoryGuess: string;
+  curationLabel: string;
+  hasLocationHint: string;
   limit: number;
   platform: string;
+  possibleAiGenerated: string;
+  possibleJoke: string;
+  possiblePrivateLocation: string;
   searchQuery: string;
+  sort: string;
   status: string;
 }>;
 
 export type ReviewStatus = Exclude<RawSourceStatus, "new" | "approved">;
 
-const RAW_SOURCE_SELECT = [
-  "id",
-  "platform",
-  "source_post_id",
-  "source_url",
-  "author_handle",
-  "posted_at",
-  "collected_at",
-  "raw_title",
-  "raw_text",
-  "raw_media_url",
-  "search_query",
-  "language",
-  "location_hint",
-  "category_guess",
-  "event_datetime_guess",
-  "status",
-  "review_notes",
-  "rejection_reason",
-  "approved_report_id",
-  "created_at",
-  "updated_at",
-].join(",");
+const RAW_SOURCE_SELECT = "*";
 
 const REPORT_COLUMNS = [
   "title",
@@ -156,7 +160,7 @@ export async function listRawSources(filters: RawSourceFilters = {}) {
   const status = normalizeStatusFilter(filters.status);
 
   endpoint.searchParams.set("select", RAW_SOURCE_SELECT);
-  endpoint.searchParams.set("order", "collected_at.desc");
+  endpoint.searchParams.set("order", normalizeSort(filters.sort));
   endpoint.searchParams.set("limit", String(clampLimit(filters.limit)));
 
   if (status !== "all") {
@@ -171,6 +175,23 @@ export async function listRawSources(filters: RawSourceFilters = {}) {
     endpoint.searchParams.set("category_guess", `eq.${filters.categoryGuess}`);
   }
 
+  if (filters.curationLabel) {
+    endpoint.searchParams.set("curation_label", `eq.${filters.curationLabel}`);
+  }
+
+  setOptionalBooleanFilter(endpoint, "has_location_hint", filters.hasLocationHint);
+  setOptionalBooleanFilter(
+    endpoint,
+    "possible_private_location",
+    filters.possiblePrivateLocation,
+  );
+  setOptionalBooleanFilter(endpoint, "possible_joke", filters.possibleJoke);
+  setOptionalBooleanFilter(
+    endpoint,
+    "possible_ai_generated",
+    filters.possibleAiGenerated,
+  );
+
   if (filters.searchQuery) {
     endpoint.searchParams.set("search_query", `eq.${filters.searchQuery}`);
   }
@@ -178,6 +199,19 @@ export async function listRawSources(filters: RawSourceFilters = {}) {
   const response = await supabaseFetch(config, endpoint);
 
   return response.json() as Promise<RawSourceRow[]>;
+}
+
+export async function scoreRawSourceById(id: string) {
+  const rawSource = await requireRawSource(id);
+  const possibleDuplicate = await hasPossibleDuplicate(rawSource);
+  const score = await scoreRawSource(rawSource, { possibleDuplicate });
+
+  await patchRawSource(id, pickCurationColumns(score));
+
+  return {
+    id,
+    score,
+  };
 }
 
 export async function updateRawSourceReview({
@@ -292,7 +326,9 @@ export function buildReportDraft(
       "Unknown",
     confidence_label:
       readString(overrides.confidence_label) ?? "Needs human review",
-    country: readString(overrides.country),
+    country:
+      readString(overrides.country) ??
+      readString(rawSource.extracted_country_guess),
     event_datetime:
       readString(overrides.event_datetime) ??
       readString(rawSource.event_datetime_guess) ??
@@ -303,11 +339,15 @@ export function buildReportDraft(
     latitude: overrides.latitude ?? null,
     location_name:
       readString(overrides.location_name) ??
+      readString(rawSource.extracted_location_text) ??
       readString(rawSource.location_hint) ??
       "Location under review",
     longitude: overrides.longitude ?? null,
     media_url: readString(rawSource.raw_media_url),
-    region: readString(overrides.region) ?? "Unknown",
+    region:
+      readString(overrides.region) ??
+      readString(rawSource.extracted_region_guess) ??
+      "Unknown",
     reported_datetime:
       readString(overrides.reported_datetime) ??
       readString(rawSource.posted_at) ??
@@ -320,10 +360,12 @@ export function buildReportDraft(
     source_url: readString(overrides.source_url) ?? readString(rawSource.source_url),
     summary:
       readString(overrides.summary) ??
+      readString(rawSource.normalized_summary) ??
       makeSummary(rawText) ??
       "A public source was staged for OddSkies review.",
     title:
       readString(overrides.title) ??
+      readString(rawSource.normalized_title) ??
       readString(rawSource.raw_title) ??
       makeTitle(rawText) ??
       "Untitled strange report",
@@ -341,11 +383,30 @@ export function getPromotionWarnings(rawSource: RawSourceRow, draft: ReportDraft
     warnings.push("Source URL is missing.");
   }
 
+  if (rawSource.curation_label === "Low context") {
+    warnings.push("Curation label is Low context. Review carefully before publishing.");
+  }
+
+  if (rawSource.possible_joke) {
+    warnings.push("Possible joke/meme language was flagged.");
+  }
+
+  if (rawSource.possible_ai_generated) {
+    warnings.push("Possible AI-generated or edited media language was flagged.");
+  }
+
+  if (rawSource.possible_duplicate) {
+    warnings.push("Possible duplicate source was flagged.");
+  }
+
   if (rawText.length < 80) {
     warnings.push("Raw text is short. Context may be thin.");
   }
 
-  if (!readString(draft.location_name) || draft.location_name === "Location under review") {
+  if (
+    !rawSource.has_location_hint &&
+    (!readString(draft.location_name) || draft.location_name === "Location under review")
+  ) {
     warnings.push("Location still needs review.");
   }
 
@@ -353,7 +414,7 @@ export function getPromotionWarnings(rawSource: RawSourceRow, draft: ReportDraft
     warnings.push("Category is unknown.");
   }
 
-  if (!readString(draft.event_datetime)) {
+  if (!rawSource.has_time_hint && !readString(draft.event_datetime)) {
     warnings.push("Event date/time is missing.");
   }
 
@@ -401,6 +462,12 @@ function getPromotionSafetyErrors(rawSource: RawSourceRow) {
     errors.push("Raw source has no usable title or text.");
   }
 
+  if (rawSource.possible_private_location) {
+    errors.push(
+      "This raw source has a private/sensitive location warning and cannot be promoted by default.",
+    );
+  }
+
   return errors;
 }
 
@@ -440,6 +507,63 @@ async function patchRawSource(id: string, patch: Partial<RawSourceRow>) {
     },
     method: "PATCH",
   });
+}
+
+async function hasPossibleDuplicate(rawSource: RawSourceRow) {
+  const sourcePostId = readString(rawSource.source_post_id);
+  const sourceUrl = readString(rawSource.source_url);
+
+  if (sourcePostId && (await rawSourceDuplicateExists(rawSource, "source_post_id", sourcePostId))) {
+    return true;
+  }
+
+  if (sourceUrl && (await rawSourceDuplicateExists(rawSource, "source_url", sourceUrl))) {
+    return true;
+  }
+
+  return false;
+}
+
+async function rawSourceDuplicateExists(
+  rawSource: RawSourceRow,
+  column: "source_post_id" | "source_url",
+  value: string,
+) {
+  const config = getSupabaseAdminConfig();
+  const endpoint = new URL("/rest/v1/raw_sources", config.supabaseUrl);
+
+  endpoint.searchParams.set("select", "id");
+  endpoint.searchParams.set("id", `neq.${rawSource.id}`);
+  endpoint.searchParams.set("platform", `eq.${rawSource.platform}`);
+  endpoint.searchParams.set(column, `eq.${value}`);
+  endpoint.searchParams.set("limit", "1");
+
+  const response = await supabaseFetch(config, endpoint);
+  const rows = (await response.json()) as Array<{ id: string }>;
+
+  return rows.length > 0;
+}
+
+function pickCurationColumns(score: RawSourceCurationScore): Partial<RawSourceRow> {
+  return {
+    curation_label: score.curation_label,
+    curation_reasons: score.curation_reasons,
+    curation_score: score.curation_score,
+    extracted_country_guess: score.extracted_country_guess,
+    extracted_event_datetime_text: score.extracted_event_datetime_text,
+    extracted_location_text: score.extracted_location_text,
+    extracted_region_guess: score.extracted_region_guess,
+    has_location_hint: score.has_location_hint,
+    has_media_hint: score.has_media_hint,
+    has_time_hint: score.has_time_hint,
+    last_scored_at: score.last_scored_at,
+    normalized_summary: score.normalized_summary,
+    normalized_title: score.normalized_title,
+    possible_ai_generated: score.possible_ai_generated,
+    possible_duplicate: score.possible_duplicate,
+    possible_joke: score.possible_joke,
+    possible_private_location: score.possible_private_location,
+  };
 }
 
 type SupabaseAdminConfig = {
@@ -507,6 +631,28 @@ function normalizeStatusFilter(status: string | undefined) {
     );
 
   return allowed.length > 0 ? allowed.join(",") : "new,needs_review";
+}
+
+function normalizeSort(sort: string | undefined) {
+  if (sort === "score_desc") {
+    return "curation_score.desc.nullslast,collected_at.desc";
+  }
+
+  if (sort === "score_asc") {
+    return "curation_score.asc.nullslast,collected_at.desc";
+  }
+
+  return "collected_at.desc";
+}
+
+function setOptionalBooleanFilter(
+  endpoint: URL,
+  column: string,
+  value: string | undefined,
+) {
+  if (value === "true" || value === "false") {
+    endpoint.searchParams.set(column, `eq.${value}`);
+  }
 }
 
 function normalizeReviewStatus(status: string) {

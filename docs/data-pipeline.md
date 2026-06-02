@@ -115,6 +115,85 @@ Admin collector safety:
 - Nothing is inserted into `public.reports`.
 - Nothing is shown publicly until manual review and promotion.
 
+## Curation Scoring
+
+V1.6 adds deterministic curation hints for `public.raw_sources`.
+
+Principle:
+
+```text
+Curation score is not truth. It is only a review helper.
+```
+
+The scorer looks for simple signals such as:
+
+- source URL captured
+- enough raw text to review
+- location-like hints
+- time/date phrases
+- media hints
+- category guess
+- possible duplicate source URL or post id
+- possible joke/meme language
+- possible AI-generated or edited media language
+- private-looking address, contact, or sensitive location details
+
+It does not:
+
+- verify reports
+- decide whether a report is true
+- publish anything
+- change review status
+- geocode locations
+- use AI
+- write to `public.reports`
+
+Run a preview:
+
+```bash
+npm run score:raw
+npm run score:raw -- --limit 20 --dry-run
+npm run score:raw -- --status new
+npm run score:raw -- --id <raw_source_id>
+```
+
+Write scoring fields only after review:
+
+```bash
+npm run score:raw -- --limit 20 --confirm
+npm run score:raw -- --id <raw_source_id> --confirm
+```
+
+The protected admin review UI can also refresh the score for a selected raw
+source. That action updates only curation fields on `public.raw_sources`.
+
+Private/sensitive location flags should be treated seriously. If a raw source
+contains an exact private-looking address, contact detail, apartment/unit, or
+targeting language, keep it out of public reports unless the sensitive detail
+has been removed and reviewed.
+
+Schema fields added by V1.6:
+
+```text
+curation_score
+curation_label
+curation_reasons
+has_location_hint
+has_time_hint
+has_media_hint
+possible_private_location
+possible_joke
+possible_ai_generated
+possible_duplicate
+extracted_location_text
+extracted_region_guess
+extracted_country_guess
+extracted_event_datetime_text
+normalized_title
+normalized_summary
+last_scored_at
+```
+
 ## Manual Promotion Helper
 
 Step 1: collect or insert a raw source into `public.raw_sources`.

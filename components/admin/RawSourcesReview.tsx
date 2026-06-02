@@ -8,11 +8,28 @@ type RawSource = {
   author_handle: string | null;
   category_guess: string | null;
   collected_at: string;
+  curation_label: string | null;
+  curation_reasons: string[] | null;
+  curation_score: number | null;
   event_datetime_guess: string | null;
+  extracted_country_guess: string | null;
+  extracted_event_datetime_text: string | null;
+  extracted_location_text: string | null;
+  extracted_region_guess: string | null;
+  has_location_hint: boolean | null;
+  has_media_hint: boolean | null;
+  has_time_hint: boolean | null;
   id: string;
   language: string | null;
+  last_scored_at: string | null;
   location_hint: string | null;
+  normalized_summary: string | null;
+  normalized_title: string | null;
   platform: string;
+  possible_ai_generated: boolean | null;
+  possible_duplicate: boolean | null;
+  possible_joke: boolean | null;
+  possible_private_location: boolean | null;
   posted_at: string | null;
   raw_media_url: string | null;
   raw_text: string | null;
@@ -45,6 +62,15 @@ type ReportDraft = {
 type PromotionPreview = {
   reportDraft: ReportDraft;
   warnings: string[];
+};
+
+type RawSourceScoreResult = {
+  id: string;
+  score: {
+    curation_label: string;
+    curation_reasons: string[];
+    curation_score: number;
+  };
 };
 
 type CollectorSummary = {
@@ -116,13 +142,39 @@ const categoryOptions = [
   "Unknown",
 ] as const;
 
+const curationLabelOptions = [
+  "",
+  "Low context",
+  "Needs review",
+  "Good candidate",
+  "Strong candidate",
+] as const;
+
+const booleanFilterOptions = [
+  ["", "Any"],
+  ["true", "Yes"],
+  ["false", "No"],
+] as const;
+
+const sortOptions = [
+  ["newest", "Newest first"],
+  ["score_desc", "Highest score"],
+  ["score_asc", "Lowest score"],
+] as const;
+
 export function RawSourcesReview() {
   const [rows, setRows] = useState<RawSource[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [status, setStatus] = useState("pending");
   const [platform, setPlatform] = useState("");
   const [categoryGuess, setCategoryGuess] = useState("");
+  const [curationLabel, setCurationLabel] = useState("");
+  const [hasLocationHint, setHasLocationHint] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [possibleAiGenerated, setPossibleAiGenerated] = useState("");
+  const [possibleJoke, setPossibleJoke] = useState("");
+  const [possiblePrivateLocation, setPossiblePrivateLocation] = useState("");
+  const [sort, setSort] = useState("newest");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState("");
   const [error, setError] = useState("");
@@ -160,8 +212,32 @@ export function RawSourcesReview() {
         params.set("categoryGuess", categoryGuess.trim());
       }
 
+      if (curationLabel.trim()) {
+        params.set("curationLabel", curationLabel.trim());
+      }
+
+      if (hasLocationHint.trim()) {
+        params.set("hasLocationHint", hasLocationHint.trim());
+      }
+
+      if (possiblePrivateLocation.trim()) {
+        params.set("possiblePrivateLocation", possiblePrivateLocation.trim());
+      }
+
+      if (possibleJoke.trim()) {
+        params.set("possibleJoke", possibleJoke.trim());
+      }
+
+      if (possibleAiGenerated.trim()) {
+        params.set("possibleAiGenerated", possibleAiGenerated.trim());
+      }
+
       if (searchQuery.trim()) {
         params.set("searchQuery", searchQuery.trim());
+      }
+
+      if (sort !== "newest") {
+        params.set("sort", sort);
       }
 
       const body = await adminFetch<{ rows: RawSource[] }>(
@@ -177,7 +253,18 @@ export function RawSourcesReview() {
     } finally {
       setLoading(false);
     }
-  }, [categoryGuess, platform, searchQuery, status]);
+  }, [
+    categoryGuess,
+    curationLabel,
+    hasLocationHint,
+    platform,
+    possibleAiGenerated,
+    possibleJoke,
+    possiblePrivateLocation,
+    searchQuery,
+    sort,
+    status,
+  ]);
 
   useEffect(() => {
     void loadSources();
@@ -320,11 +407,34 @@ export function RawSourcesReview() {
     }
   }
 
+  async function refreshSelectedScore() {
+    if (!selected) {
+      return;
+    }
+
+    setActionLoading("score");
+    setError("");
+
+    try {
+      await adminFetch<RawSourceScoreResult>(
+        `/api/admin/raw-sources/${selected.id}/score`,
+        {
+          method: "POST",
+        },
+      );
+      await loadSources();
+    } catch (scoreError) {
+      setError(formatError(scoreError));
+    } finally {
+      setActionLoading("");
+    }
+  }
+
   return (
     <section className="space-y-5">
       <div className="rounded-lg border border-night-800 bg-night-900 p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             <FilterSelect label="Status" onChange={setStatus} value={status}>
               {statusOptions.map(([value, label]) => (
                 <option key={value} value={value}>
@@ -349,6 +459,68 @@ export function RawSourcesReview() {
               onChange={setSearchQuery}
               value={searchQuery}
             />
+            <FilterSelect
+              label="Curation"
+              onChange={setCurationLabel}
+              value={curationLabel}
+            >
+              {curationLabelOptions.map((option) => (
+                <option key={option || "all"} value={option}>
+                  {option || "Any label"}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect
+              label="Location hint"
+              onChange={setHasLocationHint}
+              value={hasLocationHint}
+            >
+              {booleanFilterOptions.map(([value, label]) => (
+                <option key={value || "any-location"} value={value}>
+                  {label}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect
+              label="Private flag"
+              onChange={setPossiblePrivateLocation}
+              value={possiblePrivateLocation}
+            >
+              {booleanFilterOptions.map(([value, label]) => (
+                <option key={value || "any-private"} value={value}>
+                  {label}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect
+              label="Joke flag"
+              onChange={setPossibleJoke}
+              value={possibleJoke}
+            >
+              {booleanFilterOptions.map(([value, label]) => (
+                <option key={value || "any-joke"} value={value}>
+                  {label}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect
+              label="AI flag"
+              onChange={setPossibleAiGenerated}
+              value={possibleAiGenerated}
+            >
+              {booleanFilterOptions.map(([value, label]) => (
+                <option key={value || "any-ai"} value={value}>
+                  {label}
+                </option>
+              ))}
+            </FilterSelect>
+            <FilterSelect label="Sort" onChange={setSort} value={sort}>
+              {sortOptions.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </FilterSelect>
           </div>
           <div className="flex flex-wrap gap-2">
             <button className={secondaryButtonClass} onClick={() => void loadSources()}>
@@ -448,6 +620,10 @@ export function RawSourcesReview() {
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusBadge status={row.status} />
+                  <CurationBadge
+                    label={row.curation_label}
+                    score={row.curation_score}
+                  />
                   <span className="rounded-full border border-night-800 px-2 py-1 text-xs text-muted">
                     {row.platform}
                   </span>
@@ -456,12 +632,13 @@ export function RawSourcesReview() {
                       {row.category_guess}
                     </span>
                   ) : null}
+                  <HintBadges source={row} compact />
                 </div>
                 <p className="mt-3 text-sm font-semibold text-parchment">
-                  {row.raw_title ?? "Untitled raw source"}
+                  {row.normalized_title ?? row.raw_title ?? "Untitled raw source"}
                 </p>
                 <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted">
-                  {row.raw_text ?? "No raw text captured."}
+                  {row.normalized_summary ?? row.raw_text ?? "No raw text captured."}
                 </p>
                 <div className="mt-3 grid gap-1 text-xs text-muted sm:grid-cols-2">
                   <span>Author: {row.author_handle ?? "Unknown"}</span>
@@ -483,13 +660,23 @@ export function RawSourcesReview() {
                     Source detail
                   </p>
                   <h2 className="mt-2 text-2xl font-bold">
-                    {selected.raw_title ?? "Untitled raw source"}
+                    {selected.normalized_title ??
+                      selected.raw_title ??
+                      "Untitled raw source"}
                   </h2>
                 </div>
-                <StatusBadge status={selected.status} />
+                <div className="flex flex-wrap gap-2">
+                  <StatusBadge status={selected.status} />
+                  <CurationBadge
+                    label={selected.curation_label}
+                    score={selected.curation_score}
+                  />
+                </div>
               </div>
 
               <WarningList source={selected} preview={preview} />
+
+              <CurationPanel source={selected} />
 
               <div className="rounded-lg border border-night-800 bg-night-950 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
@@ -537,6 +724,13 @@ export function RawSourcesReview() {
                   Review actions
                 </p>
                 <div className="flex flex-wrap gap-2">
+                  <button
+                    className={secondaryButtonClass}
+                    disabled={Boolean(actionLoading)}
+                    onClick={() => void refreshSelectedScore()}
+                  >
+                    {actionLoading === "score" ? "Scoring..." : "Refresh score"}
+                  </button>
                   {reviewActions.map(([value, label]) => (
                     <button
                       className={secondaryButtonClass}
@@ -642,6 +836,119 @@ function CollectorStat({ label, value }: { label: string; value: number }) {
         {label}
       </p>
     </div>
+  );
+}
+
+function CurationPanel({ source }: { source: RawSource }) {
+  return (
+    <div className="rounded-lg border border-night-800 bg-night-950 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-teal">
+            Curation hints
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Review helper only. This score does not verify anything.
+          </p>
+        </div>
+        <CurationBadge label={source.curation_label} score={source.curation_score} />
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <HintBadges source={source} />
+      </div>
+
+      <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+        <DetailItem
+          label="Extracted location"
+          value={source.extracted_location_text}
+        />
+        <DetailItem label="Region guess" value={source.extracted_region_guess} />
+        <DetailItem label="Country guess" value={source.extracted_country_guess} />
+        <DetailItem
+          label="Time hint"
+          value={source.extracted_event_datetime_text}
+        />
+      </div>
+
+      {source.curation_reasons?.length ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {source.curation_reasons.map((reason) => (
+            <span
+              className="rounded-full border border-night-800 px-3 py-1 text-xs text-muted"
+              key={reason}
+            >
+              {reason}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 rounded-lg border border-night-800 bg-night-900 p-3 text-sm text-muted">
+          No curation score yet. Use Refresh score when this source is selected.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CurationBadge({
+  label,
+  score,
+}: {
+  label: string | null;
+  score: number | null;
+}) {
+  const displayLabel = label ?? "Unscored";
+  const displayScore = typeof score === "number" && Number.isFinite(score) ? score : 0;
+
+  return (
+    <span
+      className={`rounded-full border px-2 py-1 text-xs ${curationClass(
+        displayLabel,
+      )}`}
+    >
+      {displayLabel} - {displayScore}
+    </span>
+  );
+}
+
+function HintBadges({
+  compact = false,
+  source,
+}: {
+  compact?: boolean;
+  source: RawSource;
+}) {
+  const badges = [
+    source.has_location_hint ? ["Location", "good"] : ["No location", "muted"],
+    source.has_time_hint ? ["Time", "good"] : ["No time", "muted"],
+    source.has_media_hint ? ["Media", "good"] : null,
+    source.possible_duplicate ? ["Duplicate?", "warn"] : null,
+    source.possible_joke ? ["Joke?", "warn"] : null,
+    source.possible_ai_generated ? ["AI/edited?", "warn"] : null,
+    source.possible_private_location ? ["Private warning", "danger"] : null,
+  ].filter(Boolean) as Array<[string, "danger" | "good" | "muted" | "warn"]>;
+
+  if (compact) {
+    return (
+      <>
+        {badges.slice(0, 4).map(([label, tone]) => (
+          <span className={hintClass(tone)} key={label}>
+            {label}
+          </span>
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {badges.map(([label, tone]) => (
+        <span className={hintClass(tone)} key={label}>
+          {label}
+        </span>
+      ))}
+    </>
   );
 }
 
@@ -820,6 +1127,19 @@ function WarningList({
   const warnings = [
     !source.source_url ? "Source URL is missing." : "",
     (source.raw_text ?? "").length < 80 ? "Raw text is short." : "",
+    source.curation_label === "Low context"
+      ? "Curation label is Low context."
+      : "",
+    !source.has_location_hint ? "No location hint found yet." : "",
+    !source.has_time_hint ? "No time hint found yet." : "",
+    source.possible_private_location
+      ? "Private/sensitive location warning. Do not promote by default."
+      : "",
+    source.possible_joke ? "Possible joke/meme language flagged." : "",
+    source.possible_ai_generated
+      ? "Possible AI-generated or edited media language flagged."
+      : "",
+    source.possible_duplicate ? "Possible duplicate source flagged." : "",
     source.status === "approved" ? "Already approved." : "",
     ...(preview?.warnings ?? []),
   ].filter(Boolean);
@@ -885,6 +1205,38 @@ function statusClass(status: string) {
   }
 
   return "border-signal-ember/35 bg-signal-ember/10 text-signal-ember";
+}
+
+function curationClass(label: string) {
+  if (label === "Strong candidate") {
+    return "border-signal-teal/40 bg-signal-teal/15 text-signal-teal";
+  }
+
+  if (label === "Good candidate") {
+    return "border-signal-amber/40 bg-signal-amber/10 text-signal-amber";
+  }
+
+  if (label === "Low context") {
+    return "border-signal-ember/35 bg-signal-ember/10 text-signal-ember";
+  }
+
+  return "border-night-800 bg-night-950 text-muted";
+}
+
+function hintClass(tone: "danger" | "good" | "muted" | "warn") {
+  if (tone === "danger") {
+    return "rounded-full border border-signal-ember/40 bg-signal-ember/10 px-2 py-1 text-xs text-signal-ember";
+  }
+
+  if (tone === "good") {
+    return "rounded-full border border-signal-teal/35 bg-signal-teal/10 px-2 py-1 text-xs text-signal-teal";
+  }
+
+  if (tone === "warn") {
+    return "rounded-full border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs text-signal-amber";
+  }
+
+  return "rounded-full border border-night-800 px-2 py-1 text-xs text-muted";
 }
 
 function cleanedOverrides(overrides: DraftOverrides) {

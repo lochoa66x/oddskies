@@ -7,6 +7,7 @@
     "promote:raw": "node scripts/promote-raw-source.mjs",
     "promote:raw-source": "node scripts/promote-raw-source.mjs",
     "review:raw": "node scripts/review-raw-source.mjs",
+    "score:raw": "node scripts/score-raw-sources.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
