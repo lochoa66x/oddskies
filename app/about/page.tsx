@@ -12,7 +12,7 @@ const navItems = [
   { href: "/", label: "Map" },
   { href: "/#reports", label: "Reports" },
   { href: "/#oracle", label: "Oracle" },
-  { href: "#source-guidelines", label: "Sources" },
+  { href: "/source-guidelines", label: "Sources" },
 ];
 
 export default function AboutPage() {
@@ -70,6 +70,12 @@ export default function AboutPage() {
             <p className="mt-4 rounded-md border border-signal-teal/25 bg-signal-teal/10 px-3 py-2 text-sm font-semibold text-signal-teal">
               Verified? No. Interesting? Maybe. Source-linked? Always.
             </p>
+            <Link
+              className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md border border-signal-teal/30 bg-signal-teal/10 px-3 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
+              href="/source-guidelines"
+            >
+              Read our Source Guidelines
+            </Link>
           </div>
         </div>
       </section>
@@ -93,12 +99,12 @@ export default function AboutPage() {
             <Link className="transition hover:text-signal-teal" href="/">
               Home
             </Link>
-            <a
+            <Link
               className="transition hover:text-signal-teal"
-              href="#source-guidelines"
+              href="/source-guidelines"
             >
               Source Guidelines
-            </a>
+            </Link>
             <a className="transition hover:text-signal-teal" href="#policy">
               Policy
             </a>

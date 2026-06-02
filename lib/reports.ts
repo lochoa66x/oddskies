@@ -65,7 +65,7 @@ const demoReports: Report[] = [
     shortLabel: "Montreal Orb",
     sourceName: "Public skywatch thread",
     sourceType: "Social thread",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Round teal-white object described hovering above a low cloud shelf before fading.",
     title: "Montreal Orb above low cloud shelf",
@@ -87,7 +87,7 @@ const demoReports: Report[] = [
     shortLabel: "Sedona Triangle",
     sourceName: "Public sighting post",
     sourceType: "Social thread",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Silent triangular light formation reported moving against wind direction.",
     title: "Sedona Triangle over ridge line",
@@ -109,7 +109,7 @@ const demoReports: Report[] = [
     shortLabel: "Popocatepetl Watch",
     sourceName: "Volcano watch clip thread",
     sourceType: "Public video post",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Bright point described hovering near the Popocatepetl skyline before fading.",
     title: "Popocatepetl Watch light near skyline",
@@ -131,7 +131,7 @@ const demoReports: Report[] = [
     shortLabel: "Sao Paulo Signal",
     sourceName: "City skywatch thread",
     sourceType: "Social thread",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Small cluster of pale green lights reported drifting above high-rise rooftops.",
     title: "Sao Paulo Signal above rooftop line",
@@ -153,7 +153,7 @@ const demoReports: Report[] = [
     shortLabel: "Dublin Whisper House",
     sourceName: "Neighborhood history thread",
     sourceType: "Public forum post",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Residents trade stories about knocks, cold windows, and a stairwell voice.",
     title: "Dublin Whisper House thread resurfaces",
@@ -175,7 +175,7 @@ const demoReports: Report[] = [
     shortLabel: "Scottish Castle Echo",
     sourceName: "Local history post",
     sourceType: "Public forum post",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Late-night footsteps and a repeating knock described near a closed castle wing.",
     title: "Scottish Castle Echo near closed wing",
@@ -197,7 +197,7 @@ const demoReports: Report[] = [
     shortLabel: "Transylvania Shadow",
     sourceName: "Regional mystery board",
     sourceType: "Community post",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Travelers describe a shadow crossing an empty road near a forest trail marker.",
     title: "Transylvania Shadow near forest road",
@@ -219,7 +219,7 @@ const demoReports: Report[] = [
     shortLabel: "Tokyo Sky Pulse",
     sourceName: "Late-night sky post",
     sourceType: "Social post",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Blue-white pulse captured between buildings with little location context.",
     title: "Tokyo Sky Pulse between towers",
@@ -241,7 +241,7 @@ const demoReports: Report[] = [
     shortLabel: "Outback Fire Disc",
     sourceName: "Outback travel log",
     sourceType: "Public blog post",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Orange disc-like glow described low over a distant ridgeline after sundown.",
     title: "Outback Fire Disc near remote ridge",
@@ -263,7 +263,7 @@ const demoReports: Report[] = [
     shortLabel: "Wellington Harbor Lights",
     sourceName: "Harbor watch thread",
     sourceType: "Community post",
-    sourceUrl: "#source-guidelines",
+    sourceUrl: "/source-guidelines",
     summary:
       "Three steady lights described moving over the harbor before separating.",
     title: "Wellington Harbor Lights split apart",

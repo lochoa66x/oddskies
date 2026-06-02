@@ -200,7 +200,10 @@ function ReportDetail({
   selected: Report;
 }) {
   const selectedPosition = getReportPosition(selected);
-  const sourceHref = selected.sourceUrl || "#source-guidelines";
+  const sourceHref =
+    selected.sourceUrl === "#source-guidelines"
+      ? "/source-guidelines"
+      : selected.sourceUrl || "/source-guidelines";
   const external = sourceHref.startsWith("http");
   const selectedCountry = getCountry(selected.location);
 

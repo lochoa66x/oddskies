@@ -40,7 +40,7 @@ export default async function Home() {
             </a>
             <a
               className="transition hover:text-signal-teal"
-              href="/about#source-guidelines"
+              href="/source-guidelines"
             >
               Source Guidelines
             </a>
