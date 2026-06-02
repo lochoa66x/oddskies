@@ -24,6 +24,17 @@ const REPORT_COLUMNS = [
   "is_featured",
 ];
 
+const PROMOTABLE_STATUSES = new Set(["new", "needs_review"]);
+const BLOCKED_STATUSES = new Set([
+  "approved",
+  "rejected",
+  "duplicate",
+  "low_context",
+  "private_or_sensitive",
+  "possible_joke",
+  "possible_ai_generated",
+]);
+
 loadLocalEnv();
 
 const options = parseArgs(process.argv.slice(2));
@@ -82,7 +93,7 @@ async function runPromotion(runtimeConfig, runtimeOptions) {
     };
   }
 
-  const safetyErrors = getSafetyErrors(rawSource, runtimeOptions);
+  const safetyErrors = getSafetyErrors(rawSource);
 
   if (safetyErrors.length > 0) {
     return {
@@ -93,7 +104,7 @@ async function runPromotion(runtimeConfig, runtimeOptions) {
 
   const reportDraft = buildReportDraft(rawSource, runtimeOptions);
 
-  if (!runtimeOptions.confirm) {
+  if (!runtimeOptions.confirm || runtimeOptions.dryRun) {
     return {
       dryRun: true,
       errors: [],
@@ -127,6 +138,12 @@ function validateRuntime(runtimeConfig) {
 
   if (!runtimeConfig.supabaseServiceRoleKey) {
     errors.push("Missing SUPABASE_SERVICE_ROLE_KEY.");
+  }
+
+  if (runtimeConfig.supabaseServiceRoleKey?.startsWith("sb_publishable_")) {
+    errors.push(
+      "SUPABASE_SERVICE_ROLE_KEY looks like a publishable key. Use the server-only secret key.",
+    );
   }
 
   return errors;
@@ -192,21 +209,23 @@ async function fetchRawSource(runtimeConfig, id) {
   return Array.isArray(rows) ? rows[0] ?? null : null;
 }
 
-function getSafetyErrors(rawSource, runtimeOptions) {
+function getSafetyErrors(rawSource) {
   const errors = [];
+  const status = readString(rawSource.status) ?? "";
 
-  if (rawSource.approved_report_id && !runtimeOptions.force) {
+  if (rawSource.approved_report_id) {
     errors.push(
-      "This raw source already has an approved_report_id. Use --force only if you intentionally want another report.",
+      "This raw source already has an approved_report_id and cannot be promoted again.",
     );
   }
 
-  if (
-    !runtimeOptions.force &&
-    !["new", "needs_review"].includes(readString(rawSource.status) ?? "")
-  ) {
+  if (BLOCKED_STATUSES.has(status)) {
     errors.push(
-      `Raw source status is "${rawSource.status}". Only new or needs_review rows can be promoted without --force.`,
+      `Raw source status is "${status}" and cannot be promoted. Use review:raw to return it to needs_review only after manual review.`,
+    );
+  } else if (!PROMOTABLE_STATUSES.has(status)) {
+    errors.push(
+      `Raw source status is "${status}". Only new or needs_review rows can be promoted.`,
     );
   }
 
@@ -220,13 +239,14 @@ function getSafetyErrors(rawSource, runtimeOptions) {
 function buildReportDraft(rawSource, runtimeOptions) {
   const sourceHandle = readString(rawSource.author_handle);
   const rawText = readString(rawSource.raw_text) ?? "";
+  const platformLabel = formatPlatformName(rawSource.platform);
   const category =
     runtimeOptions.overrides.category ??
     readString(rawSource.category_guess) ??
     "Unknown";
   const sourceName =
     runtimeOptions.overrides.sourceName ??
-    (sourceHandle ? `Bluesky / @${sourceHandle}` : "Bluesky");
+    (sourceHandle ? `${platformLabel} / @${sourceHandle}` : platformLabel);
 
   return pickReportColumns({
     category,
@@ -253,7 +273,8 @@ function buildReportDraft(rawSource, runtimeOptions) {
       readString(rawSource.posted_at) ??
       readString(rawSource.collected_at),
     source_name: sourceName,
-    source_type: runtimeOptions.overrides.sourceType ?? "Bluesky post",
+    source_type:
+      runtimeOptions.overrides.sourceType ?? formatPlatformSourceType(rawSource.platform),
     source_url:
       runtimeOptions.overrides.sourceUrl ?? readString(rawSource.source_url),
     summary:
@@ -398,6 +419,32 @@ function makeTitle(text) {
   return `${compact.slice(0, 69).trim()}...`;
 }
 
+function formatPlatformName(platform) {
+  const value = readString(platform);
+
+  if (!value) {
+    return "Public source";
+  }
+
+  if (value.toLowerCase() === "bluesky") {
+    return "Bluesky";
+  }
+
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
+}
+
+function formatPlatformSourceType(platform) {
+  const platformName = formatPlatformName(platform);
+
+  return platformName === "Public source"
+    ? "Public source"
+    : `${platformName} post`;
+}
+
 function compactText(text) {
   return text.replace(/\s+/g, " ").trim();
 }
@@ -420,7 +467,6 @@ function parseArgs(args) {
   const parsed = {
     confirm: false,
     dryRun: false,
-    force: false,
     help: false,
     id: null,
     latest: false,
@@ -445,11 +491,6 @@ function parseArgs(args) {
 
     if (arg === "--dry-run") {
       parsed.dryRun = true;
-      continue;
-    }
-
-    if (arg === "--force") {
-      parsed.force = true;
       continue;
     }
 
@@ -617,15 +658,16 @@ function printHelp() {
   console.log(`OddSkies raw source promotion helper
 
 Usage:
-  npm run promote:raw-source -- --list
-  npm run promote:raw-source -- --latest
-  npm run promote:raw-source -- --id <raw_source_id>
-  npm run promote:raw-source -- --id <raw_source_id> --confirm
+  npm run promote:raw -- --list
+  npm run promote:raw -- --latest
+  npm run promote:raw -- --id <raw_source_id>
+  npm run promote:raw -- --id <raw_source_id> --confirm
 
 Defaults:
   - Without --confirm, this prints a preview only.
+  - --dry-run also previews only, for explicit safety checks.
   - Without --id, it previews the latest new/needs_review raw source.
-  - Only new or needs_review rows can be promoted unless --force is used.
+  - Only new or needs_review rows can be promoted.
 
 Useful review overrides:
   --title "Short public title"
