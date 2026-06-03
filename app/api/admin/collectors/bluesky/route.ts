@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
       limit?: number;
       query?: string;
       queries?: string[];
+      since?: string;
+      until?: string;
     };
     const queries = cleanQueries(body.queries ?? [body.query ?? DEFAULT_QUERY]);
     const summary = await collectBlueskyFromEnv({
@@ -26,6 +28,8 @@ export async function POST(request: NextRequest) {
       mode: "admin",
       postProcessInserted: true,
       queries,
+      since: cleanDateValue(body.since),
+      until: cleanDateValue(body.until),
     });
 
     return NextResponse.json(summary);
@@ -35,6 +39,10 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+function cleanDateValue(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function isAuthorized(request: NextRequest) {

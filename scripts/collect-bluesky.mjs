@@ -21,6 +21,8 @@ const config = createBlueskyCollectorConfig(process.env, {
   dryRun: options.dryRun,
   limit: options.limit,
   queries: options.queries.length > 0 ? options.queries : DEFAULT_BLUESKY_QUERIES,
+  since: options.since,
+  until: options.until,
 });
 
 const run = await startCollectorRun(config, "manual");
@@ -46,6 +48,8 @@ function parseArgs(args) {
     help: false,
     limit: 10,
     queries: [],
+    since: null,
+    until: null,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -74,6 +78,18 @@ function parseArgs(args) {
         parsed.queries.push(query);
       }
 
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--since") {
+      parsed.since = args[index + 1] ?? null;
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--until") {
+      parsed.until = args[index + 1] ?? null;
       index += 1;
       continue;
     }
@@ -138,6 +154,7 @@ Usage:
   npm run collect:bluesky
   npm run collect:bluesky -- --dry-run
   npm run collect:bluesky -- --query "ufo sighting" --limit 5
+  npm run collect:bluesky -- --query "strange lights" --since 2026-06-01 --until 2026-06-03 --limit 5
 
 Required for inserts:
   NEXT_PUBLIC_SUPABASE_URL
@@ -295,6 +312,10 @@ function formatError(error) {
 
 function makeFailedSummary(config, error) {
   return {
+    dateWindow: {
+      since: config.dateWindow?.since ?? null,
+      until: config.dateWindow?.until ?? null,
+    },
     dryRun: config.dryRun,
     errors: [formatError(error)],
     queries: [],

@@ -28,6 +28,10 @@ export type CollectorRunRow = {
 };
 
 export type CollectorRunSummary = {
+  dateWindow?: {
+    since?: string | null;
+    until?: string | null;
+  };
   dryRun?: boolean;
   errors?: string[];
   queries?: unknown[];

@@ -671,15 +671,38 @@ Run one explicit query:
 npm run collect:bluesky -- --limit 3 --query "strange lights"
 ```
 
+Run one explicit query inside a date window:
+
+```bash
+npm run collect:bluesky -- --limit 5 --query "strange lights" --since 2026-06-01 --until 2026-06-03
+```
+
+`--since` and `--until` accept `YYYY-MM-DD` or ISO date strings. Date-only
+values are expanded to the start/end of that UTC day before being sent to
+Bluesky search. The date window narrows collection by post/search time; it does
+not verify event timing, and it does not promote anything.
+
 The admin page also has a compact Bluesky collector test panel:
 
 ```text
 /admin/raw-sources
 ```
 
+The admin collector panel includes optional `From date` and `To date` fields.
+Use them for one-off manual pulls such as “only posts from this week.” Leave
+them blank for the normal small recent pull.
+
 Admin-triggered non-dry-runs insert only into `raw_sources`, then attempt to run
 curation scoring and approximate location normalization on newly inserted rows.
 Helper failures are logged as warnings/errors; nothing is promoted.
+
+Date-window collection keeps the same safety model:
+
+- all matching posts are staged in `public.raw_sources`
+- duplicate `source_post_id` or `source_url` rows are skipped
+- public reports are created only through manual review and promotion
+- the original source timestamp remains `posted_at`
+- any inferred event time remains a review hint, not verification
 
 ### Cron Route
 
@@ -706,6 +729,12 @@ Local dry-run test:
 
 ```bash
 curl "http://localhost:3000/api/cron/collect/bluesky?dryRun=true&secret=$ODDSKIES_CRON_SECRET"
+```
+
+Local date-window dry-run test:
+
+```bash
+curl "http://localhost:3000/api/cron/collect/bluesky?dryRun=true&since=2026-06-01&until=2026-06-03&secret=$ODDSKIES_CRON_SECRET"
 ```
 
 Recommended early cadence: daily. Configure the Vercel cron schedule manually

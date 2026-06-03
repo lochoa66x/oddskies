@@ -114,6 +114,10 @@ type RawSourceLocationResult = {
 };
 
 type CollectorSummary = {
+  dateWindow?: {
+    since: string | null;
+    until: string | null;
+  };
   dryRun: boolean;
   errors: string[];
   queries: {
@@ -269,6 +273,8 @@ export function RawSourcesReview() {
   const [collectorLimit, setCollectorLimit] = useState("3");
   const [collectorLoading, setCollectorLoading] = useState(false);
   const [collectorQuery, setCollectorQuery] = useState("strange lights");
+  const [collectorSince, setCollectorSince] = useState("");
+  const [collectorUntil, setCollectorUntil] = useState("");
   const [collectorSummary, setCollectorSummary] =
     useState<CollectorSummary | null>(null);
   const [collectorRuns, setCollectorRuns] = useState<CollectorRun[]>([]);
@@ -519,6 +525,8 @@ export function RawSourcesReview() {
             dryRun: collectorDryRun,
             limit: Number(collectorLimit),
             queries: [collectorQuery],
+            since: collectorSince || undefined,
+            until: collectorUntil || undefined,
           }),
           headers: { "Content-Type": "application/json" },
           method: "POST",
@@ -745,7 +753,7 @@ export function RawSourcesReview() {
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_120px] xl:min-w-[520px]">
+          <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_120px] xl:min-w-[620px]">
             <FilterInput
               label="Query"
               onChange={setCollectorQuery}
@@ -755,6 +763,18 @@ export function RawSourcesReview() {
               label="Limit"
               onChange={setCollectorLimit}
               value={collectorLimit}
+            />
+            <FilterInput
+              label="From date"
+              onChange={setCollectorSince}
+              type="date"
+              value={collectorSince}
+            />
+            <FilterInput
+              label="To date"
+              onChange={setCollectorUntil}
+              type="date"
+              value={collectorUntil}
             />
             <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-950 px-3 py-2 text-sm text-muted sm:col-span-2">
               <input
@@ -1004,6 +1024,12 @@ function CollectorSummaryPanel({ summary }: { summary: CollectorSummary }) {
           {summary.dryRun ? "Dry run" : "Staged insert"}
         </span>
       </div>
+
+      {summary.dateWindow?.since || summary.dateWindow?.until ? (
+        <p className="mt-3 rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-xs text-muted">
+          Date window: {formatDateWindow(summary.dateWindow)}
+        </p>
+      ) : null}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-4">
         <CollectorStat label="Fetched" value={summary.totals.fetched} />
@@ -1360,10 +1386,12 @@ function HintBadges({
 function FilterInput({
   label,
   onChange,
+  type = "text",
   value,
 }: {
   label: string;
   onChange: (value: string) => void;
+  type?: string;
   value: string;
 }) {
   return (
@@ -1372,6 +1400,7 @@ function FilterInput({
       <input
         className="mt-2 w-full rounded-lg border border-night-800 bg-night-950 px-3 py-2 text-sm normal-case tracking-normal text-parchment outline-none transition focus:border-signal-teal"
         onChange={(event) => onChange(event.target.value)}
+        type={type}
         value={value}
       />
     </label>
@@ -1790,6 +1819,44 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
     timeStyle: "short",
+  }).format(date);
+}
+
+function formatDateWindow(window: {
+  since: string | null;
+  until: string | null;
+}) {
+  const since = formatDateOnly(window.since);
+  const until = formatDateOnly(window.until);
+
+  if (since && until) {
+    return `${since} to ${until}`;
+  }
+
+  if (since) {
+    return `Since ${since}`;
+  }
+
+  if (until) {
+    return `Until ${until}`;
+  }
+
+  return "No date window";
+}
+
+function formatDateOnly(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
   }).format(date);
 }
 

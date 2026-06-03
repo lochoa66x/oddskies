@@ -23,6 +23,10 @@ export type BlueskyCollectorQuerySummary = {
 };
 
 export type BlueskyCollectorSummary = {
+  dateWindow: {
+    since: string | null;
+    until: string | null;
+  };
   dryRun: boolean;
   errors: string[];
   queries: BlueskyCollectorQuerySummary[];
@@ -51,6 +55,8 @@ export type BlueskyCollectorOptions = {
   mode?: CollectorRunMode;
   postProcessInserted?: boolean;
   queries?: string[];
+  since?: string | null;
+  until?: string | null;
 };
 
 type BlueskyCoreModule = {
@@ -98,6 +104,10 @@ export async function collectBlueskyFromEnv(options: BlueskyCollectorOptions = {
         errorMessage: message,
         status: "failed",
         summary: {
+          dateWindow: {
+            since: options.since ?? null,
+            until: options.until ?? null,
+          },
           dryRun: Boolean(options.dryRun),
           errors: [message],
           queries: [],

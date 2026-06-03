@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
       logRun: true,
       mode: "scheduled",
       postProcessInserted: true,
+      since: cleanDateValue(request.nextUrl.searchParams.get("since")),
+      until: cleanDateValue(request.nextUrl.searchParams.get("until")),
     });
 
     return NextResponse.json({
@@ -39,6 +41,10 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+function cleanDateValue(value: string | null) {
+  return value?.trim() || null;
 }
 
 function isAuthorizedCronRequest(request: NextRequest) {
