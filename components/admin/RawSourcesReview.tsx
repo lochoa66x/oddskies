@@ -753,8 +753,9 @@ export function RawSourcesReview() {
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_120px] xl:min-w-[620px]">
+          <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[680px] xl:grid-cols-4">
             <FilterInput
+              className="xl:col-span-3"
               label="Query"
               onChange={setCollectorQuery}
               value={collectorQuery}
@@ -765,18 +766,20 @@ export function RawSourcesReview() {
               value={collectorLimit}
             />
             <FilterInput
+              className="xl:col-span-2"
               label="From date"
               onChange={setCollectorSince}
               type="date"
               value={collectorSince}
             />
             <FilterInput
+              className="xl:col-span-2"
               label="To date"
               onChange={setCollectorUntil}
               type="date"
               value={collectorUntil}
             />
-            <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-950 px-3 py-2 text-sm text-muted sm:col-span-2">
+            <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-950 px-3 py-2 text-sm text-muted sm:col-span-2 xl:col-span-4">
               <input
                 checked={collectorDryRun}
                 className="size-4 accent-signal-teal"
@@ -786,7 +789,7 @@ export function RawSourcesReview() {
               Dry run first
             </label>
             <button
-              className="rounded-lg border border-signal-teal/40 bg-signal-teal/10 px-4 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+              className="rounded-lg border border-signal-teal/40 bg-signal-teal/10 px-4 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2 xl:col-span-4"
               disabled={collectorLoading}
               onClick={() => void runBlueskyCollectorTest()}
             >
@@ -1384,18 +1387,22 @@ function HintBadges({
 }
 
 function FilterInput({
+  className = "",
   label,
   onChange,
   type = "text",
   value,
 }: {
+  className?: string;
   label: string;
   onChange: (value: string) => void;
   type?: string;
   value: string;
 }) {
   return (
-    <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+    <label
+      className={`text-xs font-semibold uppercase tracking-[0.2em] text-muted ${className}`}
+    >
       {label}
       <input
         className="mt-2 w-full rounded-lg border border-night-800 bg-night-950 px-3 py-2 text-sm normal-case tracking-normal text-parchment outline-none transition focus:border-signal-teal"
