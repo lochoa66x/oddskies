@@ -96,8 +96,8 @@ export function LatestReports({ reports }: { reports: Report[] }) {
           })}
         </div>
 
-        <div className="grid items-start gap-4 lg:grid-cols-[0.88fr_1.12fr]">
-          <div className="field-log-list flex gap-3 overflow-x-auto pb-1 lg:grid lg:max-h-[760px] lg:overflow-x-hidden lg:overflow-y-auto lg:pr-1">
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)]">
+          <div className="field-log-list flex gap-3 overflow-x-auto rounded-lg border border-night-800 bg-night-850/45 p-2 lg:grid lg:max-h-[940px] lg:overflow-x-hidden lg:overflow-y-auto lg:pr-2">
             {visibleReports.length > 0 ? (
               visibleReports.map((report, index) => {
                 const selectedCard = selected?.id === report.id;
@@ -242,8 +242,8 @@ function ReportDetail({
         </p>
       </div>
 
-      <div className="atlas-grid detail-atlas relative min-h-[355px] overflow-hidden md:min-h-[430px] xl:min-h-[480px]">
-        <WorldMapBase className="absolute inset-x-4 top-8 h-[74%] w-[calc(100%-2rem)] md:inset-x-5 md:h-[76%] md:w-[calc(100%-2.5rem)]" />
+      <div className="atlas-grid detail-atlas relative min-h-[330px] overflow-hidden md:min-h-[390px] xl:min-h-[420px]">
+        <WorldMapBase className="absolute inset-x-4 top-8 h-[73%] w-[calc(100%-2rem)] md:inset-x-5 md:h-[75%] md:w-[calc(100%-2.5rem)]" />
         <svg
           aria-hidden="true"
           className="atlas-route-lines absolute inset-x-7 top-10 h-[68%] w-[calc(100%-3.5rem)] md:inset-x-8 md:w-[calc(100%-4rem)]"

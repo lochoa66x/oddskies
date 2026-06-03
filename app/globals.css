@@ -524,8 +524,29 @@ a {
 }
 
 .field-log-list {
-  scrollbar-color: rgba(72, 224, 194, 0.32) rgba(7, 10, 18, 0.45);
-  scrollbar-width: thin;
+  scrollbar-color: rgba(72, 224, 194, 0.72) rgba(7, 10, 18, 0.72);
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+}
+
+.field-log-list::-webkit-scrollbar {
+  height: 0.7rem;
+  width: 0.7rem;
+}
+
+.field-log-list::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(7, 10, 18, 0.72);
+}
+
+.field-log-list::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(7, 10, 18, 0.72);
+  border-radius: 999px;
+  background: rgba(72, 224, 194, 0.68);
+}
+
+.field-log-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(72, 224, 194, 0.92);
 }
 
 .report-card[aria-pressed="true"] {
