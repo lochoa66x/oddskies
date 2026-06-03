@@ -730,18 +730,18 @@ export function RawSourcesReview() {
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-signal-teal">
-              Collector test
+              Collector control
             </p>
             <h2 className="mt-2 text-xl font-bold text-parchment">
-              Bluesky to raw_sources
+              Staged Bluesky pull
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted">
-              Runs a small staging-only pull. Nothing becomes public until a raw
-              source is reviewed and promoted.
+              Pulls a small batch into raw_sources only. Nothing becomes public
+              until a raw source is reviewed and promoted.
             </p>
             <CollectorRunStatusPanel
               loading={collectorRunsLoading}
-              run={collectorRuns[0] ?? null}
+              runs={collectorRuns}
             />
           </div>
 
@@ -770,7 +770,7 @@ export function RawSourcesReview() {
               disabled={collectorLoading}
               onClick={() => void runBlueskyCollectorTest()}
             >
-              {collectorLoading ? "Checking the sky..." : "Run Bluesky collector test"}
+              {collectorLoading ? "Checking the sky..." : "Run staged Bluesky pull"}
             </button>
           </div>
         </div>
@@ -1059,11 +1059,13 @@ function CollectorStat({ label, value }: { label: string; value: number }) {
 
 function CollectorRunStatusPanel({
   loading,
-  run,
+  runs,
 }: {
   loading: boolean;
-  run: CollectorRun | null;
+  runs: CollectorRun[];
 }) {
+  const run = runs[0] ?? null;
+
   if (loading) {
     return (
       <div className="mt-4 rounded-lg border border-night-800 bg-night-950 p-3 text-sm text-muted">
@@ -1106,6 +1108,29 @@ function CollectorRunStatusPanel({
         <p className="mt-3 rounded-lg border border-signal-amber/30 bg-signal-amber/10 p-2 text-xs text-parchment">
           {run.error_message}
         </p>
+      ) : null}
+      {runs.length > 1 ? (
+        <div className="mt-3 border-t border-night-800 pt-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            Recent runs
+          </p>
+          <div className="mt-2 space-y-2">
+            {runs.slice(1, 3).map((recentRun) => (
+              <div
+                className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted"
+                key={recentRun.id}
+              >
+                <span>
+                  {formatDate(recentRun.started_at)} · {recentRun.mode}
+                </span>
+                <span>
+                  {recentRun.dry_run ? "dry run" : "staged"} · fetched{" "}
+                  {recentRun.fetched_count} · inserted {recentRun.inserted_count}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : null}
     </div>
   );

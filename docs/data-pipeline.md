@@ -711,6 +711,37 @@ curl "http://localhost:3000/api/cron/collect/bluesky?dryRun=true&secret=$ODDSKIE
 Recommended early cadence: daily. Configure the Vercel cron schedule manually
 after confirming the route works and the run log looks clean.
 
+### Production Enablement Checklist
+
+Keep scheduled collection off until the manual/admin path looks boring and
+predictable.
+
+Before enabling the Vercel schedule:
+
+- confirm `SUPABASE_SERVICE_ROLE_KEY` is configured only as a server-side secret
+- confirm `BLUESKY_IDENTIFIER` and `BLUESKY_APP_PASSWORD` are configured only as server-side secrets
+- set `ODDSKIES_CRON_SECRET` to a long server-only secret
+- leave `ODDSKIES_COLLECTOR_ENABLED=false` until ready for scheduled runs
+- run the admin collector in dry-run mode and confirm `collector_runs` logs it
+- run one staged admin pull with a small limit and confirm rows land only in `raw_sources`
+- review the staging queue before promoting anything
+
+When ready, set:
+
+```text
+ODDSKIES_COLLECTOR_ENABLED=true
+```
+
+Then test the production cron route with a dry run first:
+
+```bash
+curl -H "Authorization: Bearer $ODDSKIES_CRON_SECRET" \
+  "https://oddskies.com/api/cron/collect/bluesky?dryRun=true"
+```
+
+If that looks clean, configure a daily Vercel cron schedule for the same route.
+Do not schedule aggressive intervals while the review workflow is still manual.
+
 Raw sources are evidence trails, not public reports.
 
 ## Source Promise
