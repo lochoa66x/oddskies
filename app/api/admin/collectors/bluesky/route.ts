@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
     const summary = await collectBlueskyFromEnv({
       dryRun: body.dryRun ?? true,
       limit: clampLimit(body.limit),
+      logRun: true,
+      mode: "admin",
+      postProcessInserted: true,
       queries,
     });
 
