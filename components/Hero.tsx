@@ -60,6 +60,10 @@ export function Hero({ reports }: { reports: Report[] }) {
       <div className="sky-noise absolute inset-0" />
       <div className="ufo-beam absolute right-[9%] top-14 hidden h-[34rem] w-[24rem] md:block" />
       <div className="saucer-silhouette absolute right-[22%] top-16 hidden md:block" />
+      <div
+        aria-hidden="true"
+        className="abduction-easter-egg absolute right-[18.5%] top-56 hidden md:block"
+      />
       <div className="haunted-horizon absolute bottom-0 left-[44%] hidden h-52 w-[34rem] lg:block" />
       <div className="terrain-silhouette absolute inset-x-0 bottom-0 h-36" />
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-signal-teal/50 to-transparent" />
@@ -90,7 +94,7 @@ export function Hero({ reports }: { reports: Report[] }) {
         </nav>
       </header>
 
-      <div className="relative z-10 mx-auto grid max-w-[88rem] gap-7 px-5 pb-10 pt-4 lg:min-h-[calc(100svh-68px)] lg:grid-cols-[0.62fr_1.38fr] lg:items-center lg:gap-8 lg:pb-12 lg:pt-3">
+      <div className="relative z-10 mx-auto grid max-w-[88rem] gap-7 px-5 pb-10 pt-4 md:pt-6 lg:grid-cols-[0.62fr_1.38fr] lg:items-center lg:gap-8 lg:pb-12 lg:pt-8 xl:pt-10">
         <div>
           <p className="inline-flex rounded-md border border-signal-amber/30 bg-signal-amber/10 px-3 py-2 text-sm font-semibold text-signal-amber">
             Mystery Atlas / Phase 1 Preview
