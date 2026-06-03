@@ -371,18 +371,33 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
   const category = normalizeCategory(
     readString(row, "category", "report_category", "type") ?? "Unknown",
   );
-  const title =
-    readString(row, "display_title", "title", "report_title", "name", "label") ??
-    "Untitled strange report";
+  const displayTitle = readString(row, "display_title");
   const originalTitle = readString(row, "title", "report_title", "name", "label");
-  const summary =
-    readString(row, "display_summary", "summary", "description", "body") ??
-    "No summary is available yet.";
+  const rawTitle =
+    displayTitle && !looksPreTruncated(displayTitle)
+      ? displayTitle
+      : originalTitle ?? displayTitle ?? "Untitled strange report";
+  const cleanedTitle = cleanPublicText(rawTitle) || "Untitled strange report";
+  const title = truncateAtNaturalBoundary(cleanedTitle, 88);
+  const displaySummary = readString(row, "display_summary");
   const originalSummary = readString(row, "summary", "description", "body");
+  const rawSummary =
+    displaySummary && !looksPreTruncated(displaySummary)
+      ? displaySummary
+      : originalSummary ?? displaySummary ?? "No summary is available yet.";
+  const cleanedSummary =
+    cleanPublicText(rawSummary) || "No summary is available yet.";
+  const summary = truncateAtNaturalBoundary(cleanedSummary, 280);
   const eventRaw =
     readString(row, "event_datetime", "event_at", "event_date") ?? "";
   const reportedRaw =
     readString(row, "reported_datetime", "reported_at", "created_at") ?? "";
+  const rawLocation = readString(row, "location", "place", "location_name");
+  const location = formatPublicLocation(rawLocation);
+  const hasUsableLocation = !isPlaceholderLocation(rawLocation);
+  const locationConfidence = formatPublicLocationConfidence(
+    readString(row, "location_confidence"),
+  );
   const region = normalizeRegion(
     readString(row, "region", "report_region", "region_label"),
     latitude,
@@ -402,9 +417,10 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
       "Suspiciously Interesting",
     eventDateTime: formatDateTime(eventRaw),
     eventDateTimeRaw: eventRaw,
-    hasLocation:
-      readBoolean(row, "has_location") ??
-      Boolean(readString(row, "location", "place", "location_name")),
+    hasLocation: Boolean(
+      (readBoolean(row, "has_location") ?? hasUsableLocation) &&
+        hasUsableLocation,
+    ),
     hasMediaHint: readBoolean(row, "has_media_hint") ?? readBoolean(row, "has_media"),
     hasSourceLink:
       readBoolean(row, "has_source_link") ??
@@ -412,12 +428,10 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     hasTime: readBoolean(row, "has_time") ?? Boolean(eventRaw || reportedRaw),
     id:
       readString(row, "id", "slug", "report_id") ??
-      `${slugify(title)}-${index}`,
+      `${slugify(rawTitle)}-${index}`,
     latitude,
-    location:
-      readString(row, "location", "place", "location_name") ??
-      "Location not listed",
-    locationConfidence: readString(row, "location_confidence"),
+    location,
+    locationConfidence,
     locationResolution: readString(row, "location_resolution"),
     longitude,
     marker: getMarkerClass(category),
@@ -426,9 +440,11 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     originalTitle: originalTitle && originalTitle !== title ? originalTitle : undefined,
     region,
     reportedDateTime: formatDateTime(reportedRaw),
-    shortLabel:
-      readString(row, "short_label", "map_label") ??
-      makeShortLabel(title, readString(row, "location", "place", "location_name")),
+    shortLabel: makePublicShortLabel(
+      readString(row, "short_label", "map_label"),
+      title,
+      rawLocation,
+    ),
     sourceName:
       readString(row, "source_name", "source", "publisher") ??
       "Source not listed",
@@ -444,6 +460,110 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     verificationStatus:
       readString(row, "verification_status", "status") ?? "Unverified",
   };
+}
+
+function cleanPublicText(value: string) {
+  return value
+    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function looksPreTruncated(value: string) {
+  return /(\.\.\.|…)$/u.test(value.trim());
+}
+
+function truncateAtNaturalBoundary(value: string, maxLength: number) {
+  const cleaned = value.replace(/\s+/g, " ").trim();
+
+  if (cleaned.length <= maxLength) {
+    return cleaned;
+  }
+
+  const cutoff = Math.max(0, maxLength - 1);
+  const slice = cleaned.slice(0, cutoff).trimEnd();
+  const punctuationMatches = [...slice.matchAll(/[.!?]/g)];
+  const lastPunctuation = punctuationMatches.at(-1)?.index;
+
+  if (
+    lastPunctuation !== undefined &&
+    lastPunctuation > Math.floor(maxLength * 0.45)
+  ) {
+    return `${slice.slice(0, lastPunctuation + 1).trim()}…`;
+  }
+
+  const lastSpace = slice.lastIndexOf(" ");
+  const boundary =
+    lastSpace > Math.floor(maxLength * 0.45) ? slice.slice(0, lastSpace) : slice;
+
+  return `${boundary.replace(/[,:;-]+$/g, "").trim()}…`;
+}
+
+function formatPublicLocation(value?: string) {
+  if (isPlaceholderLocation(value)) {
+    return "Location pending";
+  }
+
+  return cleanPublicText(value ?? "");
+}
+
+function isPlaceholderLocation(value?: string) {
+  const normalized = cleanPublicText(value ?? "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ");
+
+  return (
+    normalized.length === 0 ||
+    normalized === "unknown" ||
+    normalized === "none" ||
+    normalized === "no location" ||
+    normalized === "location none" ||
+    normalized === "location pending" ||
+    normalized === "location not listed" ||
+    normalized === "location under review" ||
+    normalized === "not listed"
+  );
+}
+
+function hasPlaceholderLocationText(value: string) {
+  return /location\s+(under review|pending|not listed|none)|\bloc\s+(none|unknown|pending)\b/i.test(
+    value,
+  );
+}
+
+function formatPublicLocationConfidence(value?: string) {
+  const normalized = cleanPublicText(value ?? "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ");
+
+  if (
+    !normalized ||
+    normalized === "none" ||
+    normalized === "unknown" ||
+    normalized === "pending" ||
+    normalized === "not listed"
+  ) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
+function makePublicShortLabel(
+  label: string | undefined,
+  title: string,
+  location?: string,
+) {
+  const cleanedLabel = cleanPublicText(label ?? "");
+
+  if (cleanedLabel && !hasPlaceholderLocationText(cleanedLabel)) {
+    return truncateAtNaturalBoundary(cleanedLabel, 34);
+  }
+
+  return makeShortLabel(
+    title,
+    isPlaceholderLocation(location) ? undefined : location,
+  );
 }
 
 function readString(row: SupabaseReportRow, ...keys: string[]) {

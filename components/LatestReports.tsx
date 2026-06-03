@@ -101,6 +101,8 @@ export function LatestReports({ reports }: { reports: Report[] }) {
             {visibleReports.length > 0 ? (
               visibleReports.map((report, index) => {
                 const selectedCard = selected?.id === report.id;
+                const locationConfidenceLabel =
+                  getLocationConfidenceBadge(report);
 
                 return (
                   <button
@@ -139,7 +141,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                       {report.title}
                     </h3>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
-                      <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
+                      <span className={getLocationChipClass(report.location)}>
                         {report.location}
                       </span>
                       <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
@@ -148,9 +150,9 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                       <span className="rounded border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-signal-violet">
                         {report.confidenceMood}
                       </span>
-                      {report.locationConfidence ? (
+                      {locationConfidenceLabel ? (
                         <span className="rounded border border-signal-teal/25 bg-signal-teal/10 px-2 py-1 text-signal-teal">
-                          Loc {report.locationConfidence}
+                          {locationConfidenceLabel}
                         </span>
                       ) : null}
                     </div>
@@ -356,12 +358,48 @@ function getReportPosition(report: Report) {
 }
 
 function getCountry(location: string) {
+  if (isPendingLocation(location)) {
+    return "Unknown";
+  }
+
   return location.split(",").at(-1)?.trim() || "Unknown";
 }
 
 function getLocationConfidenceLabel(report: Report) {
-  const confidence = report.locationConfidence ?? "unknown";
+  const confidence = report.locationConfidence;
   const resolution = report.locationResolution;
 
-  return resolution ? `${confidence} / ${resolution.replace(/_/g, " ")}` : confidence;
+  if (!confidence) {
+    return "Location pending";
+  }
+
+  return resolution
+    ? `${toDisplayLabel(confidence)} / ${toDisplayLabel(resolution)}`
+    : toDisplayLabel(confidence);
+}
+
+function getLocationConfidenceBadge(report: Report) {
+  if (!report.locationConfidence) {
+    return undefined;
+  }
+
+  return `Location ${toDisplayLabel(report.locationConfidence)}`;
+}
+
+function getLocationChipClass(location: string) {
+  const tone = isPendingLocation(location)
+    ? "border-night-800 bg-night-950/40 text-muted"
+    : "border-night-800 bg-night-950/55 text-muted";
+
+  return `rounded border px-2 py-1 ${tone}`;
+}
+
+function isPendingLocation(location: string) {
+  return location.trim().toLowerCase() === "location pending";
+}
+
+function toDisplayLabel(value: string) {
+  const normalized = value.replace(/[_-]+/g, " ").trim().toLowerCase();
+
+  return normalized.replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
