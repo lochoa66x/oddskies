@@ -254,28 +254,31 @@ function WeirdnessGrid({
   cells: GridCell[];
   totalReports: number;
 }) {
-  const weeks = groupCellsByWeek(cells);
-  const monthLabels = getHeatmapMonthLabels(weeks);
-  const gridMinWidth = `${weeks.length * 1.05}rem`;
+  const activeDays = cells.filter((cell) => cell.count > 0);
+  const displayedDays = activeDays.slice(-8);
+  const quietDays = cells.length - activeDays.length;
 
   return (
-    <article className="field-card min-w-0 rounded-lg p-3.5 md:p-4">
+    <article className="field-card min-w-0 rounded-lg p-3.5 md:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
             Weirdness Activity
           </p>
           <h3 className="mt-2 text-xl font-semibold text-parchment md:text-2xl">
-            Recent weirdness activity.
+            Recent signal tape.
           </h3>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Tiny squares from unverified reports. Quiet cells are asleep.
-            Bright cells mean the map had snacks.
+            Active days from unverified reports. Quiet days stay tucked away
+            until the map gets more snacks.
           </p>
         </div>
         <div className="flex w-fit flex-wrap gap-2">
           <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
-            {recentActivityWeeks} weeks shown
+            {recentActivityWeeks} weeks scanned
+          </span>
+          <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
+            {activeDays.length} active days
           </span>
           <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
             {totalReports} reports indexed
@@ -283,63 +286,78 @@ function WeirdnessGrid({
         </div>
       </div>
 
-      <div className="mt-5 overflow-x-auto pb-2">
-        <div style={{ minWidth: gridMinWidth }}>
-          <div
-            className="grid gap-1"
-            style={{
-              gridTemplateColumns: `repeat(${weeks.length}, 0.875rem)`,
-            }}
-          >
-            {monthLabels.map((label, index) => (
-              <span
-                className="h-4 text-[0.62rem] uppercase tracking-[0.12em] text-muted"
-                key={`month-${index}`}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-2 grid grid-flow-col grid-rows-7 auto-cols-[0.875rem] gap-1">
-            {weeks.flat().map((cell) => (
-              <span
-                aria-label={`${cell.dateLabel}: ${cell.count} report${
-                  cell.count === 1 ? "" : "s"
-                }`}
-                className={`size-3.5 rounded-[0.18rem] border ${getHeatCellClass(
-                  cell.intensity,
-                )}`}
+      <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem]">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {displayedDays.length > 0 ? (
+            displayedDays.map((cell) => (
+              <article
+                className="rounded-md border border-night-800 bg-night-950/80 p-3"
                 key={toDateKey(cell.date)}
-                title={`${cell.dateLabel}: ${cell.count} report${
-                  cell.count === 1 ? "" : "s"
-                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted">
+                      {formatActivityDate(cell.date)}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-parchment">
+                      {cell.count} {cell.count === 1 ? "report" : "reports"}
+                    </p>
+                  </div>
+                  <span
+                    className={`size-2 rounded-full ${getSignalDotClass(
+                      cell.intensity,
+                    )}`}
+                  />
+                </div>
+                <div className="mt-3 grid grid-cols-6 gap-1" aria-hidden="true">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <span
+                      className={`h-2 rounded-full border ${
+                        index < Math.min(cell.count, 6)
+                          ? getHeatCellClass(cell.intensity)
+                          : "border-night-800 bg-night-950"
+                      }`}
+                      key={index}
+                    />
+                  ))}
+                </div>
+                <p className="mt-3 text-xs leading-5 text-muted">
+                  {getActivityMood(cell.count)}
+                </p>
+              </article>
+            ))
+          ) : (
+            <div className="rounded-md border border-night-800 bg-night-950/80 p-4 text-sm leading-6 text-muted sm:col-span-2 xl:col-span-4">
+              No active days in the recent scan. Quiet skies, at least for the
+              demo layer.
+            </div>
+          )}
+        </div>
+
+        <aside className="rounded-md border border-night-800 bg-night-950/70 p-3 text-xs leading-5 text-muted">
+          <p className="font-semibold uppercase tracking-[0.16em] text-parchment">
+            Signal key
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <span>Quiet</span>
+            {[0, 1, 2, 3, 4].map((intensity) => (
+              <span
+                className={`size-3 rounded-[0.18rem] border ${getHeatCellClass(
+                  intensity,
+                )}`}
+                key={intensity}
               />
             ))}
+            <span>Spicy</span>
           </div>
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
-        <div className="flex max-w-xl flex-col gap-1">
-          <span>Based on event dates when available.</span>
-          <span>
-            Recent seed/demo activity shown while collectors warm up. Counts are
-            real. Conclusions are not.
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>Quiet</span>
-          {[0, 1, 2, 3, 4].map((intensity) => (
-            <span
-              className={`size-3 rounded-[0.18rem] border ${getHeatCellClass(
-                intensity,
-              )}`}
-              key={intensity}
-            />
-          ))}
-          <span>Sky is spicy</span>
-        </div>
+          <p className="mt-3">
+            {quietDays} quiet days hidden from the recent scan. Based on event
+            dates when available.
+          </p>
+          <p className="mt-2 text-signal-amber">
+            Counts are real. Conclusions are not.
+          </p>
+        </aside>
       </div>
     </article>
   );
@@ -426,32 +444,6 @@ function createWeirdnessGrid(
       }).format(date),
       intensity: getHeatIntensity(count),
     };
-  });
-}
-
-function groupCellsByWeek(cells: GridCell[]) {
-  return Array.from({ length: Math.ceil(cells.length / 7) }, (_, index) =>
-    cells.slice(index * 7, index * 7 + 7),
-  );
-}
-
-function getHeatmapMonthLabels(weeks: GridCell[][]) {
-  return weeks.map((week, index) => {
-    if (index === 0 && week[0]) {
-      return formatMonth(week[0].date);
-    }
-
-    const previousWeek = weeks[index - 1];
-    const previousMonth = previousWeek?.[0]?.date.getMonth();
-    const monthStart = week.find(
-      (cell) => cell.date.getMonth() !== previousMonth,
-    );
-
-    if (monthStart) {
-      return formatMonth(monthStart.date);
-    }
-
-    return "";
   });
 }
 
@@ -597,6 +589,25 @@ function toDateKey(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-function formatMonth(date: Date) {
-  return new Intl.DateTimeFormat("en-US", { month: "short" }).format(date);
+function formatActivityDate(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
+
+function getActivityMood(count: number) {
+  if (count >= 4) {
+    return "Sky is spicy.";
+  }
+
+  if (count >= 3) {
+    return "Map had snacks.";
+  }
+
+  if (count >= 2) {
+    return "Odd little cluster.";
+  }
+
+  return "Single weird ping.";
 }
