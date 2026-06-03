@@ -99,11 +99,11 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
 
   return (
     <section
-      className="border-y border-night-800 bg-night-900 px-5 py-8 md:py-10"
+      className="border-y border-night-800 bg-night-900 px-5 py-7 md:py-9"
       id="signals"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="mb-3.5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
               Signal Strip
@@ -135,7 +135,7 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
           topRegion={topRegion}
         />
 
-        <div className="mt-4">
+        <div className="mt-3">
           <WeirdnessGrid cells={heatmapCells} totalReports={reports.length} />
         </div>
       </div>
@@ -204,7 +204,7 @@ function SignalStrip({
     <div className="signal-strip flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-5">
       {cards.map((card, index) => (
         <article
-          className="field-card signal-artifact relative min-h-28 min-w-[13.5rem] overflow-hidden rounded-lg p-3 sm:min-w-0"
+          className="field-card signal-artifact relative min-h-24 min-w-[13rem] overflow-hidden rounded-lg p-3 sm:min-w-0"
           key={card.label}
         >
           <span
@@ -286,12 +286,12 @@ function WeirdnessGrid({
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_16rem]">
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_15rem]">
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {displayedDays.length > 0 ? (
             displayedDays.map((cell) => (
               <article
-                className="rounded-md border border-night-800 bg-night-950/80 p-3"
+                className="rounded-md border border-night-800 bg-night-950/80 p-2.5"
                 key={toDateKey(cell.date)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -309,7 +309,7 @@ function WeirdnessGrid({
                     )}`}
                   />
                 </div>
-                <div className="mt-3 grid grid-cols-6 gap-1" aria-hidden="true">
+                <div className="mt-2.5 grid grid-cols-6 gap-1" aria-hidden="true">
                   {Array.from({ length: 6 }).map((_, index) => (
                     <span
                       className={`h-2 rounded-full border ${
@@ -321,7 +321,7 @@ function WeirdnessGrid({
                     />
                   ))}
                 </div>
-                <p className="mt-3 text-xs leading-5 text-muted">
+                <p className="mt-2.5 text-xs leading-5 text-muted">
                   {getActivityMood(cell.count)}
                 </p>
               </article>

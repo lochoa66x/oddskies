@@ -465,6 +465,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
 function cleanPublicText(value: string) {
   return value
     .replace(/https?:\/\/\S+/gi, "")
+    .replace(/(^|[\s([{])#[^\s#]+/gu, "$1")
     .replace(/\s+/g, " ")
     .trim();
 }

@@ -17,8 +17,8 @@ export default async function Home() {
       <OddSkiesOracle />
       <SignalsWeirdness reports={reports} />
       <WeirdShelf />
-      <footer className="bg-night-950 px-5 py-10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 border-t border-night-800 pt-8 text-sm text-muted md:flex-row md:items-center md:justify-between">
+      <footer className="bg-night-950 px-5 py-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 border-t border-night-800 pt-6 text-sm text-muted md:flex-row md:items-center md:justify-between">
           <div className="max-w-2xl">
             <p className="font-semibold text-parchment">OddSkies</p>
             <p className="mt-1 text-parchment">

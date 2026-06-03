@@ -94,23 +94,23 @@ export function Hero({ reports }: { reports: Report[] }) {
         </nav>
       </header>
 
-      <div className="relative z-10 mx-auto grid max-w-[88rem] gap-7 px-5 pb-10 pt-4 md:pt-6 lg:grid-cols-[0.62fr_1.38fr] lg:items-center lg:gap-8 lg:pb-12 lg:pt-8 xl:pt-10">
-        <div>
+      <div className="relative z-10 mx-auto grid max-w-[88rem] gap-6 px-5 pb-9 pt-2 md:pt-4 lg:grid-cols-[0.62fr_1.38fr] lg:items-start lg:gap-8 lg:pb-10 lg:pt-5 xl:pt-6">
+        <div className="lg:pt-8 xl:pt-12">
           <p className="inline-flex rounded-md border border-signal-amber/30 bg-signal-amber/10 px-3 py-2 text-sm font-semibold text-signal-amber">
             Mystery Atlas / Phase 1 Preview
           </p>
-          <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[0.95] text-parchment sm:text-6xl lg:text-6xl xl:text-7xl">
+          <h1 className="mt-4 max-w-3xl text-5xl font-semibold leading-[0.95] text-parchment sm:text-6xl lg:text-6xl xl:text-7xl">
             Explore the weird side of the map.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-8 text-muted md:text-lg">
+          <p className="mt-4 max-w-2xl text-base leading-8 text-muted md:text-lg">
             OddSkies organizes strange, unverified public reports — from UFOs
             and strange lights to haunted places and local legends — by time,
             place, category, and source.
           </p>
-          <p className="mt-5 max-w-xl rounded-md border border-night-800 bg-night-900/80 px-4 py-3 text-sm font-semibold text-parchment">
+          <p className="mt-4 max-w-xl rounded-md border border-night-800 bg-night-900/80 px-4 py-3 text-sm font-semibold text-parchment">
             Verified? No. Interesting? Maybe. Source-linked? Always.
           </p>
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <a
               className="hero-cta hero-cta-primary inline-flex min-h-14 items-center justify-center gap-3 rounded-md bg-signal-teal px-5 py-3 text-sm font-bold text-night-950 shadow-glow transition hover:bg-parchment"
               href="#map"
@@ -140,7 +140,7 @@ export function Hero({ reports }: { reports: Report[] }) {
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
-                Phase 1 density layer
+                Global field layer
               </span>
               <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
                 Global preview / {plottedCount} plotted
@@ -218,7 +218,7 @@ export function Hero({ reports }: { reports: Report[] }) {
 
             <div className="absolute left-5 right-5 top-5 z-[3] flex flex-wrap items-start justify-between gap-2">
               <div className="max-w-[13rem] rounded-md border border-night-800 bg-night-950/80 px-3 py-2 text-xs text-muted">
-                Field layer: public report density
+                Field layer: public report markers
               </div>
               <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs font-semibold text-signal-amber">
                 Not confirmed events
@@ -274,7 +274,7 @@ export function Hero({ reports }: { reports: Report[] }) {
             </div>
 
             <div className="atlas-control absolute right-5 top-16 hidden rounded-md border border-night-800 bg-night-950/80 p-2 text-xs text-muted 2xl:flex">
-              <span>Density</span>
+              <span>Markers</span>
               <span>Source links</span>
               <span>48h</span>
             </div>
@@ -291,9 +291,9 @@ export function Hero({ reports }: { reports: Report[] }) {
                 ))}
               </div>
               <div className="flex max-w-sm items-center gap-3 rounded-md border border-night-800 bg-night-950/85 px-3 py-2 text-xs text-muted">
-                <span>Fewer reports</span>
+                <span>Quiet regions</span>
                 <span className="h-2 flex-1 rounded-full bg-gradient-to-r from-signal-teal/35 via-signal-amber to-signal-ember" />
-                <span>More reports</span>
+                <span>Active regions</span>
               </div>
             </div>
           </div>
