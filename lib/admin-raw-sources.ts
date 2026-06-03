@@ -4,6 +4,10 @@ import { scoreRawSource } from "@/lib/curation/scoreRawSource";
 import type { RawSourceCurationScore } from "@/lib/curation/scoreRawSource";
 import { normalizeLocation } from "@/lib/location/normalizeLocation";
 import type { LocationNormalization } from "@/lib/location/normalizeLocation";
+import {
+  enrichReportDraft,
+  pickReportEnrichmentColumns,
+} from "@/lib/reports/enrichReport";
 
 export const rawSourceStatuses = [
   "new",
@@ -73,19 +77,33 @@ export type ReportDraft = {
   category: string;
   confidence_label: string;
   country: string | null;
+  display_summary: string;
+  display_title: string;
+  enrichment_notes: string[];
   event_datetime: string | null;
+  has_location: boolean;
+  has_media_hint: boolean;
   has_media: boolean;
+  has_source_link: boolean;
+  has_time: boolean;
   is_featured: boolean;
   latitude: number | null;
+  last_enriched_at: string;
   location_confidence: string | null;
   location_name: string;
   location_resolution: string | null;
   location_warnings: string[];
   longitude: number | null;
   media_url: string | null;
+  mood_label: string;
+  oracle_prompt_seed: string | null;
+  oracle_ready: boolean;
   region: string;
   reported_datetime: string | null;
+  short_label: string;
   source_name: string;
+  source_quality_label: string;
+  source_quality_reasons: string[];
   source_type: string;
   source_url: string | null;
   summary: string;
@@ -153,6 +171,20 @@ const REPORT_COLUMNS = [
   "verification_status",
   "confidence_label",
   "is_featured",
+  "display_title",
+  "display_summary",
+  "short_label",
+  "mood_label",
+  "source_quality_label",
+  "source_quality_reasons",
+  "has_source_link",
+  "has_location",
+  "has_time",
+  "has_media_hint",
+  "oracle_ready",
+  "oracle_prompt_seed",
+  "enrichment_notes",
+  "last_enriched_at",
 ] as const;
 
 const promotableStatuses = new Set<RawSourceStatus>(["new", "needs_review"]);
@@ -371,7 +403,7 @@ export function buildReportDraft(
   const sourceHandle = readString(rawSource.author_handle);
   const rawText = readString(rawSource.raw_text) ?? "";
   const platformName = formatPlatformName(rawSource.platform);
-  const draft: ReportDraft = {
+  const draft = {
     category:
       readString(overrides.category) ??
       readString(rawSource.category_guess) ??
@@ -429,8 +461,12 @@ export function buildReportDraft(
       "Untitled strange report",
     verification_status: "Unverified",
   };
+  const enrichment = enrichReportDraft(draft as Record<string, unknown>);
 
-  return pickReportColumns(draft);
+  return pickReportColumns({
+    ...draft,
+    ...pickReportEnrichmentColumns(enrichment),
+  });
 }
 
 export function getPromotionWarnings(rawSource: RawSourceRow, draft: ReportDraft) {
@@ -769,7 +805,7 @@ function clampLimit(value: number | undefined) {
   return Math.max(1, Math.min(100, Math.floor(Number(value))));
 }
 
-function pickReportColumns(report: ReportDraft) {
+function pickReportColumns(report: Record<string, unknown>) {
   return Object.fromEntries(
     REPORT_COLUMNS.map((column) => [column, report[column]]),
   ) as ReportDraft;

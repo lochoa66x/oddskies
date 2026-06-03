@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "collect:bluesky": "node scripts/collect-bluesky.mjs",
+    "enrich:reports": "node scripts/enrich-reports.mjs",
     "promote:raw": "node scripts/promote-raw-source.mjs",
     "promote:raw-source": "node scripts/promote-raw-source.mjs",
     "normalize:locations": "node scripts/normalize-raw-locations.mjs",

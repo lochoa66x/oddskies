@@ -2,6 +2,10 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import {
+  enrichReportDraft,
+  pickReportEnrichmentColumns,
+} from "../lib/reports/enrich-report-core.mjs";
 
 const REPORT_COLUMNS = [
   "title",
@@ -25,6 +29,20 @@ const REPORT_COLUMNS = [
   "verification_status",
   "confidence_label",
   "is_featured",
+  "display_title",
+  "display_summary",
+  "short_label",
+  "mood_label",
+  "source_quality_label",
+  "source_quality_reasons",
+  "has_source_link",
+  "has_location",
+  "has_time",
+  "has_media_hint",
+  "oracle_ready",
+  "oracle_prompt_seed",
+  "enrichment_notes",
+  "last_enriched_at",
 ];
 
 const PROMOTABLE_STATUSES = new Set(["new", "needs_review"]);
@@ -261,7 +279,7 @@ function buildReportDraft(rawSource, runtimeOptions) {
     runtimeOptions.overrides.sourceName ??
     (sourceHandle ? `${platformLabel} / @${sourceHandle}` : platformLabel);
 
-  return pickReportColumns({
+  const baseDraft = {
     category,
     confidence_label:
       runtimeOptions.overrides.confidenceLabel ?? "Needs human review",
@@ -315,6 +333,12 @@ function buildReportDraft(rawSource, runtimeOptions) {
       makeTitle(rawText) ??
       "Untitled strange report",
     verification_status: "Unverified",
+  };
+  const enrichment = enrichReportDraft(baseDraft);
+
+  return pickReportColumns({
+    ...baseDraft,
+    ...pickReportEnrichmentColumns(enrichment),
   });
 }
 

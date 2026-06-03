@@ -16,16 +16,27 @@ export type Report = {
   confidenceMood: string;
   eventDateTime: string;
   eventDateTimeRaw: string;
+  hasLocation?: boolean;
+  hasMediaHint?: boolean;
+  hasSourceLink?: boolean;
+  hasTime?: boolean;
   id: string;
   isDemo?: boolean;
   latitude: number | null;
   location: string;
+  locationConfidence?: string;
+  locationResolution?: string;
   longitude: number | null;
   marker: string;
+  oracleReady?: boolean;
+  originalSummary?: string;
+  originalTitle?: string;
   region: AtlasRegion;
   reportedDateTime: string;
   shortLabel: string;
   sourceName: string;
+  sourceQualityLabel?: string;
+  sourceQualityReasons?: string[];
   sourceType: string;
   sourceUrl: string;
   summary: string;
@@ -361,8 +372,13 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     readString(row, "category", "report_category", "type") ?? "Unknown",
   );
   const title =
-    readString(row, "title", "report_title", "name", "label") ??
+    readString(row, "display_title", "title", "report_title", "name", "label") ??
     "Untitled strange report";
+  const originalTitle = readString(row, "title", "report_title", "name", "label");
+  const summary =
+    readString(row, "display_summary", "summary", "description", "body") ??
+    "No summary is available yet.";
+  const originalSummary = readString(row, "summary", "description", "body");
   const eventRaw =
     readString(row, "event_datetime", "event_at", "event_date") ?? "";
   const reportedRaw =
@@ -376,10 +392,24 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
   return {
     category,
     confidenceMood:
-      readString(row, "confidence_mood", "mood", "confidence_label") ??
+      readString(
+        row,
+        "mood_label",
+        "confidence_mood",
+        "mood",
+        "confidence_label",
+      ) ??
       "Suspiciously Interesting",
     eventDateTime: formatDateTime(eventRaw),
     eventDateTimeRaw: eventRaw,
+    hasLocation:
+      readBoolean(row, "has_location") ??
+      Boolean(readString(row, "location", "place", "location_name")),
+    hasMediaHint: readBoolean(row, "has_media_hint") ?? readBoolean(row, "has_media"),
+    hasSourceLink:
+      readBoolean(row, "has_source_link") ??
+      Boolean(readString(row, "source_url", "url", "link")),
+    hasTime: readBoolean(row, "has_time") ?? Boolean(eventRaw || reportedRaw),
     id:
       readString(row, "id", "slug", "report_id") ??
       `${slugify(title)}-${index}`,
@@ -387,8 +417,13 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     location:
       readString(row, "location", "place", "location_name") ??
       "Location not listed",
+    locationConfidence: readString(row, "location_confidence"),
+    locationResolution: readString(row, "location_resolution"),
     longitude,
     marker: getMarkerClass(category),
+    oracleReady: readBoolean(row, "oracle_ready") ?? false,
+    originalSummary: originalSummary && originalSummary !== summary ? originalSummary : undefined,
+    originalTitle: originalTitle && originalTitle !== title ? originalTitle : undefined,
     region,
     reportedDateTime: formatDateTime(reportedRaw),
     shortLabel:
@@ -397,12 +432,14 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     sourceName:
       readString(row, "source_name", "source", "publisher") ??
       "Source not listed",
+    sourceQualityLabel:
+      readString(row, "source_quality_label") ??
+      (readString(row, "source_url", "url", "link") ? "Linked trail" : "Source-light"),
+    sourceQualityReasons: readStringArray(row, "source_quality_reasons"),
     sourceType:
       readString(row, "source_type", "source_kind") ?? "Public source",
     sourceUrl: readString(row, "source_url", "url", "link") ?? "",
-    summary:
-      readString(row, "summary", "description", "body") ??
-      "No summary is available yet.",
+    summary,
     title,
     verificationStatus:
       readString(row, "verification_status", "status") ?? "Unverified",
@@ -443,6 +480,45 @@ function readNumber(row: SupabaseReportRow, ...keys: string[]) {
   }
 
   return null;
+}
+
+function readBoolean(row: SupabaseReportRow, ...keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+
+    if (typeof value === "boolean") {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+
+      if (normalized === "true") {
+        return true;
+      }
+
+      if (normalized === "false") {
+        return false;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function readStringArray(row: SupabaseReportRow, ...keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+
+    if (Array.isArray(value)) {
+      return value
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+  }
+
+  return [];
 }
 
 function normalizeCategory(category: string) {

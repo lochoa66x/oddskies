@@ -55,15 +55,29 @@ type ReportDraft = {
   category: string;
   confidence_label: string;
   country: string | null;
+  display_summary?: string;
+  display_title?: string;
+  enrichment_notes?: string[];
   event_datetime: string | null;
+  has_location?: boolean;
   has_media: boolean;
+  has_media_hint?: boolean;
+  has_source_link?: boolean;
+  has_time?: boolean;
+  last_enriched_at?: string;
   location_confidence: string | null;
   location_name: string;
   location_resolution: string | null;
   location_warnings: string[];
+  mood_label?: string;
+  oracle_prompt_seed?: string | null;
+  oracle_ready?: boolean;
   region: string;
   reported_datetime: string | null;
+  short_label?: string;
   source_name: string;
+  source_quality_label?: string;
+  source_quality_reasons?: string[];
   source_type: string;
   source_url: string | null;
   summary: string;
@@ -1279,6 +1293,8 @@ function DraftEditor({
         </div>
       ) : null}
 
+      {draft ? <DraftEnrichmentPreview draft={draft} /> : null}
+
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <DraftInput label="Title" name="title" setOverrides={setOverrides} value={overrides.title ?? draft?.title ?? ""} />
         <DraftInput label="Category" name="category" setOverrides={setOverrides} value={overrides.category ?? draft?.category ?? ""} />
@@ -1307,6 +1323,60 @@ function DraftEditor({
           />
         </label>
       </div>
+    </div>
+  );
+}
+
+function DraftEnrichmentPreview({ draft }: { draft: ReportDraft }) {
+  const reasons = draft.source_quality_reasons ?? [];
+  const notes = draft.enrichment_notes ?? [];
+
+  return (
+    <div className="mt-4 rounded-lg border border-signal-teal/25 bg-signal-teal/5 p-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-teal">
+            Enrichment preview
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Display polish only. This does not verify the report.
+          </p>
+        </div>
+        <span className="rounded-full border border-night-800 bg-night-950 px-3 py-1 text-xs text-muted">
+          {draft.oracle_ready ? "Oracle-ready" : "Oracle not ready"}
+        </span>
+      </div>
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
+        <DetailItem label="Display title" value={draft.display_title ?? draft.title} />
+        <DetailItem label="Atlas label" value={draft.short_label ?? "Not generated"} />
+        <DetailItem label="Mood label" value={draft.mood_label ?? "Not generated"} />
+        <DetailItem
+          label="Source quality"
+          value={draft.source_quality_label ?? "Not generated"}
+        />
+      </div>
+      {draft.display_summary ? (
+        <div className="mt-3 rounded-lg border border-night-800 bg-night-950 p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            Display summary
+          </p>
+          <p className="mt-2 text-sm leading-6 text-parchment">
+            {draft.display_summary}
+          </p>
+        </div>
+      ) : null}
+      {reasons.length || notes.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[...reasons, ...notes].slice(0, 8).map((reason) => (
+            <span
+              className="rounded-full border border-night-800 bg-night-950 px-2 py-1 text-xs text-muted"
+              key={reason}
+            >
+              {reason}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

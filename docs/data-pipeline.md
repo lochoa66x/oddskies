@@ -267,6 +267,70 @@ order by last_location_normalized_at desc nulls last
 limit 50;
 ```
 
+## Public Report Enrichment
+
+V1.8 adds deterministic enrichment fields on `public.reports`. These fields
+make approved reports easier to read and map without changing the original
+source trail.
+
+Principle:
+
+```text
+Report enrichment is presentation polish, not verification.
+```
+
+The enrichment helper can fill:
+
+```text
+display_title
+display_summary
+short_label
+mood_label
+source_quality_label
+source_quality_reasons
+has_source_link
+has_location
+has_time
+has_media_hint
+oracle_ready
+oracle_prompt_seed
+enrichment_notes
+last_enriched_at
+```
+
+Run a preview:
+
+```bash
+npm run enrich:reports
+npm run enrich:reports -- --limit 20 --dry-run
+npm run enrich:reports -- --id <report_id>
+```
+
+Write enrichment fields only after review:
+
+```bash
+npm run enrich:reports -- --limit 20 --confirm
+npm run enrich:reports -- --id <report_id> --confirm
+```
+
+What enrichment does:
+
+- cleans long public titles into `display_title`
+- creates compact atlas labels like `Anoka UFO` or `Montreal Orb`
+- adds a playful mood label
+- labels source context as `Context-rich`, `Linked trail`, `Source-light`,
+  `Needs more context`, or `Demo seed`
+- prepares a safe `oracle_prompt_seed` only when enough public context exists
+
+What enrichment does not do:
+
+- verify sightings
+- decide whether a report is true
+- read `public.raw_sources`
+- publish raw sources
+- use AI
+- expose the service role key
+
 ## Manual Promotion Helper
 
 Step 1: collect or insert a raw source into `public.raw_sources`.
@@ -311,6 +375,11 @@ npm run promote:raw -- --id <raw_source_id> \
 The helper defaults to preview mode. It creates a `public.reports` row only
 with `--confirm`, then marks the staged `raw_sources` row as `approved` and
 stores the new report id in `approved_report_id`.
+
+Promotion now runs the deterministic public report enrichment helper before
+insert, so new public rows receive display title, display summary, source
+quality, atlas label, mood label, and Oracle-readiness fields immediately.
+Those fields are still presentation hints only.
 
 Step 6: confirm the new row appears in `public.reports`. The public site can
 display it as unverified, source-linked report data.

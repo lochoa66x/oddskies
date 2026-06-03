@@ -34,6 +34,8 @@ export function LatestReports({ reports }: { reports: Report[] }) {
         ["Reported date/time", selected.reportedDateTime],
         ["Source name", selected.sourceName],
         ["Source type", selected.sourceType],
+        ["Source quality", selected.sourceQualityLabel ?? "Source-light"],
+        ["Location confidence", getLocationConfidenceLabel(selected)],
         ["Verification", selected.verificationStatus],
         ["Mood label", selected.confidenceMood],
       ]
@@ -117,7 +119,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                         Field note {String(index + 1).padStart(2, "0")}
                       </span>
                       <span className="rounded border border-night-800 bg-night-950/60 px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                        Source trail
+                        {report.sourceQualityLabel ?? "Source trail"}
                       </span>
                     </div>
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -146,6 +148,11 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                       <span className="rounded border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-signal-violet">
                         {report.confidenceMood}
                       </span>
+                      {report.locationConfidence ? (
+                        <span className="rounded border border-signal-teal/25 bg-signal-teal/10 px-2 py-1 text-signal-teal">
+                          Loc {report.locationConfidence}
+                        </span>
+                      ) : null}
                     </div>
                     <p className="field-log-summary mt-3 text-sm leading-6 text-muted">
                       {report.summary}
@@ -156,7 +163,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                       </span>
                       <span className="source-link inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold">
                         {report.sourceUrl
-                          ? "Source link"
+                          ? "View source"
                           : "Source link placeholder"}
                         <span aria-hidden="true">↗</span>
                       </span>
@@ -218,6 +225,11 @@ function ReportDetail({
             <h3 className="mt-2 text-2xl font-semibold text-parchment">
               {selected.title}
             </h3>
+            {selected.originalTitle ? (
+              <p className="mt-2 max-w-2xl text-xs leading-5 text-muted">
+                Original title: {selected.originalTitle}
+              </p>
+            ) : null}
           </div>
           <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
             Unverified
@@ -303,16 +315,30 @@ function ReportDetail({
               OddSkies has not verified this report. Check the original source
               when available.
             </p>
+            {selected.oracleReady ? (
+              <p className="mt-2 text-xs leading-5 text-muted">
+                Oracle-ready means there is enough public context for a playful
+                future reading. It does not mean the report is true.
+              </p>
+            ) : null}
           </div>
-          <a
-            className="source-link inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
-            href={sourceHref}
-            rel={external ? "noreferrer" : undefined}
-            target={external ? "_blank" : undefined}
-          >
-            {selected.sourceUrl ? "Open source" : "Source link placeholder"}
-            <span aria-hidden="true">↗</span>
-          </a>
+          <div className="grid gap-2">
+            <a
+              className="source-link inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
+              href={sourceHref}
+              rel={external ? "noreferrer" : undefined}
+              target={external ? "_blank" : undefined}
+            >
+              {selected.sourceUrl ? "Open source" : "Source link placeholder"}
+              <span aria-hidden="true">↗</span>
+            </a>
+            <a
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-signal-violet/35 bg-signal-violet/10 px-3 py-2 text-sm font-semibold text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/20"
+              href="#oracle"
+            >
+              Ask the Oracle
+            </a>
+          </div>
         </div>
       </div>
     </aside>
@@ -331,4 +357,11 @@ function getReportPosition(report: Report) {
 
 function getCountry(location: string) {
   return location.split(",").at(-1)?.trim() || "Unknown";
+}
+
+function getLocationConfidenceLabel(report: Report) {
+  const confidence = report.locationConfidence ?? "unknown";
+  const resolution = report.locationResolution;
+
+  return resolution ? `${confidence} / ${resolution.replace(/_/g, " ")}` : confidence;
 }
