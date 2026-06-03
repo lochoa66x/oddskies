@@ -27,9 +27,9 @@ export function LatestReports({ reports }: { reports: Report[] }) {
   const detailRows = selected
     ? [
         ["Category", selected.category],
-        ["Location", selected.location],
+        ["Location", getDetailLocationLabel(selected.location)],
         ["Region", selected.region],
-        ["Country", selectedCountry],
+        ["Country", selectedCountry || "—"],
         ["Event date/time", selected.eventDateTime],
         ["Reported date/time", selected.reportedDateTime],
         ["Source name", selected.sourceName],
@@ -105,6 +105,9 @@ export function LatestReports({ reports }: { reports: Report[] }) {
               {visibleReports.length > 0 ? (
                 visibleReports.map((report, index) => {
                   const selectedCard = selected?.id === report.id;
+                  const compactLocationLabel = getCompactLocationLabel(
+                    report.location,
+                  );
                   const locationConfidenceLabel =
                     getLocationConfidenceBadge(report);
 
@@ -145,9 +148,11 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                         {report.title}
                       </h3>
                       <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
-                        <span className={getLocationChipClass(report.location)}>
-                          {getCompactLocationLabel(report.location)}
-                        </span>
+                        {compactLocationLabel ? (
+                          <span className={getLocationChipClass(report.location)}>
+                            {compactLocationLabel}
+                          </span>
+                        ) : null}
                         <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
                           {report.eventDateTime}
                         </span>
@@ -219,7 +224,7 @@ function ReportDetail({
       ? "/source-guidelines"
       : selected.sourceUrl || "/source-guidelines";
   const external = sourceHref.startsWith("http");
-  const selectedCountry = getCountry(selected.location);
+  const metaLine = getLocationMetaLine(selected);
 
   return (
     <aside className="field-card field-file-card overflow-hidden rounded-lg">
@@ -242,9 +247,7 @@ function ReportDetail({
             Unverified
           </span>
         </div>
-        <p className="mt-1 text-sm text-muted">
-          {selected.location} · {selected.region} · {selectedCountry}
-        </p>
+        {metaLine ? <p className="mt-1 text-sm text-muted">{metaLine}</p> : null}
       </div>
 
       <div className="atlas-grid detail-atlas relative min-h-[330px] overflow-hidden md:min-h-[390px] xl:min-h-[420px]">
@@ -363,11 +366,11 @@ function getReportPosition(report: Report) {
 }
 
 function getCountry(location: string) {
-  if (isPendingLocation(location)) {
-    return "Unknown";
+  if (isMissingLocation(location)) {
+    return "";
   }
 
-  return location.split(",").at(-1)?.trim() || "Unknown";
+  return location.split(",").at(-1)?.trim() || "";
 }
 
 function getLocationConfidenceLabel(report: Report) {
@@ -375,7 +378,7 @@ function getLocationConfidenceLabel(report: Report) {
   const resolution = report.locationResolution;
 
   if (!confidence) {
-    return "Location pending";
+    return "—";
   }
 
   return resolution
@@ -392,7 +395,7 @@ function getLocationConfidenceBadge(report: Report) {
 }
 
 function getLocationChipClass(location: string) {
-  const tone = isPendingLocation(location)
+  const tone = isMissingLocation(location)
     ? "border-night-800 bg-night-950/40 text-muted"
     : "border-night-800 bg-night-950/55 text-muted";
 
@@ -400,11 +403,32 @@ function getLocationChipClass(location: string) {
 }
 
 function getCompactLocationLabel(location: string) {
-  return isPendingLocation(location) ? "Loc: reviewing" : location;
+  return isMissingLocation(location) ? "" : location;
 }
 
-function isPendingLocation(location: string) {
-  return location.trim().toLowerCase() === "location pending";
+function getDetailLocationLabel(location: string) {
+  return isMissingLocation(location) ? "—" : location;
+}
+
+function getLocationMetaLine(report: Report) {
+  const country = getCountry(report.location);
+
+  return [getDetailLocationLabel(report.location), report.region, country]
+    .filter((value) => value && value !== "—" && value !== "Unknown")
+    .join(" · ");
+}
+
+function isMissingLocation(location: string) {
+  const normalized = location.trim().toLowerCase();
+
+  return (
+    normalized.length === 0 ||
+    normalized === "location pending" ||
+    normalized === "location not listed" ||
+    normalized === "location under review" ||
+    normalized === "unknown" ||
+    normalized === "none"
+  );
 }
 
 function toDisplayLabel(value: string) {

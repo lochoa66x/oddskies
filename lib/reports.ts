@@ -502,7 +502,7 @@ function truncateAtNaturalBoundary(value: string, maxLength: number) {
 
 function formatPublicLocation(value?: string) {
   if (isPlaceholderLocation(value)) {
-    return "Location pending";
+    return "";
   }
 
   return cleanPublicText(value ?? "");
