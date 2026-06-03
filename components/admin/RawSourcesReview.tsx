@@ -118,19 +118,45 @@ type CollectorSummary = {
   errors: string[];
   queries: {
     duplicatesSkipped: number;
+    emptySkipped: number;
     errors: string[];
     fetched: number;
     inserted: number;
+    insertedIds: string[];
     normalized: number;
     query: string;
+    repliesSkipped: number;
   }[];
+  runId?: string;
   totals: {
     duplicatesSkipped: number;
+    emptySkipped: number;
     fetched: number;
     inserted: number;
+    insertedIds: string[];
+    locationNormalized?: number;
     normalized: number;
+    repliesSkipped: number;
+    scored?: number;
   };
   warnings: string[];
+};
+
+type CollectorRun = {
+  collector_name: string;
+  dry_run: boolean;
+  duplicate_count: number;
+  error_count: number;
+  error_message: string | null;
+  fetched_count: number;
+  finished_at: string | null;
+  id: string;
+  inserted_count: number;
+  mode: string;
+  platform: string;
+  query_count: number;
+  started_at: string;
+  status: string;
 };
 
 type DraftOverrides = Partial<{
@@ -244,6 +270,8 @@ export function RawSourcesReview() {
   const [collectorQuery, setCollectorQuery] = useState("strange lights");
   const [collectorSummary, setCollectorSummary] =
     useState<CollectorSummary | null>(null);
+  const [collectorRuns, setCollectorRuns] = useState<CollectorRun[]>([]);
+  const [collectorRunsLoading, setCollectorRunsLoading] = useState(true);
 
   const selected = useMemo(
     () => rows.find((row) => row.id === selectedId) ?? rows[0] ?? null,
@@ -337,9 +365,29 @@ export function RawSourcesReview() {
     status,
   ]);
 
+  const loadCollectorRuns = useCallback(async () => {
+    setCollectorRunsLoading(true);
+
+    try {
+      const body = await adminFetch<{ rows: CollectorRun[] }>(
+        "/api/admin/collector-runs?limit=3",
+      );
+
+      setCollectorRuns(body.rows);
+    } catch {
+      setCollectorRuns([]);
+    } finally {
+      setCollectorRunsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     void loadSources();
   }, [loadSources]);
+
+  useEffect(() => {
+    void loadCollectorRuns();
+  }, [loadCollectorRuns]);
 
   useEffect(() => {
     setPreview(null);
@@ -467,6 +515,7 @@ export function RawSourcesReview() {
       );
 
       setCollectorSummary(body);
+      await loadCollectorRuns();
 
       if (!body.dryRun && body.totals.inserted > 0) {
         await loadSources();
@@ -679,6 +728,10 @@ export function RawSourcesReview() {
               Runs a small staging-only pull. Nothing becomes public until a raw
               source is reviewed and promoted.
             </p>
+            <CollectorRunStatusPanel
+              loading={collectorRunsLoading}
+              run={collectorRuns[0] ?? null}
+            />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_120px] xl:min-w-[520px]">
@@ -942,6 +995,13 @@ function CollectorSummaryPanel({ summary }: { summary: CollectorSummary }) {
           label="Duplicates"
           value={summary.totals.duplicatesSkipped}
         />
+        <CollectorStat label="Replies skipped" value={summary.totals.repliesSkipped} />
+        <CollectorStat label="Empty skipped" value={summary.totals.emptySkipped} />
+        <CollectorStat label="Scored" value={summary.totals.scored ?? 0} />
+        <CollectorStat
+          label="Locations"
+          value={summary.totals.locationNormalized ?? 0}
+        />
       </div>
 
       {summary.queries.length > 0 ? (
@@ -977,6 +1037,72 @@ function CollectorStat({ label, value }: { label: string; value: number }) {
       </p>
     </div>
   );
+}
+
+function CollectorRunStatusPanel({
+  loading,
+  run,
+}: {
+  loading: boolean;
+  run: CollectorRun | null;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-lg border border-night-800 bg-night-950 p-3 text-sm text-muted">
+        Checking the last collector run...
+      </div>
+    );
+  }
+
+  if (!run) {
+    return (
+      <div className="mt-4 rounded-lg border border-night-800 bg-night-950 p-3 text-sm text-muted">
+        No collector run has been logged yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-lg border border-night-800 bg-night-950 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+          Last collector run
+        </p>
+        <span className={collectorRunStatusClass(run.status)}>
+          {run.status.replace(/_/g, " ")}
+        </span>
+      </div>
+      <div className="mt-3 grid gap-2 text-xs text-muted sm:grid-cols-2">
+        <span>
+          {run.collector_name} · {run.mode}
+        </span>
+        <span>{run.dry_run ? "Dry run" : "Staged insert"}</span>
+        <span>Started: {formatDate(run.started_at)}</span>
+        <span>Finished: {formatDate(run.finished_at)}</span>
+        <span>Fetched: {run.fetched_count}</span>
+        <span>Inserted: {run.inserted_count}</span>
+        <span>Duplicates: {run.duplicate_count}</span>
+        <span>Errors: {run.error_count}</span>
+      </div>
+      {run.error_message ? (
+        <p className="mt-3 rounded-lg border border-signal-amber/30 bg-signal-amber/10 p-2 text-xs text-parchment">
+          {run.error_message}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function collectorRunStatusClass(status: string) {
+  if (status === "completed") {
+    return "rounded-full border border-signal-teal/35 bg-signal-teal/10 px-3 py-1 text-xs text-signal-teal";
+  }
+
+  if (status === "failed" || status === "completed_with_errors") {
+    return "rounded-full border border-signal-ember/40 bg-signal-ember/10 px-3 py-1 text-xs text-signal-ember";
+  }
+
+  return "rounded-full border border-signal-amber/40 bg-signal-amber/10 px-3 py-1 text-xs text-signal-amber";
 }
 
 function CurationPanel({ source }: { source: RawSource }) {

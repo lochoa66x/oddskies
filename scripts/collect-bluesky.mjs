@@ -23,7 +23,16 @@ const config = createBlueskyCollectorConfig(process.env, {
   queries: options.queries.length > 0 ? options.queries : DEFAULT_BLUESKY_QUERIES,
 });
 
-const summary = await collectBluesky(config);
+const run = await startCollectorRun(config, "manual");
+let summary;
+
+try {
+  summary = await collectBluesky(config);
+} catch (error) {
+  summary = makeFailedSummary(config, error);
+}
+
+await finishCollectorRun(run, summary);
 
 console.log(JSON.stringify(summary, null, 2));
 
@@ -80,7 +89,7 @@ function clampLimit(value) {
     return 10;
   }
 
-  return Math.max(1, Math.min(25, Math.floor(value)));
+  return Math.max(1, Math.min(10, Math.floor(value)));
 }
 
 function loadLocalEnv() {
@@ -140,8 +149,164 @@ Optional Bluesky auth:
   BLUESKY_SERVICE_URL=https://bsky.social
   BLUESKY_PUBLIC_API_URL=https://public.api.bsky.app
 
+Optional collector safety caps:
+  ODDSKIES_COLLECTOR_MAX_RESULTS_PER_QUERY=10
+  ODDSKIES_COLLECTOR_MAX_QUERIES=10
+  ODDSKIES_COLLECTOR_MAX_FETCHED_PER_RUN=100
+
 Safety:
   Collector rows go only into public.raw_sources. They are never promoted to
-  public.reports without manual review.
+  public.reports without manual review. When server credentials are available,
+  runs are logged in public.collector_runs.
 `);
+}
+
+async function startCollectorRun(config, mode) {
+  if (!config.supabaseUrl || !config.supabaseServiceRoleKey) {
+    return {
+      id: null,
+      warning:
+        "Collector run logging skipped because Supabase server credentials are missing.",
+    };
+  }
+
+  if (config.supabaseServiceRoleKey.startsWith("sb_publishable_")) {
+    return {
+      id: null,
+      warning:
+        "Collector run logging skipped because SUPABASE_SERVICE_ROLE_KEY is not server-only.",
+    };
+  }
+
+  try {
+    const endpoint = new URL("/rest/v1/collector_runs", config.supabaseUrl);
+    const response = await fetch(endpoint, {
+      body: JSON.stringify({
+        collector_name: "bluesky-search",
+        dry_run: config.dryRun,
+        mode,
+        platform: "bluesky",
+        query_count: config.queries.length,
+        status: "started",
+      }),
+      headers: {
+        ...supabaseHeaders(config),
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      return {
+        id: null,
+        warning: `Collector run logging skipped (${response.status}): ${await readResponseText(response)}`,
+      };
+    }
+
+    const rows = await response.json().catch(() => []);
+
+    return {
+      id: Array.isArray(rows) && typeof rows[0]?.id === "string" ? rows[0].id : null,
+      warning: null,
+    };
+  } catch (error) {
+    return {
+      id: null,
+      warning: `Collector run logging skipped: ${formatError(error)}`,
+    };
+  }
+}
+
+async function finishCollectorRun(run, summary) {
+  if (run.warning) {
+    summary.warnings.push(run.warning);
+  }
+
+  if (!run.id) {
+    return;
+  }
+
+  try {
+    const endpoint = new URL("/rest/v1/collector_runs", config.supabaseUrl);
+
+    endpoint.searchParams.set("id", `eq.${run.id}`);
+
+    const response = await fetch(endpoint, {
+      body: JSON.stringify({
+        duplicate_count: summary.totals.duplicatesSkipped,
+        error_count: summary.errors.length,
+        error_message: summary.errors[0] ?? null,
+        fetched_count: summary.totals.fetched,
+        finished_at: new Date().toISOString(),
+        inserted_count: summary.totals.inserted,
+        query_count: summary.queries.length,
+        status: inferCollectorRunStatus(summary),
+        summary,
+      }),
+      headers: {
+        ...supabaseHeaders(config),
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      method: "PATCH",
+    });
+
+    if (!response.ok) {
+      summary.warnings.push(
+        `Collector run finish logging failed (${response.status}): ${await readResponseText(response)}`,
+      );
+    } else {
+      summary.runId = run.id;
+    }
+  } catch (error) {
+    summary.warnings.push(`Collector run finish logging failed: ${formatError(error)}`);
+  }
+}
+
+function inferCollectorRunStatus(summary) {
+  if (
+    summary.errors.length > 0 &&
+    summary.queries.length === 0 &&
+    summary.totals.fetched === 0
+  ) {
+    return "failed";
+  }
+
+  return summary.errors.length > 0 ? "completed_with_errors" : "completed";
+}
+
+function supabaseHeaders(config) {
+  return {
+    apikey: config.supabaseServiceRoleKey,
+    Authorization: `Bearer ${config.supabaseServiceRoleKey}`,
+  };
+}
+
+async function readResponseText(response) {
+  const text = await response.text();
+
+  return text ? text.slice(0, 500) : response.statusText;
+}
+
+function formatError(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function makeFailedSummary(config, error) {
+  return {
+    dryRun: config.dryRun,
+    errors: [formatError(error)],
+    queries: [],
+    totals: {
+      duplicatesSkipped: 0,
+      emptySkipped: 0,
+      fetched: 0,
+      inserted: 0,
+      insertedIds: [],
+      normalized: 0,
+      repliesSkipped: 0,
+    },
+    warnings: [],
+  };
 }

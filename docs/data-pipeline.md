@@ -561,6 +561,158 @@ set
 where id = '<raw_source_id>';
 ```
 
+## Controlled Recurring Collector
+
+V1.9 adds a small controlled collector layer for recurring Bluesky searches.
+
+The rule stays simple:
+
+```text
+collector -> raw_sources -> scoring/location hints -> admin review -> manual promotion -> public reports
+```
+
+Recurring collection writes only to `public.raw_sources`. It never writes
+directly to `public.reports`, never displays raw sources publicly, and never
+verifies whether a post is true.
+
+### Collector Run Log
+
+Every server-side admin or scheduled collector run writes an internal row to
+`public.collector_runs` when the V1.9 migration has been applied.
+
+The table tracks:
+
+- collector name and platform
+- run mode: `manual`, `admin`, or `scheduled`
+- status: `started`, `completed`, `completed_with_errors`, or `failed`
+- query/fetch/insert/duplicate/error counts
+- dry-run mode
+- per-query summary JSON
+
+`collector_runs` has RLS enabled and no public read policy. Treat it as an
+internal operations log, not public product data.
+
+Recent collector runs:
+
+```sql
+select
+  collector_name,
+  platform,
+  mode,
+  status,
+  started_at,
+  finished_at,
+  fetched_count,
+  inserted_count,
+  duplicate_count,
+  error_count
+from public.collector_runs
+order by started_at desc
+limit 20;
+```
+
+Recent Bluesky raw sources:
+
+```sql
+select
+  id,
+  platform,
+  search_query,
+  category_guess,
+  status,
+  curation_score,
+  curation_label,
+  normalized_location_name,
+  posted_at,
+  author_handle,
+  left(raw_text, 180) as preview,
+  source_url
+from public.raw_sources
+where platform = 'bluesky'
+order by collected_at desc
+limit 50;
+```
+
+### Safety Limits
+
+Collector defaults are intentionally small:
+
+- max 10 results per query
+- max 10 queries per run
+- max 100 fetched posts per run
+- duplicate `source_post_id` or `source_url` rows are skipped
+- replies are skipped for now
+- empty text posts are skipped
+
+Environment variables:
+
+```text
+ODDSKIES_COLLECTOR_ENABLED=false
+ODDSKIES_COLLECTOR_MAX_RESULTS_PER_QUERY=10
+ODDSKIES_COLLECTOR_MAX_QUERIES=10
+ODDSKIES_COLLECTOR_MAX_FETCHED_PER_RUN=100
+ODDSKIES_CRON_SECRET=<server-only secret>
+```
+
+`ODDSKIES_COLLECTOR_ENABLED` only gates scheduled cron collection. Manual admin
+and command-line tests can still run when explicitly invoked.
+
+### Manual Commands
+
+Dry-run a small collector pass:
+
+```bash
+npm run collect:bluesky -- --limit 3 --dry-run
+```
+
+Run one explicit query:
+
+```bash
+npm run collect:bluesky -- --limit 3 --query "strange lights"
+```
+
+The admin page also has a compact Bluesky collector test panel:
+
+```text
+/admin/raw-sources
+```
+
+Admin-triggered non-dry-runs insert only into `raw_sources`, then attempt to run
+curation scoring and approximate location normalization on newly inserted rows.
+Helper failures are logged as warnings/errors; nothing is promoted.
+
+### Cron Route
+
+Scheduled route:
+
+```text
+GET /api/cron/collect/bluesky
+```
+
+Requirements:
+
+- `ODDSKIES_COLLECTOR_ENABLED=true`
+- `ODDSKIES_CRON_SECRET` configured
+- either `Authorization: Bearer <ODDSKIES_CRON_SECRET>` or `?secret=<ODDSKIES_CRON_SECRET>`
+
+Example:
+
+```bash
+curl -H "Authorization: Bearer $ODDSKIES_CRON_SECRET" \
+  https://oddskies.com/api/cron/collect/bluesky
+```
+
+Local dry-run test:
+
+```bash
+curl "http://localhost:3000/api/cron/collect/bluesky?dryRun=true&secret=$ODDSKIES_CRON_SECRET"
+```
+
+Recommended early cadence: daily. Configure the Vercel cron schedule manually
+after confirming the route works and the run log looks clean.
+
+Raw sources are evidence trails, not public reports.
+
 ## Source Promise
 
 Counts are real. Conclusions are not.
