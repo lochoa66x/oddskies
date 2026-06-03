@@ -1,7 +1,7 @@
 "use client";
 
-import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Dispatch, ReactNode, Ref, SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type RawSource = {
   approved_report_id: string | null;
@@ -262,6 +262,7 @@ export function RawSourcesReview() {
   const [error, setError] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
+  const [reasonError, setReasonError] = useState("");
   const [draftOverrides, setDraftOverrides] = useState<DraftOverrides>({});
   const [preview, setPreview] = useState<PromotionPreview | null>(null);
   const [collectorDryRun, setCollectorDryRun] = useState(true);
@@ -272,6 +273,7 @@ export function RawSourcesReview() {
     useState<CollectorSummary | null>(null);
   const [collectorRuns, setCollectorRuns] = useState<CollectorRun[]>([]);
   const [collectorRunsLoading, setCollectorRunsLoading] = useState(true);
+  const rejectionReasonRef = useRef<HTMLTextAreaElement | null>(null);
 
   const selected = useMemo(
     () => rows.find((row) => row.id === selectedId) ?? rows[0] ?? null,
@@ -393,6 +395,7 @@ export function RawSourcesReview() {
     setPreview(null);
     setReviewNotes(selected?.review_notes ?? "");
     setRejectionReason(selected?.rejection_reason ?? "");
+    setReasonError("");
     setDraftOverrides({});
   }, [selected?.id, selected?.rejection_reason, selected?.review_notes]);
 
@@ -409,12 +412,20 @@ export function RawSourcesReview() {
     const requiresReason = nextStatus !== "needs_review";
 
     if (requiresReason && !rejectionReason.trim()) {
-      setError("Add a rejection/review reason before changing this status.");
+      const message = "Add a rejection/review reason before changing this status.";
+      setError(message);
+      setReasonError(message);
+      rejectionReasonRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      window.setTimeout(() => rejectionReasonRef.current?.focus(), 250);
       return;
     }
 
     setActionLoading(nextStatus);
     setError("");
+    setReasonError("");
 
     try {
       await adminFetch(`/api/admin/raw-sources/${selected.id}/review`, {
@@ -897,8 +908,15 @@ export function RawSourcesReview() {
                 />
                 <TextArea
                   label="Rejection / review reason"
-                  onChange={setRejectionReason}
+                  error={reasonError}
+                  onChange={(value) => {
+                    setRejectionReason(value);
+                    if (value.trim()) {
+                      setReasonError("");
+                    }
+                  }}
                   placeholder="Required for rejected, duplicate, low-context, private/sensitive, joke, AI-generated."
+                  textareaRef={rejectionReasonRef}
                   value={rejectionReason}
                 />
               </div>
@@ -1361,25 +1379,38 @@ function FilterSelect({
 }
 
 function TextArea({
+  error,
   label,
   onChange,
   placeholder,
+  textareaRef,
   value,
 }: {
+  error?: string;
   label: string;
   onChange: (value: string) => void;
   placeholder: string;
+  textareaRef?: Ref<HTMLTextAreaElement>;
   value: string;
 }) {
   return (
     <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
       {label}
       <textarea
-        className="mt-2 min-h-28 w-full rounded-lg border border-night-800 bg-night-950 px-3 py-2 text-sm normal-case leading-6 tracking-normal text-parchment outline-none transition focus:border-signal-teal"
+        aria-invalid={Boolean(error)}
+        className={`mt-2 min-h-28 w-full rounded-lg border bg-night-950 px-3 py-2 text-sm normal-case leading-6 tracking-normal text-parchment outline-none transition focus:border-signal-teal ${
+          error ? "border-signal-ember" : "border-night-800"
+        }`}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        ref={textareaRef}
         value={value}
       />
+      {error ? (
+        <span className="mt-2 block text-xs normal-case tracking-normal text-signal-ember">
+          {error}
+        </span>
+      ) : null}
     </label>
   );
 }
