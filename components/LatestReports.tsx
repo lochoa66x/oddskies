@@ -61,6 +61,9 @@ export function LatestReports({ reports }: { reports: Report[] }) {
               <span className="ml-2 text-xs normal-case tracking-[0.16em] lg:hidden">
                 swipe -&gt;
               </span>
+              <span className="ml-2 hidden text-xs normal-case tracking-[0.16em] text-muted lg:inline">
+                scroll field notes ↓
+              </span>
             </p>
             <h2 className="mt-2 max-w-3xl text-3xl font-semibold text-parchment md:text-4xl">
               Latest reports, filed as unverified.
@@ -97,93 +100,95 @@ export function LatestReports({ reports }: { reports: Report[] }) {
         </div>
 
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)]">
-          <div className="field-log-list flex gap-3 overflow-x-auto rounded-lg border border-night-800 bg-night-850/45 p-2 lg:grid lg:max-h-[860px] lg:overflow-x-hidden lg:overflow-y-auto lg:pr-2">
-            {visibleReports.length > 0 ? (
-              visibleReports.map((report, index) => {
-                const selectedCard = selected?.id === report.id;
-                const locationConfidenceLabel =
-                  getLocationConfidenceBadge(report);
+          <div className="field-log-scroll-shell relative overflow-hidden rounded-lg border border-night-800 bg-night-850/45">
+            <div className="field-log-list flex gap-3 overflow-x-auto p-2 lg:grid lg:max-h-[860px] lg:overflow-x-hidden lg:overflow-y-auto lg:pb-12 lg:pr-4">
+              {visibleReports.length > 0 ? (
+                visibleReports.map((report, index) => {
+                  const selectedCard = selected?.id === report.id;
+                  const locationConfidenceLabel =
+                    getLocationConfidenceBadge(report);
 
-                return (
-                  <button
-                    aria-pressed={selectedCard}
-                    className={`report-card field-log-card group block w-full min-w-[18rem] rounded-lg border bg-night-850 p-3 text-left transition lg:min-w-0 ${
-                      selectedCard
-                        ? "border-signal-teal/60 shadow-glow"
-                        : "border-night-800 hover:border-signal-teal/45"
-                    }`}
-                    key={report.id}
-                    onClick={() => setSelectedId(report.id)}
-                    type="button"
-                  >
-                    <div className="mb-3 flex items-center justify-between gap-3 border-b border-night-800/80 pb-2.5">
-                      <span className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                        Field note {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <span className="rounded border border-night-800 bg-night-950/60 px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                        {report.sourceQualityLabel ?? "Source trail"}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span
-                          className={`size-2.5 shrink-0 rounded-full ${report.marker}`}
-                        />
-                        <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-parchment">
-                          {report.category}
-                        </p>
-                      </div>
-                      <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
-                        Unverified
-                      </span>
-                    </div>
-                    <h3 className="mt-3 text-base font-semibold leading-6 text-parchment transition group-hover:text-signal-teal">
-                      {report.title}
-                    </h3>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
-                      <span className={getLocationChipClass(report.location)}>
-                        {getCompactLocationLabel(report.location)}
-                      </span>
-                      <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
-                        {report.eventDateTime}
-                      </span>
-                      <span className="rounded border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-signal-violet">
-                        {report.confidenceMood}
-                      </span>
-                      {locationConfidenceLabel ? (
-                        <span className="rounded border border-signal-teal/25 bg-signal-teal/10 px-2 py-1 text-signal-teal">
-                          {locationConfidenceLabel}
+                  return (
+                    <button
+                      aria-pressed={selectedCard}
+                      className={`report-card field-log-card group block w-full min-w-[18rem] rounded-lg border bg-night-850 p-3 text-left transition lg:min-w-0 ${
+                        selectedCard
+                          ? "border-signal-teal/60 shadow-glow"
+                          : "border-night-800 hover:border-signal-teal/45"
+                      }`}
+                      key={report.id}
+                      onClick={() => setSelectedId(report.id)}
+                      type="button"
+                    >
+                      <div className="mb-3 flex items-center justify-between gap-3 border-b border-night-800/80 pb-2.5">
+                        <span className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                          Field note {String(index + 1).padStart(2, "0")}
                         </span>
-                      ) : null}
-                    </div>
-                    <p className="field-log-summary mt-2.5 text-sm leading-6 text-muted">
-                      {report.summary}
-                    </p>
-                    <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
-                      <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs text-muted">
-                        {report.sourceType} · {report.sourceName}
-                      </span>
-                      <span className="source-link inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold">
-                        {report.sourceUrl
-                          ? "View source"
-                          : "Source link placeholder"}
-                        <span aria-hidden="true">↗</span>
-                      </span>
-                    </div>
-                  </button>
-                );
-              })
-            ) : (
-              <div className="rounded-lg border border-night-800 bg-night-850 p-5 text-sm text-muted">
-                No reports are listed for this region yet.
-              </div>
-            )}
-            {filteredReports.length > visibleReports.length ? (
-              <p className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs leading-5 text-muted">
-                Showing {visibleReports.length} preview artifacts from this
-                filter. More report browsing comes later.
-              </p>
-            ) : null}
+                        <span className="rounded border border-night-800 bg-night-950/60 px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-muted">
+                          {report.sourceQualityLabel ?? "Source trail"}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span
+                            className={`size-2.5 shrink-0 rounded-full ${report.marker}`}
+                          />
+                          <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-parchment">
+                            {report.category}
+                          </p>
+                        </div>
+                        <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
+                          Unverified
+                        </span>
+                      </div>
+                      <h3 className="mt-3 text-base font-semibold leading-6 text-parchment transition group-hover:text-signal-teal">
+                        {report.title}
+                      </h3>
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
+                        <span className={getLocationChipClass(report.location)}>
+                          {getCompactLocationLabel(report.location)}
+                        </span>
+                        <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
+                          {report.eventDateTime}
+                        </span>
+                        <span className="rounded border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-signal-violet">
+                          {report.confidenceMood}
+                        </span>
+                        {locationConfidenceLabel ? (
+                          <span className="rounded border border-signal-teal/25 bg-signal-teal/10 px-2 py-1 text-signal-teal">
+                            {locationConfidenceLabel}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="field-log-summary mt-2.5 text-sm leading-6 text-muted">
+                        {report.summary}
+                      </p>
+                      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                        <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs text-muted">
+                          {report.sourceType} · {report.sourceName}
+                        </span>
+                        <span className="source-link inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold">
+                          {report.sourceUrl
+                            ? "View source"
+                            : "Source link placeholder"}
+                          <span aria-hidden="true">↗</span>
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="rounded-lg border border-night-800 bg-night-850 p-5 text-sm text-muted">
+                  No reports are listed for this region yet.
+                </div>
+              )}
+              {filteredReports.length > visibleReports.length ? (
+                <p className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs leading-5 text-muted">
+                  Showing {visibleReports.length} preview artifacts from this
+                  filter. More report browsing comes later.
+                </p>
+              ) : null}
+            </div>
           </div>
 
           {selected ? (
