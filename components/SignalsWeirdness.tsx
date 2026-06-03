@@ -57,7 +57,7 @@ const timeWindows = [
   { hours: [18, 19, 20], label: "6 PM - 9 PM" },
 ];
 
-const weekdayLabels = ["", "Mon", "", "Wed", "", "Fri", ""];
+const recentActivityWeeks = 12;
 
 const categoryMoods: Record<string, string> = {
   "Haunted Places": "Quietly haunted",
@@ -256,7 +256,7 @@ function WeirdnessGrid({
 }) {
   const weeks = groupCellsByWeek(cells);
   const monthLabels = getHeatmapMonthLabels(weeks);
-  const gridMinWidth = `${4 + weeks.length * 1.125}rem`;
+  const gridMinWidth = `${weeks.length * 1.05}rem`;
 
   return (
     <article className="field-card min-w-0 rounded-lg p-3.5 md:p-4">
@@ -266,16 +266,21 @@ function WeirdnessGrid({
             Weirdness Activity
           </p>
           <h3 className="mt-2 text-xl font-semibold text-parchment md:text-2xl">
-            Last 365 days of unverified weird.
+            Recent weirdness activity.
           </h3>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Tiny squares from unverified reports. Quiet cells are asleep.
             Bright cells mean the map had snacks.
           </p>
         </div>
-        <span className="w-fit rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
-          {totalReports} reports indexed
-        </span>
+        <div className="flex w-fit flex-wrap gap-2">
+          <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
+            {recentActivityWeeks} weeks shown
+          </span>
+          <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
+            {totalReports} reports indexed
+          </span>
+        </div>
       </div>
 
       <div className="mt-5 overflow-x-auto pb-2">
@@ -283,10 +288,9 @@ function WeirdnessGrid({
           <div
             className="grid gap-1"
             style={{
-              gridTemplateColumns: `3rem repeat(${weeks.length}, 0.875rem)`,
+              gridTemplateColumns: `repeat(${weeks.length}, 0.875rem)`,
             }}
           >
-            <span aria-hidden="true" />
             {monthLabels.map((label, index) => (
               <span
                 className="h-4 text-[0.62rem] uppercase tracking-[0.12em] text-muted"
@@ -297,40 +301,33 @@ function WeirdnessGrid({
             ))}
           </div>
 
-          <div className="mt-2 grid grid-cols-[3rem_1fr] gap-1">
-            <div className="grid grid-rows-7 gap-1 text-xs leading-none text-muted">
-              {weekdayLabels.map((label, index) => (
-                <span
-                  className="flex h-3.5 items-center"
-                  key={`${label}-${index}`}
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
-
-            <div className="grid grid-flow-col grid-rows-7 auto-cols-[0.875rem] gap-1">
-              {weeks.flat().map((cell) => (
-                <span
-                  aria-label={`${cell.dateLabel}: ${cell.count} report${
-                    cell.count === 1 ? "" : "s"
-                  }`}
-                  className={`size-3.5 rounded-[0.18rem] border ${getHeatCellClass(
-                    cell.intensity,
-                  )}`}
-                  key={toDateKey(cell.date)}
-                  title={`${cell.dateLabel}: ${cell.count} report${
-                    cell.count === 1 ? "" : "s"
-                  }`}
-                />
-              ))}
-            </div>
+          <div className="mt-2 grid grid-flow-col grid-rows-7 auto-cols-[0.875rem] gap-1">
+            {weeks.flat().map((cell) => (
+              <span
+                aria-label={`${cell.dateLabel}: ${cell.count} report${
+                  cell.count === 1 ? "" : "s"
+                }`}
+                className={`size-3.5 rounded-[0.18rem] border ${getHeatCellClass(
+                  cell.intensity,
+                )}`}
+                key={toDateKey(cell.date)}
+                title={`${cell.dateLabel}: ${cell.count} report${
+                  cell.count === 1 ? "" : "s"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
-        <span>Based on event dates when available.</span>
+        <div className="flex max-w-xl flex-col gap-1">
+          <span>Based on event dates when available.</span>
+          <span>
+            Recent seed/demo activity shown while collectors warm up. Counts are
+            real. Conclusions are not.
+          </span>
+        </div>
         <div className="flex items-center gap-2">
           <span>Quiet</span>
           {[0, 1, 2, 3, 4].map((intensity) => (
@@ -402,7 +399,7 @@ function createWeirdnessGrid(
   latestDate: Date,
 ): GridCell[] {
   const counts = new Map<string, number>();
-  const weeksToShow = 52;
+  const weeksToShow = recentActivityWeeks;
 
   for (const { eventDate } of datedReports) {
     const key = toDateKey(eventDate);
@@ -440,14 +437,18 @@ function groupCellsByWeek(cells: GridCell[]) {
 
 function getHeatmapMonthLabels(weeks: GridCell[][]) {
   return weeks.map((week, index) => {
-    const monthStart = week.find((cell) => cell.date.getDate() === 1);
+    if (index === 0 && week[0]) {
+      return formatMonth(week[0].date);
+    }
+
+    const previousWeek = weeks[index - 1];
+    const previousMonth = previousWeek?.[0]?.date.getMonth();
+    const monthStart = week.find(
+      (cell) => cell.date.getMonth() !== previousMonth,
+    );
 
     if (monthStart) {
       return formatMonth(monthStart.date);
-    }
-
-    if (index === 0 && week[0]) {
-      return formatMonth(week[0].date);
     }
 
     return "";
