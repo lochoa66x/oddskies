@@ -242,11 +242,11 @@ function ReportDetail({
         </p>
       </div>
 
-      <div className="atlas-grid detail-atlas relative min-h-[225px] overflow-hidden">
-        <WorldMapBase className="absolute inset-x-5 top-8 h-[70%] w-[calc(100%-2.5rem)]" />
+      <div className="atlas-grid detail-atlas relative min-h-[355px] overflow-hidden md:min-h-[430px] xl:min-h-[480px]">
+        <WorldMapBase className="absolute inset-x-4 top-8 h-[74%] w-[calc(100%-2rem)] md:inset-x-5 md:h-[76%] md:w-[calc(100%-2.5rem)]" />
         <svg
           aria-hidden="true"
-          className="atlas-route-lines absolute inset-x-8 top-9 h-[58%] w-[calc(100%-4rem)]"
+          className="atlas-route-lines absolute inset-x-7 top-10 h-[68%] w-[calc(100%-3.5rem)] md:inset-x-8 md:w-[calc(100%-4rem)]"
           viewBox="0 0 1000 430"
         >
           <path d="M190 184c122-72 235-63 338 27 105 91 218 97 339 21" />
@@ -280,7 +280,7 @@ function ReportDetail({
           );
         })}
 
-        <div className="absolute bottom-4 left-4 right-4 rounded-md border border-night-800 bg-night-950/85 p-4">
+        <div className="absolute bottom-4 left-4 right-4 rounded-md border border-night-800 bg-night-950/88 p-4 shadow-[0_18px_44px_rgba(0,0,0,0.38)] md:left-5 md:right-auto md:w-[min(34rem,calc(100%-2.5rem))]">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`size-2.5 rounded-full ${selected.marker}`} />
             <span className="text-sm font-semibold text-parchment">
@@ -290,7 +290,7 @@ function ReportDetail({
               Unverified
             </span>
           </div>
-          <p className="mt-3 text-sm leading-6 text-muted">
+          <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted">
             {selected.summary}
           </p>
         </div>
