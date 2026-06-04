@@ -100,19 +100,33 @@ export function OracleReportPanel({ report }: { report: Report }) {
       ) : null}
 
       {reading ? (
-        <div className="mt-3 space-y-3">
-          <div className="rounded-md border border-night-800 bg-night-900/80 p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-parchment">
-                {reading.headline}
-              </p>
+        <div className="mt-4 space-y-3">
+          <div className="relative overflow-hidden rounded-lg border border-signal-violet/40 bg-[radial-gradient(circle_at_18%_0%,rgba(139,92,246,0.22),transparent_34%),linear-gradient(135deg,rgba(16,21,34,0.98),rgba(8,11,20,0.98))] p-4 shadow-[0_0_42px_rgba(139,92,246,0.16)]">
+            <div className="pointer-events-none absolute -right-12 -top-16 size-44 rounded-full bg-signal-violet/10 blur-3xl" />
+            <div className="relative flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-signal-violet">
+                  The Oracle says
+                </p>
+                <p className="mt-1 text-base font-semibold leading-6 text-parchment">
+                  {reading.headline}
+                </p>
+              </div>
               <span className="rounded-md border border-signal-amber/30 bg-signal-amber/10 px-2 py-1 text-xs font-bold text-signal-amber">
                 {reading.verdict} · {reading.maybeWeirdScore}/100
               </span>
             </div>
-            <p className="mt-2 text-xs leading-5 text-muted">
+            <p className="relative mt-4 border-l-2 border-signal-violet/60 pl-4 text-base font-semibold leading-7 text-parchment md:text-lg md:leading-8">
               {reading.fieldNote}
             </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="h-px flex-1 bg-night-800" />
+            <span className="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-muted">
+              Supporting signals
+            </span>
+            <span className="h-px flex-1 bg-night-800" />
           </div>
 
           <div className="grid gap-2 md:grid-cols-2">
@@ -125,11 +139,11 @@ export function OracleReportPanel({ report }: { report: Report }) {
               items={reading.missingContext}
               title="Missing context"
             />
-            <div className="rounded-md border border-night-800 bg-night-900/60 p-3">
+            <div className="rounded-md border border-night-800 bg-night-900/50 p-2.5">
               <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-muted">
                 Next step
               </p>
-              <p className="mt-2 text-xs leading-5 text-parchment">
+              <p className="mt-2 text-[0.78rem] leading-5 text-muted">
                 {reading.nextStep}
               </p>
             </div>
@@ -170,14 +184,17 @@ function getOracleStatusLabel(status: OracleApiResponse["status"]) {
 
 function OracleList({ items, title }: { items: string[]; title: string }) {
   return (
-    <div className="rounded-md border border-night-800 bg-night-900/60 p-3">
+    <div className="rounded-md border border-night-800 bg-night-900/50 p-2.5">
       <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-muted">
         {title}
       </p>
-      <ul className="mt-2 space-y-1.5">
+      <ul className="mt-2 space-y-1">
         {items.map((item) => (
-          <li className="flex gap-2 text-xs leading-5 text-parchment" key={item}>
-            <span className="mt-2 size-1.5 shrink-0 rounded-full bg-signal-teal" />
+          <li
+            className="flex gap-2 text-[0.78rem] leading-5 text-muted"
+            key={item}
+          >
+            <span className="mt-2 size-1.5 shrink-0 rounded-full bg-signal-teal/80" />
             <span>{item}</span>
           </li>
         ))}

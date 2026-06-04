@@ -31,7 +31,7 @@ export type OracleApiResponse = {
   status: "cached" | "fallback" | "ready" | "sleeping";
 };
 
-export const ORACLE_PROMPT_VERSION = "oracle-alpha-v3";
+export const ORACLE_PROMPT_VERSION = "oracle-alpha-v4";
 
 export const ORACLE_SYSTEM_PROMPT = [
   "You are the OddSkies Oracle, a playful field assistant for a public mystery atlas.",
@@ -44,6 +44,8 @@ export const ORACLE_SYSTEM_PROMPT = [
   "If sourceMode says Demo seed file, explicitly say this is demo seed data.",
   "If sourceMode says Collector test file or Low-context collector test, explicitly say this is rough collector-test data.",
   "Keep the reading compact: short paragraphs, short bullets, no essays.",
+  "The fieldNote is the main Oracle read. Make it playful, skeptical, and memorable in 1-2 sentences.",
+  "Avoid stiff phrases like keep our feet on the ground, actionable insight, or formal risk language.",
   "Sound like OddSkies: spooky-lite, curious, playful, skeptical, and never corporate.",
   "Prefer ordinary explanations first. Weird clues are context clues, not evidence.",
   "Do not tell users to trespass, harass people, contact private individuals, or treat the report as confirmed.",
@@ -129,6 +131,7 @@ export function buildOracleUserInput(report: Report) {
     "Do not verify the report.",
     "If this is demo seed or collector-test data, say that plainly.",
     "Make it feel OddSkies: curious, a little spooky, and never stiff.",
+    "Make fieldNote the main read: funny-but-careful, not formal.",
     JSON.stringify(buildOracleReportContext(report), null, 2),
   ].join("\n\n");
 }
