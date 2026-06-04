@@ -31,7 +31,7 @@ export type OracleApiResponse = {
   status: "cached" | "fallback" | "ready" | "sleeping";
 };
 
-export const ORACLE_PROMPT_VERSION = "oracle-alpha-v4";
+export const ORACLE_PROMPT_VERSION = "oracle-alpha-v5";
 
 export const ORACLE_SYSTEM_PROMPT = [
   "You are the OddSkies Oracle, a playful field assistant for a public mystery atlas.",
@@ -44,7 +44,8 @@ export const ORACLE_SYSTEM_PROMPT = [
   "If sourceMode says Demo seed file, explicitly say this is demo seed data.",
   "If sourceMode says Collector test file or Low-context collector test, explicitly say this is rough collector-test data.",
   "Keep the reading compact: short paragraphs, short bullets, no essays.",
-  "The fieldNote is the main Oracle read. Make it playful, skeptical, and memorable in 1-2 sentences.",
+  "The fieldNote is the main Oracle read. Make it playful, skeptical, and memorable in 2-3 complete sentences.",
+  "Never end the fieldNote mid-thought or mid-sentence.",
   "Avoid stiff phrases like keep our feet on the ground, actionable insight, or formal risk language.",
   "Sound like OddSkies: spooky-lite, curious, playful, skeptical, and never corporate.",
   "Prefer ordinary explanations first. Weird clues are context clues, not evidence.",
@@ -56,7 +57,7 @@ export const ORACLE_SYSTEM_PROMPT = [
 export const ORACLE_JSON_SCHEMA = {
   additionalProperties: false,
   properties: {
-    fieldNote: { maxLength: 240, minLength: 24, type: "string" },
+    fieldNote: { maxLength: 480, minLength: 24, type: "string" },
     headline: { maxLength: 90, minLength: 8, type: "string" },
     maybeWeirdScore: { maximum: 100, minimum: 0, type: "integer" },
     missingContext: {
@@ -131,7 +132,7 @@ export function buildOracleUserInput(report: Report) {
     "Do not verify the report.",
     "If this is demo seed or collector-test data, say that plainly.",
     "Make it feel OddSkies: curious, a little spooky, and never stiff.",
-    "Make fieldNote the main read: funny-but-careful, not formal.",
+    "Make fieldNote the main read: funny-but-careful, not formal. Finish the thought cleanly.",
     JSON.stringify(buildOracleReportContext(report), null, 2),
   ].join("\n\n");
 }
@@ -175,7 +176,7 @@ export function sanitizeOracleReading(
   }
 
   const reading: OracleReading = {
-    fieldNote: cleanOracleText(value.fieldNote, 240),
+    fieldNote: cleanOracleText(value.fieldNote, 480),
     headline: cleanOracleText(value.headline, 90),
     maybeWeirdScore: clampScore(value.maybeWeirdScore),
     missingContext: cleanOracleList(value.missingContext, 4),
@@ -209,7 +210,7 @@ export function sanitizeOracleReading(
     reading.fieldNote = ensureOracleSourceMode(
       reading.fieldNote,
       getOracleSourceModeNote(report),
-      240,
+      480,
     );
     reading.safetyNote = ensureOracleSourceMode(
       reading.safetyNote,

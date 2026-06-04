@@ -113,7 +113,7 @@ export function OracleReportPanel({ report }: { report: Report }) {
                 </p>
               </div>
               <span className="rounded-md border border-signal-amber/30 bg-signal-amber/10 px-2 py-1 text-xs font-bold text-signal-amber">
-                {reading.verdict} · {reading.maybeWeirdScore}/100
+                {getOracleVerdictLabel(reading.verdict)}
               </span>
             </div>
             <p className="relative mt-4 border-l-2 border-signal-violet/60 pl-4 text-base font-semibold leading-7 text-parchment md:text-lg md:leading-8">
@@ -180,6 +180,18 @@ function getOracleStatusLabel(status: OracleApiResponse["status"]) {
   }
 
   return "Oracle read";
+}
+
+function getOracleVerdictLabel(verdict: OracleApiResponse["reading"]["verdict"]) {
+  const labels: Record<OracleApiResponse["reading"]["verdict"], string> = {
+    "Mildly Odd": "Mildly odd",
+    "Needs More Witnesses": "Needs more witnesses",
+    "Probably Normal": "Probably normal",
+    "Sky Is Being Dramatic": "Sky is being dramatic",
+    "Suspiciously Interesting": "Suspiciously interesting",
+  };
+
+  return labels[verdict];
 }
 
 function OracleList({ items, title }: { items: string[]; title: string }) {
