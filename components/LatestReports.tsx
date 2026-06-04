@@ -14,6 +14,7 @@ import {
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
+import { OracleReportPanel } from "@/components/OracleReportPanel";
 import { WorldMapBase } from "@/components/WorldMapBase";
 
 export function LatestReports({ reports }: { reports: Report[] }) {
@@ -456,14 +457,9 @@ function ReportDetail({
               {selected.sourceUrl ? "Open source" : "Source link placeholder"}
               <span aria-hidden="true">↗</span>
             </a>
-            <a
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-signal-violet/35 bg-signal-violet/10 px-3 py-2 text-sm font-semibold text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/20"
-              href="#oracle"
-            >
-              Ask the Oracle
-            </a>
           </div>
         </div>
+        <OracleReportPanel report={selected} />
       </div>
     </aside>
   );

@@ -13,25 +13,23 @@ export function OddSkiesOracle() {
             Think it&apos;s real? Ask our little bro, the OddSkies Oracle.
           </p>
           <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-            The Oracle will give playful reality checks for strange reports —
-            possible normal explanations, weird clues, and a maybe-weird
-            verdict. It cannot verify whether something is real.
+            The Oracle gives playful, report-based reality checks for selected
+            case files — possible normal explanations, weird clues, and a
+            maybe-weird verdict. It cannot verify whether something is real.
           </p>
           <p className="mt-3 max-w-xl rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
             The Oracle cannot verify whether something is real, AI-generated,
             mistaken, staged, satire, or a joke.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button
-              aria-disabled="true"
-              className="inline-flex min-h-12 cursor-not-allowed items-center justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-5 py-3 text-sm font-bold text-parchment opacity-85"
-              disabled
-              type="button"
+            <a
+              className="inline-flex min-h-12 items-center justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/25"
+              href="#reports"
             >
-              Ask the Oracle
-            </button>
+              Ask in Field Log
+            </a>
             <span className="rounded-md border border-night-800 bg-night-900 px-3 py-2 text-xs font-semibold text-muted">
-              Coming soon
+              Report-based alpha
             </span>
           </div>
         </div>
@@ -61,8 +59,8 @@ export function OddSkiesOracle() {
               sky is just being dramatic tonight.
             </p>
             <p className="mt-3 text-xs text-muted">
-              Preview only. Confidence: playful. Verification: none. Suggested
-              next step: compare nearby reports and source context.
+              Alpha mode. Confidence: playful. Verification: none. Suggested
+              next step: open a case file and compare source context.
             </p>
           </div>
 
