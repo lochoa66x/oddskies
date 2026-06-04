@@ -1,3 +1,5 @@
+"use client";
+
 const categories = [
   { icon: "ufo", label: "UFO / UAP", marker: "bg-signal-teal" },
   { icon: "lights", label: "Strange Lights", marker: "bg-signal-amber" },
@@ -8,6 +10,18 @@ const categories = [
 ];
 
 export function CategoryStrip() {
+  function selectCategory(category: string) {
+    window.dispatchEvent(
+      new CustomEvent("oddskies:category-filter", {
+        detail: { category },
+      }),
+    );
+    document.getElementById("reports")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
   return (
     <section className="border-b border-night-800 bg-night-950 px-5 py-3">
       <div className="mx-auto flex max-w-7xl gap-3 overflow-x-auto pb-1">
@@ -15,6 +29,7 @@ export function CategoryStrip() {
           <button
             className="category-chip inline-flex shrink-0 items-center gap-2 rounded-md border border-night-800 bg-night-900 px-3 py-2 text-sm font-semibold text-parchment transition hover:border-signal-teal/50 hover:bg-night-850"
             key={category.label}
+            onClick={() => selectCategory(category.label)}
             type="button"
           >
             <span

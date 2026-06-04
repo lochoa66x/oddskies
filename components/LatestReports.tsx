@@ -1,11 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  categoryFilters,
   coordinateToAtlasPosition,
+  filterReportsByCategory,
   filterReportsByRegion,
+  isCategoryFilter,
   regionAnchors,
   regionFilters,
+  type CategoryFilter,
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
@@ -13,10 +17,16 @@ import { WorldMapBase } from "@/components/WorldMapBase";
 
 export function LatestReports({ reports }: { reports: Report[] }) {
   const [activeRegion, setActiveRegion] = useState<RegionFilter>("All");
+  const [activeCategory, setActiveCategory] =
+    useState<CategoryFilter>("All categories");
   const [selectedId, setSelectedId] = useState(reports[0]?.id ?? "");
   const filteredReports = useMemo(
-    () => filterReportsByRegion(reports, activeRegion),
-    [activeRegion, reports],
+    () =>
+      filterReportsByCategory(
+        filterReportsByRegion(reports, activeRegion),
+        activeCategory,
+      ),
+    [activeCategory, activeRegion, reports],
   );
   const visibleReports = filteredReports.slice(0, 4);
   const selected =
@@ -42,11 +52,52 @@ export function LatestReports({ reports }: { reports: Report[] }) {
     : [];
 
   function changeRegion(region: RegionFilter) {
-    const nextReports = filterReportsByRegion(reports, region);
+    const nextReports = filterReportsByCategory(
+      filterReportsByRegion(reports, region),
+      activeCategory,
+    );
 
     setActiveRegion(region);
     setSelectedId(nextReports[0]?.id ?? reports[0]?.id ?? "");
   }
+
+  function changeCategory(category: CategoryFilter) {
+    const nextReports = filterReportsByCategory(
+      filterReportsByRegion(reports, activeRegion),
+      category,
+    );
+
+    setActiveCategory(category);
+    setSelectedId(nextReports[0]?.id ?? reports[0]?.id ?? "");
+  }
+
+  useEffect(() => {
+    function handleCategoryFilter(event: Event) {
+      const category = (event as CustomEvent<{ category?: string }>).detail
+        ?.category;
+
+      if (!isCategoryFilter(category)) {
+        return;
+      }
+
+      const nextReports = filterReportsByCategory(
+        filterReportsByRegion(reports, activeRegion),
+        category,
+      );
+
+      setActiveCategory(category);
+      setSelectedId(nextReports[0]?.id ?? reports[0]?.id ?? "");
+    }
+
+    window.addEventListener("oddskies:category-filter", handleCategoryFilter);
+
+    return () => {
+      window.removeEventListener(
+        "oddskies:category-filter",
+        handleCategoryFilter,
+      );
+    };
+  }, [activeRegion, reports]);
 
   return (
     <section
@@ -99,6 +150,27 @@ export function LatestReports({ reports }: { reports: Report[] }) {
           })}
         </div>
 
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+          {categoryFilters.map((category) => {
+            const active = category === activeCategory;
+
+            return (
+              <button
+                className={`atlas-filter rounded-md border px-3 py-2 text-xs font-semibold transition ${
+                  active
+                    ? "border-signal-violet/60 bg-signal-violet/15 text-parchment"
+                    : "border-night-800 bg-night-950/70 text-muted hover:border-signal-violet/40 hover:text-parchment"
+                }`}
+                key={category}
+                onClick={() => changeCategory(category)}
+                type="button"
+              >
+                {category}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)]">
           <div className="field-log-scroll-shell relative overflow-hidden rounded-lg border border-night-800 bg-night-850/45">
             <div className="field-log-list flex gap-3 overflow-x-auto p-2 lg:grid lg:max-h-[860px] lg:overflow-x-hidden lg:overflow-y-auto lg:pb-12 lg:pr-4">
@@ -112,7 +184,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                     getLocationConfidenceBadge(report);
 
                   return (
-                    <button
+                    <div
                       aria-pressed={selectedCard}
                       className={`report-card field-log-card group block w-full min-w-[18rem] rounded-lg border bg-night-850 p-3 text-left transition lg:min-w-0 ${
                         selectedCard
@@ -121,7 +193,19 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                       }`}
                       key={report.id}
                       onClick={() => setSelectedId(report.id)}
-                      type="button"
+                      onKeyDown={(event) => {
+                        if (
+                          event.target !== event.currentTarget ||
+                          (event.key !== "Enter" && event.key !== " ")
+                        ) {
+                          return;
+                        }
+
+                        event.preventDefault();
+                        setSelectedId(report.id);
+                      }}
+                      role="button"
+                      tabIndex={0}
                     >
                       <div className="mb-3 flex items-center justify-between gap-3 border-b border-night-800/80 pb-2.5">
                         <span className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
@@ -172,19 +256,25 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                         <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs text-muted">
                           {report.sourceType} · {report.sourceName}
                         </span>
-                        <span className="source-link inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold">
+                        <a
+                          className="source-link inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold"
+                          href={getSourceHref(report.sourceUrl)}
+                          onClick={(event) => event.stopPropagation()}
+                          rel={isExternalSource(report.sourceUrl) ? "noreferrer" : undefined}
+                          target={isExternalSource(report.sourceUrl) ? "_blank" : undefined}
+                        >
                           {report.sourceUrl
                             ? "View source"
                             : "Source link placeholder"}
                           <span aria-hidden="true">↗</span>
-                        </span>
+                        </a>
                       </div>
-                    </button>
+                    </div>
                   );
                 })
               ) : (
                 <div className="rounded-lg border border-night-800 bg-night-850 p-5 text-sm text-muted">
-                  No reports are listed for this region yet.
+                  No reports are listed for this filter yet.
                 </div>
               )}
               {filteredReports.length > visibleReports.length ? (
@@ -219,11 +309,8 @@ function ReportDetail({
   selected: Report;
 }) {
   const selectedPosition = getReportPosition(selected);
-  const sourceHref =
-    selected.sourceUrl === "#source-guidelines"
-      ? "/source-guidelines"
-      : selected.sourceUrl || "/source-guidelines";
-  const external = sourceHref.startsWith("http");
+  const sourceHref = getSourceHref(selected.sourceUrl);
+  const external = isExternalSource(selected.sourceUrl);
   const metaLine = getLocationMetaLine(selected);
 
   return (
@@ -234,11 +321,11 @@ function ReportDetail({
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
               Selected Field File
             </p>
-            <h3 className="mt-2 text-2xl font-semibold text-parchment">
+            <h3 className="mt-2 line-clamp-3 text-2xl font-semibold text-parchment">
               {selected.title}
             </h3>
             {selected.originalTitle ? (
-              <p className="mt-2 max-w-2xl text-xs leading-5 text-muted">
+              <p className="mt-2 line-clamp-2 max-w-2xl text-xs leading-5 text-muted">
                 Original title: {selected.originalTitle}
               </p>
             ) : null}
@@ -250,11 +337,11 @@ function ReportDetail({
         {metaLine ? <p className="mt-1 text-sm text-muted">{metaLine}</p> : null}
       </div>
 
-      <div className="atlas-grid detail-atlas relative min-h-[330px] overflow-hidden md:min-h-[390px] xl:min-h-[420px]">
-        <WorldMapBase className="absolute inset-x-4 top-8 h-[73%] w-[calc(100%-2rem)] md:inset-x-5 md:h-[75%] md:w-[calc(100%-2.5rem)]" />
+      <div className="atlas-grid detail-atlas relative min-h-[360px] overflow-hidden md:min-h-[430px] xl:min-h-[460px]">
+        <WorldMapBase className="absolute inset-x-4 top-5 h-[82%] w-[calc(100%-2rem)] md:inset-x-5 md:h-[83%] md:w-[calc(100%-2.5rem)]" />
         <svg
           aria-hidden="true"
-          className="atlas-route-lines absolute inset-x-7 top-10 h-[68%] w-[calc(100%-3.5rem)] md:inset-x-8 md:w-[calc(100%-4rem)]"
+          className="atlas-route-lines absolute inset-x-7 top-8 h-[74%] w-[calc(100%-3.5rem)] md:inset-x-8 md:w-[calc(100%-4rem)]"
           viewBox="0 0 1000 430"
         >
           <path d="M190 184c122-72 235-63 338 27 105 91 218 97 339 21" />
@@ -268,6 +355,23 @@ function ReportDetail({
             top: `${selectedPosition.top}%`,
           }}
         />
+        <span
+          aria-hidden="true"
+          className="selected-atlas-focus absolute size-20"
+          style={{
+            left: `${selectedPosition.left}%`,
+            top: `${selectedPosition.top}%`,
+          }}
+        />
+        <span
+          className="selected-atlas-callout absolute"
+          style={{
+            left: `${selectedPosition.left}%`,
+            top: `${selectedPosition.top}%`,
+          }}
+        >
+          {selected.shortLabel}
+        </span>
         {reports.slice(0, 12).map((report, index) => {
           const position = getReportPosition(report);
           const active = report.id === selected.id;
@@ -276,7 +380,7 @@ function ReportDetail({
             <span
               aria-label={report.shortLabel}
               className={`atlas-pin absolute rounded-full ${
-                active ? "size-4" : "size-2"
+                active ? "selected-atlas-pin size-5" : "size-2"
               }`}
               key={report.id}
               style={{
@@ -288,23 +392,32 @@ function ReportDetail({
           );
         })}
 
-        <div className="absolute bottom-4 left-4 right-4 rounded-md border border-night-800 bg-night-950/88 p-4 shadow-[0_18px_44px_rgba(0,0,0,0.38)] md:left-5 md:right-auto md:w-[min(34rem,calc(100%-2.5rem))]">
+        <div className="absolute bottom-4 left-4 z-10 max-w-[min(24rem,calc(100%-2rem))] rounded-md border border-night-800 bg-night-950/88 px-3 py-2.5 shadow-[0_18px_44px_rgba(0,0,0,0.38)] md:left-5">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`size-2.5 rounded-full ${selected.marker}`} />
             <span className="text-sm font-semibold text-parchment">
-              {selected.category}
+              {selected.shortLabel}
             </span>
             <span className="rounded border border-signal-amber/30 px-2 py-0.5 text-xs text-signal-amber">
               Unverified
             </span>
           </div>
-          <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted">
-            {selected.summary}
+          <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted">
+            Selected marker
           </p>
         </div>
       </div>
 
       <div className="space-y-3 p-4 md:p-5">
+        <div className="rounded-md border border-night-800 bg-night-950/55 p-3.5">
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted">
+            Report summary
+          </p>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            {selected.summary}
+          </p>
+        </div>
+
         <dl className="grid grid-cols-2 gap-2 xl:grid-cols-3">
           {detailRows.map(([label, value]) => (
             <div
@@ -416,6 +529,26 @@ function getLocationMetaLine(report: Report) {
   return [getDetailLocationLabel(report.location), report.region, country]
     .filter((value) => value && value !== "—" && value !== "Unknown")
     .join(" · ");
+}
+
+function getSourceHref(sourceUrl: string) {
+  if (!sourceUrl || sourceUrl === "#source-guidelines") {
+    return "/source-guidelines";
+  }
+
+  if (/^https?:\/\//i.test(sourceUrl) || sourceUrl.startsWith("/")) {
+    return sourceUrl;
+  }
+
+  if (/^(www\.|[a-z0-9.-]+\.[a-z]{2,}\/?)/i.test(sourceUrl)) {
+    return `https://${sourceUrl}`;
+  }
+
+  return sourceUrl;
+}
+
+function isExternalSource(sourceUrl: string) {
+  return getSourceHref(sourceUrl).startsWith("http");
 }
 
 function isMissingLocation(location: string) {

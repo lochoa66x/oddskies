@@ -11,9 +11,22 @@ export const regionFilters = [
 export type RegionFilter = (typeof regionFilters)[number];
 export type AtlasRegion = Exclude<RegionFilter, "All">;
 
+export const categoryFilters = [
+  "All categories",
+  "UFO / UAP",
+  "Strange Lights",
+  "Haunted Places",
+  "Paranormal",
+  "Local Legends",
+  "Unknown",
+] as const;
+
+export type CategoryFilter = (typeof categoryFilters)[number];
+
 export type Report = {
   category: string;
   confidenceMood: string;
+  createdAtRaw?: string;
   eventDateTime: string;
   eventDateTimeRaw: string;
   hasLocation?: boolean;
@@ -321,30 +334,34 @@ export async function getReports(): Promise<Report[]> {
 
 export function getHomepageDisplayReports(reports: Report[]): Report[] {
   const publishableReports = reports.filter((report) => !isRejectedLike(report));
-  const cleanReports = publishableReports.filter((report) => {
-    const score = getHomepageDisplayScore(report);
-
-    return score >= 5 && !isLowContextDisplay(report);
-  });
-
-  if (cleanReports.length >= 6) {
-    return cleanReports.slice(0, 24);
-  }
 
   return publishableReports
     .map((report) => ({
       report,
       score: getHomepageDisplayScore(report),
+      isMessy:
+        isLowContextDisplay(report) ||
+        looksPromotionalOrOffTopic(
+          `${report.title} ${report.summary} ${report.originalTitle ?? ""} ${
+            report.originalSummary ?? ""
+          }`,
+        ),
     }))
     .sort((a, b) => {
-      if (b.score !== a.score) {
-        return b.score - a.score;
+      if (a.isMessy !== b.isMessy) {
+        return a.isMessy ? 1 : -1;
       }
 
-      return getReportTime(b.report) - getReportTime(a.report);
+      const timeDelta = getReportTime(b.report) - getReportTime(a.report);
+
+      if (timeDelta !== 0) {
+        return timeDelta;
+      }
+
+      return b.score - a.score;
     })
     .map(({ report }) => report)
-    .slice(0, 24);
+    .slice(0, 48);
 }
 
 export function filterReportsByRegion(
@@ -356,6 +373,23 @@ export function filterReportsByRegion(
   }
 
   return reports.filter((report) => report.region === region);
+}
+
+export function filterReportsByCategory(
+  reports: Report[],
+  category: CategoryFilter,
+): Report[] {
+  if (category === "All categories") {
+    return reports;
+  }
+
+  return reports.filter(
+    (report) => normalizeCategoryFilter(report.category) === category,
+  );
+}
+
+export function isCategoryFilter(value: string | undefined): value is CategoryFilter {
+  return categoryFilters.some((category) => category === value);
 }
 
 export function coordinateToAtlasPosition(
@@ -420,6 +454,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     readString(row, "event_datetime", "event_at", "event_date") ?? "";
   const reportedRaw =
     readString(row, "reported_datetime", "reported_at", "created_at") ?? "";
+  const createdRaw = readString(row, "created_at", "updated_at", "published_at");
   const rawLocation = readString(row, "location", "place", "location_name");
   const location = formatPublicLocation(rawLocation);
   const hasUsableLocation = !isPlaceholderLocation(rawLocation);
@@ -443,6 +478,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
         "confidence_label",
       ) ??
       "Suspiciously Interesting",
+    createdAtRaw: createdRaw,
     eventDateTime: formatDateTime(eventRaw),
     eventDateTimeRaw: eventRaw,
     hasLocation: Boolean(
@@ -604,6 +640,12 @@ function looksPromotionalOrOffTopic(value: string) {
 }
 
 function getReportTime(report: Report) {
+  const createdTime = new Date(report.createdAtRaw ?? "").getTime();
+
+  if (Number.isFinite(createdTime)) {
+    return createdTime;
+  }
+
   const time = new Date(report.eventDateTimeRaw).getTime();
 
   return Number.isFinite(time) ? time : 0;
@@ -793,7 +835,7 @@ function normalizeCategory(category: string) {
   }
 
   if (normalized.includes("haunt")) {
-    return "Haunted Place";
+    return "Haunted Places";
   }
 
   if (normalized.includes("legend") || normalized.includes("folklore")) {
@@ -809,6 +851,16 @@ function normalizeCategory(category: string) {
   }
 
   return category;
+}
+
+function normalizeCategoryFilter(category: string): CategoryFilter {
+  const normalized = normalizeCategory(category);
+
+  if (isCategoryFilter(normalized)) {
+    return normalized;
+  }
+
+  return "Unknown";
 }
 
 function normalizeRegion(

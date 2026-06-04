@@ -652,12 +652,52 @@ a {
   transform: translate(-50%, -50%) scale(1);
 }
 
+.selected-atlas-focus {
+  z-index: 5;
+  border: 1px solid rgba(72, 224, 194, 0.34);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(72, 224, 194, 0.28) 0 10%, rgba(246, 180, 75, 0.16) 22%, transparent 66%);
+  box-shadow:
+    0 0 0 12px rgba(72, 224, 194, 0.045),
+    0 0 46px rgba(72, 224, 194, 0.34),
+    0 0 80px rgba(246, 180, 75, 0.12);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.selected-atlas-callout {
+  z-index: 7;
+  max-width: 13rem;
+  border: 1px solid rgba(72, 224, 194, 0.28);
+  border-radius: 0.42rem;
+  background: rgba(7, 10, 18, 0.9);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32);
+  color: #f3f0e8;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.1;
+  padding: 0.45rem 0.55rem;
+  pointer-events: none;
+  transform: translate(0.95rem, -50%);
+}
+
 .atlas-pin {
   animation: pin-pulse 3.2s ease-in-out infinite;
   background: #f6b44b;
   box-shadow:
     0 0 0 8px rgba(246, 180, 75, 0.08),
     0 0 26px rgba(249, 115, 91, 0.72);
+}
+
+.detail-atlas .selected-atlas-pin {
+  z-index: 8;
+  background: #48e0c2;
+  box-shadow:
+    0 0 0 8px rgba(72, 224, 194, 0.12),
+    0 0 0 16px rgba(72, 224, 194, 0.045),
+    0 0 32px rgba(72, 224, 194, 0.8),
+    0 0 64px rgba(246, 180, 75, 0.24);
 }
 
 .field-card {
