@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   categoryFilters,
@@ -125,10 +126,18 @@ export function LatestReports({ reports }: { reports: Report[] }) {
               Source-aware, time-stamped, and linked whenever possible.
             </p>
           </div>
-          <p className="max-w-sm rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-            Reports may include curated seed data and reviewed collector tests.
-            Everything remains unverified.
-          </p>
+          <div className="flex max-w-sm flex-col items-start gap-2 md:items-end">
+            <p className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
+              Reports may include curated seed data and reviewed collector tests.
+              Everything remains unverified.
+            </p>
+            <Link
+              className="rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
+              href="/send-signal"
+            >
+              Send a signal
+            </Link>
+          </div>
         </div>
 
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">

@@ -34,6 +34,46 @@ Internal staging for future collectors or manual capture. This table can contain
 
 Public, approved report records used by the OddSkies homepage, atlas, field log, and weirdness signals. These records are still unverified by default.
 
+## Public Signal Intake
+
+The public `/send-signal` page lets visitors submit a source link for human
+review. It is a relationship and discovery intake, not a publishing workflow.
+
+```text
+/send-signal
+-> /api/send-signal
+-> public.raw_sources
+-> human review
+-> maybe public.reports
+```
+
+Public signal rules:
+
+- `source_url` is required.
+- The source must be a public `http` or `https` URL.
+- Local, internal, private-message, account-settings, and private-looking URLs
+  are rejected server-side.
+- Submitters must confirm that the source is public and does not include private
+  messages, private accounts, exact private addresses, personal information,
+  harassment, or unsafe material.
+- Optional context such as category, location, event time, and contact email is
+  stored only as internal review context.
+- Nothing from this flow auto-publishes.
+
+Rows are inserted into `public.raw_sources` with:
+
+```text
+platform = user_submission
+search_query = user_submission
+status = new or needs_review
+```
+
+The API route uses `SUPABASE_SERVICE_ROLE_KEY` only on the server. The key must
+never be imported into client components or exposed to the browser.
+
+User-submitted signals can become public only after manual review and promotion.
+Public reports remain unverified even after promotion.
+
 ## Bluesky Collector Prototype
 
 The Bluesky collector is a manual, server-only staging tool. It can run from

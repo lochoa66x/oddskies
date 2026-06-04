@@ -66,7 +66,7 @@ const categoryMoods: Record<string, string> = {
   "Strange Lights": "Glowing suspiciously",
   UFO: "Sky is blinking",
   "UFO / UAP": "Sky is blinking",
-  Unknown: "Needs more witnesses",
+  Unknown: "More eyes needed",
 };
 
 const regionMoods: Record<Exclude<RegionFilter, "All">, string> = {

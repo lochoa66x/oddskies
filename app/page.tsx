@@ -44,6 +44,12 @@ export default async function Home() {
               </a>
               <a
                 className="transition hover:text-signal-teal"
+                href="/send-signal"
+              >
+                Send a Signal
+              </a>
+              <a
+                className="transition hover:text-signal-teal"
                 href="/source-guidelines"
               >
                 Source Guidelines
