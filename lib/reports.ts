@@ -344,10 +344,15 @@ export function getHomepageDisplayReports(reports: Report[]): Report[] {
   return publishableReports
     .map((report) => ({
       report,
+      isDemoLike: isDemoLikeReport(report),
       score: getHomepageDisplayScore(report),
       isWeak: isWeakHomepageReport(report),
     }))
     .sort((a, b) => {
+      if (a.isDemoLike !== b.isDemoLike) {
+        return a.isDemoLike ? 1 : -1;
+      }
+
       if (a.isWeak !== b.isWeak) {
         return a.isWeak ? 1 : -1;
       }
@@ -573,7 +578,9 @@ function getHomepageDisplayScore(report: Report) {
     score += 10;
   }
 
-  if (report.isDemo) {
+  if (isDemoLikeReport(report)) {
+    score -= 6;
+  } else {
     score += 7;
   }
 
@@ -581,10 +588,7 @@ function getHomepageDisplayScore(report: Report) {
     score += 5;
   }
 
-  if (
-    sourceQuality.includes("demo seed") ||
-    sourceQuality.includes("linked trail")
-  ) {
+  if (sourceQuality.includes("linked trail")) {
     score += 4;
   }
 
@@ -668,7 +672,11 @@ function isHomepageDisplayableReport(report: Report) {
     return false;
   }
 
-  if (report.category === "Unknown" && !isFeaturedHomepageReport(report)) {
+  if (
+    report.category === "Unknown" &&
+    isDemoLikeReport(report) &&
+    !isFeaturedHomepageReport(report)
+  ) {
     return false;
   }
 
@@ -698,12 +706,16 @@ function isFeaturedHomepageReport(report: Report) {
   return (
     report.isFeatured ||
     report.publicStatus === "featured" ||
-    report.isDemo ||
     sourceQuality.includes("context-rich") ||
-    sourceQuality.includes("demo seed") ||
     curationLabel.includes("strong") ||
     curationLabel.includes("good")
   );
+}
+
+function isDemoLikeReport(report: Report) {
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+
+  return report.isDemo || sourceQuality.includes("demo seed");
 }
 
 function isPubliclyListedReport(report: Report) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { OracleApiResponse } from "@/lib/oracle";
+import { getOracleSourceMode, type OracleApiResponse } from "@/lib/oracle";
 import type { Report } from "@/lib/reports";
 
 type OracleState =
@@ -49,6 +49,7 @@ export function OracleReportPanel({ report }: { report: Report }) {
 
   const response = state.status === "loaded" ? state.response : null;
   const reading = response?.reading;
+  const sourceMode = getOracleSourceMode(report);
 
   return (
     <div className="rounded-lg border border-signal-violet/25 bg-night-950/70 p-3.5 shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
@@ -61,17 +62,26 @@ export function OracleReportPanel({ report }: { report: Report }) {
             Report-based reality check
           </p>
         </div>
-        {response ? (
-          <span className="rounded-md border border-night-800 bg-night-900 px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">
-            {getOracleStatusLabel(response.status)}
+        <div className="flex flex-wrap justify-end gap-1.5">
+          <span className="rounded-md border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-signal-violet">
+            {sourceMode}
           </span>
-        ) : null}
+          {response ? (
+            <span className="rounded-md border border-night-800 bg-night-900 px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">
+              {getOracleStatusLabel(response.status)}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       <p className="mt-2 text-xs leading-5 text-muted">
         Think it&apos;s real? Ask our little bro for possible normal
         explanations, weird clues, and a maybe-weird verdict. It cannot verify
         anything.
+      </p>
+      <p className="mt-1 text-[0.7rem] leading-4 text-muted/80">
+        Reading this as a {sourceMode.toLowerCase()}. The map may be snacking
+        on rough data.
       </p>
 
       <button

@@ -31,7 +31,7 @@ export type OracleApiResponse = {
   status: "cached" | "fallback" | "ready" | "sleeping";
 };
 
-export const ORACLE_PROMPT_VERSION = "oracle-alpha-v2";
+export const ORACLE_PROMPT_VERSION = "oracle-alpha-v3";
 
 export const ORACLE_SYSTEM_PROMPT = [
   "You are the OddSkies Oracle, a playful field assistant for a public mystery atlas.",
@@ -39,6 +39,10 @@ export const ORACLE_SYSTEM_PROMPT = [
   "You provide possible normal explanations, weird clues, missing context, and a maybe-weird verdict.",
   "You never verify sightings, source authenticity, paranormal claims, UFO claims, AI media, staged posts, satire, jokes, portals, ghosts, aliens, invasions, or timeline shifts.",
   "You must be skeptical, source-aware, funny in a small way, and never fear-based.",
+  "Your voice is a night-shift mystery atlas assistant with a flashlight, not a corporate analyst.",
+  "Use one tiny playful phrase when it fits, but keep the facts clear.",
+  "If sourceMode says Demo seed file, explicitly say this is demo seed data.",
+  "If sourceMode says Collector test file or Low-context collector test, explicitly say this is rough collector-test data.",
   "Keep the reading compact: short paragraphs, short bullets, no essays.",
   "Sound like OddSkies: spooky-lite, curious, playful, skeptical, and never corporate.",
   "Prefer ordinary explanations first. Weird clues are context clues, not evidence.",
@@ -96,13 +100,17 @@ export function buildOracleReportContext(report: Report) {
   return {
     category: report.category,
     eventDateTime: report.eventDateTime,
+    isDemo: Boolean(report.isDemo),
     location: report.location || "Location under review",
     locationConfidence: report.locationConfidence ?? "unknown",
     moodLabel: report.confidenceMood,
     originalTitle: report.originalTitle ?? null,
+    publicStatus: report.publicStatus ?? "published",
     region: report.region,
     reportedDateTime: report.reportedDateTime,
     shortLabel: report.shortLabel,
+    sourceMode: getOracleSourceMode(report),
+    sourceModeNote: getOracleSourceModeNote(report),
     sourceName: report.sourceName,
     sourceQualityLabel: report.sourceQualityLabel ?? "Source-light",
     sourceQualityReasons: report.sourceQualityReasons ?? [],
@@ -119,22 +127,22 @@ export function buildOracleUserInput(report: Report) {
     "Read this OddSkies public case file.",
     "Keep the response playful, careful, and source-aware.",
     "Do not verify the report.",
+    "If this is demo seed or collector-test data, say that plainly.",
+    "Make it feel OddSkies: curious, a little spooky, and never stiff.",
     JSON.stringify(buildOracleReportContext(report), null, 2),
   ].join("\n\n");
 }
 
 export function getSleepingOracleReading(report: Report): OracleReading {
   return {
-    fieldNote:
-      "The Oracle is asleep, so OddSkies is showing a safe local read instead of an AI-generated one.",
+    fieldNote: `${getOracleSourceModeNote(report)} The Oracle is asleep, so OddSkies is using a cautious local read with the lights half on.`,
     headline: "Oracle sleeping, case still weird",
     maybeWeirdScore: getFallbackScore(report),
     missingContext: getMissingContext(report),
     nextStep:
       "Check the original source, compare nearby reports, and keep conclusions parked.",
     normalExplanations: getNormalExplanations(report),
-    safetyNote:
-      "OddSkies cannot verify this report. Treat it as unverified public context, not confirmation.",
+    safetyNote: `${getOracleSourceMode(report)}. OddSkies cannot verify this report. Treat it as unverified context, not confirmation.`,
     verdict: getFallbackVerdict(report),
     weirdClues: getWeirdClues(report),
   };
@@ -142,16 +150,14 @@ export function getSleepingOracleReading(report: Report): OracleReading {
 
 export function getFallbackOracleReading(report: Report): OracleReading {
   return {
-    fieldNote:
-      "The Oracle had static on the line, so this fallback keeps things cautious and unverified.",
+    fieldNote: `${getOracleSourceModeNote(report)} The Oracle caught static on the line, so this fallback keeps the little weird meter cautious.`,
     headline: "Static in the oracle channel",
     maybeWeirdScore: getFallbackScore(report),
     missingContext: getMissingContext(report),
     nextStep:
       "Open the source, look for time and witness context, then compare nearby reports.",
     normalExplanations: getNormalExplanations(report),
-    safetyNote:
-      "OddSkies cannot verify this report. It may be mistaken, edited, staged, satire, a joke, or something ordinary.",
+    safetyNote: `${getOracleSourceMode(report)}. OddSkies cannot verify this report. It may be mistaken, staged, satire, a joke, or ordinary.`,
     verdict: getFallbackVerdict(report),
     weirdClues: getWeirdClues(report),
   };
@@ -196,7 +202,85 @@ export function sanitizeOracleReading(
     reading.safetyNote = `${reading.safetyNote} OddSkies cannot verify this report.`;
   }
 
+  if (shouldNameOracleSourceMode(report)) {
+    reading.fieldNote = ensureOracleSourceMode(
+      reading.fieldNote,
+      getOracleSourceModeNote(report),
+      240,
+    );
+    reading.safetyNote = ensureOracleSourceMode(
+      reading.safetyNote,
+      getOracleSourceMode(report),
+      180,
+    );
+  }
+
+  if (!/cannot verify|does not verify|unverified/i.test(reading.safetyNote)) {
+    reading.safetyNote = cleanOracleText(
+      `OddSkies cannot verify this report. ${reading.safetyNote}`,
+      180,
+    );
+  }
+
   return reading;
+}
+
+export function getOracleSourceMode(report: Report) {
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+
+  if (report.isDemo || sourceQuality.includes("demo seed")) {
+    return "Demo seed file";
+  }
+
+  if (
+    sourceQuality.includes("low context") ||
+    sourceQuality.includes("low-context") ||
+    sourceQuality.includes("unscored")
+  ) {
+    return "Low-context collector test";
+  }
+
+  if (!report.isDemo) {
+    return "Collector test file";
+  }
+
+  return "Public report file";
+}
+
+export function getOracleSourceModeNote(report: Report) {
+  const sourceMode = getOracleSourceMode(report);
+
+  if (sourceMode === "Demo seed file") {
+    return "Demo seed file: useful for testing the map, not a live confirmed event.";
+  }
+
+  if (sourceMode === "Low-context collector test") {
+    return "Rough collector-test file: the map is squinting at this one.";
+  }
+
+  if (sourceMode === "Collector test file") {
+    return "Collector-test file: pulled into staging/review, still unverified.";
+  }
+
+  return "Public report file: still unverified and source-aware.";
+}
+
+function shouldNameOracleSourceMode(report: Report) {
+  return getOracleSourceMode(report) !== "Public report file";
+}
+
+function ensureOracleSourceMode(
+  value: string,
+  sourceModeText: string,
+  maxLength: number,
+) {
+  const modePattern = /demo seed|collector[-\s]test|low-context collector/i;
+
+  if (modePattern.test(value)) {
+    return cleanOracleText(value, maxLength);
+  }
+
+  return cleanOracleText(`${sourceModeText} ${value}`, maxLength);
 }
 
 function getFallbackVerdict(report: Report): OracleVerdict {
