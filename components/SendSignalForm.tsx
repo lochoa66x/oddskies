@@ -90,6 +90,19 @@ export function SendSignalForm() {
       onSubmit={handleSubmit}
     >
       <div className="grid gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-signal-teal">
+            Signal details
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-parchment">
+            Drop the public trail here.
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            A link is the strongest signal. A short note helps the reviewer see
+            what felt odd without turning it into a claim.
+          </p>
+        </div>
+
         <label className="grid gap-2">
           <span className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-teal">
             Public source link
@@ -99,7 +112,7 @@ export function SendSignalForm() {
             inputMode="url"
             maxLength={2048}
             onChange={(event) => setSourceUrl(event.target.value)}
-            placeholder="https://..."
+            placeholder="https://public-post-or-article.example/..."
             required
             type="url"
             value={sourceUrl}
@@ -114,7 +127,7 @@ export function SendSignalForm() {
             className="min-h-32 rounded-md border border-night-800 bg-night-950 px-4 py-3 text-sm leading-6 text-parchment outline-none transition placeholder:text-muted focus:border-signal-teal"
             maxLength={1200}
             onChange={(event) => setSubmitterNote(event.target.value)}
-            placeholder="Short public-context note. No private details, exact home addresses, or personal info."
+            placeholder="What is weird, where did it happen, and why should the map take a peek? Keep it public and source-aware."
             value={submitterNote}
           />
         </label>
@@ -226,7 +239,7 @@ export function SendSignalForm() {
           disabled={loading || !sourceUrl || !consent || !safety}
           type="submit"
         >
-          {loading ? "Sending through the fog..." : "Send Signal"}
+          {loading ? "Sending through the fog..." : "Send Signal for Review"}
         </button>
 
         {result ? (

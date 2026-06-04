@@ -46,27 +46,27 @@ export default function SendSignalPage() {
         <section className="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.32em] text-signal-teal">
-              Public Signal Drop
+              Signal Drop
             </p>
             <h1 className="mt-4 max-w-4xl text-4xl font-black leading-tight md:text-6xl">
-              Send a strange public report into the fog.
+              Add a little spice to the skies.
             </h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">
-              Found a public post, article, archive entry, or local story that
-              belongs on the mystery atlas? Send the source link. A human
-              reviews it before anything becomes public.
+              Saw something odd in a public post, article, archive entry, or
+              local story? Send the source link into the OddSkies review queue.
+              We check the trail before anything reaches the map.
             </p>
             <p className="mt-4 inline-flex rounded-md border border-signal-amber/35 bg-signal-amber/10 px-3 py-2 text-sm font-semibold text-signal-amber">
-              Nothing auto-publishes. Reports remain unverified.
+              Reviewed before public. Reports remain unverified.
             </p>
           </div>
 
           <aside className="field-card p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-signal-amber">
-              Fog rules
+              Before you drop it
             </p>
             <ul className="mt-4 grid gap-3 text-sm leading-6 text-muted">
-              <li>Public sources only.</li>
+              <li>Public links are best.</li>
               <li>No private messages, private accounts, or exact addresses.</li>
               <li>No harassment, doxxing, or unsafe material.</li>
               <li>OddSkies may reject low-context or messy signals.</li>
@@ -86,8 +86,8 @@ export default function SendSignalPage() {
                 <li>The signal lands in the internal raw source queue.</li>
                 <li>A human checks the trail, privacy, category, and context.</li>
                 <li>
-                  Maybe it becomes a Field Log. Maybe it wanders back into the
-                  fog.
+                  Maybe it becomes a Field Log. Maybe it waits for better
+                  breadcrumbs.
                 </li>
               </ol>
             </section>
