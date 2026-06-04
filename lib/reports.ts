@@ -28,6 +28,7 @@ export type Report = {
   confidenceMood: string;
   createdAtRaw?: string;
   curationLabel?: string;
+  displayPriority?: number;
   eventDateTime: string;
   eventDateTimeRaw: string;
   hasLocation?: boolean;
@@ -35,7 +36,10 @@ export type Report = {
   hasSourceLink?: boolean;
   hasTime?: boolean;
   id: string;
+  isArchived?: boolean;
   isDemo?: boolean;
+  isFeatured?: boolean;
+  isHidden?: boolean;
   latitude: number | null;
   location: string;
   locationConfidence?: string;
@@ -45,6 +49,7 @@ export type Report = {
   oracleReady?: boolean;
   originalSummary?: string;
   originalTitle?: string;
+  publicStatus?: string;
   region: AtlasRegion;
   reportedDateTime: string;
   shortLabel: string;
@@ -493,6 +498,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
       "Suspiciously Interesting",
     createdAtRaw: createdRaw,
     curationLabel: readString(row, "curation_label", "review_label"),
+    displayPriority: readNumber(row, "display_priority") ?? 0,
     eventDateTime: formatDateTime(eventRaw),
     eventDateTimeRaw: eventRaw,
     hasLocation: Boolean(
@@ -507,7 +513,16 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     id:
       readString(row, "id", "slug", "report_id") ??
       `${slugify(rawTitle)}-${index}`,
+    isArchived:
+      normalizePublicStatus(readString(row, "public_status")) === "archived" ||
+      Boolean(readString(row, "archived_at")),
     latitude,
+    isFeatured:
+      readBoolean(row, "is_featured") ??
+      normalizePublicStatus(readString(row, "public_status")) === "featured",
+    isHidden:
+      normalizePublicStatus(readString(row, "public_status")) === "hidden" ||
+      Boolean(readString(row, "hidden_at")),
     location,
     locationConfidence,
     locationResolution: readString(row, "location_resolution"),
@@ -516,6 +531,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     oracleReady: readBoolean(row, "oracle_ready") ?? false,
     originalSummary: originalSummary && originalSummary !== summary ? originalSummary : undefined,
     originalTitle: originalTitle && originalTitle !== title ? originalTitle : undefined,
+    publicStatus: normalizePublicStatus(readString(row, "public_status")),
     region,
     reportedDateTime: formatDateTime(reportedRaw),
     shortLabel: makePublicShortLabel(
@@ -549,9 +565,13 @@ function cleanPublicText(value: string) {
 }
 
 function getHomepageDisplayScore(report: Report) {
-  let score = 0;
+  let score = report.displayPriority ?? 0;
   const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
   const curationLabel = report.curationLabel?.toLowerCase() ?? "";
+
+  if (report.isFeatured || report.publicStatus === "featured") {
+    score += 10;
+  }
 
   if (report.isDemo) {
     score += 7;
@@ -636,6 +656,10 @@ function getHomepageDisplayScore(report: Report) {
 }
 
 function isHomepageDisplayableReport(report: Report) {
+  if (!isPubliclyListedReport(report)) {
+    return false;
+  }
+
   if (isRejectedLike(report) || hasPrivateOrSensitiveSignal(report)) {
     return false;
   }
@@ -672,12 +696,24 @@ function isFeaturedHomepageReport(report: Report) {
   const curationLabel = report.curationLabel?.toLowerCase() ?? "";
 
   return (
+    report.isFeatured ||
+    report.publicStatus === "featured" ||
     report.isDemo ||
     sourceQuality.includes("context-rich") ||
     sourceQuality.includes("demo seed") ||
     curationLabel.includes("strong") ||
     curationLabel.includes("good")
   );
+}
+
+function isPubliclyListedReport(report: Report) {
+  const status = normalizePublicStatus(report.publicStatus);
+
+  if (report.isArchived || report.isHidden) {
+    return false;
+  }
+
+  return !status || status === "published" || status === "featured";
 }
 
 function isLowContextDisplay(report: Report) {
@@ -870,6 +906,23 @@ function formatPublicLocationConfidence(value?: string) {
   }
 
   return normalized;
+}
+
+function normalizePublicStatus(value?: string) {
+  const normalized = cleanPublicText(value ?? "")
+    .toLowerCase()
+    .replace(/[_\s-]+/g, "_");
+
+  if (
+    normalized === "published" ||
+    normalized === "featured" ||
+    normalized === "archived" ||
+    normalized === "hidden"
+  ) {
+    return normalized;
+  }
+
+  return undefined;
 }
 
 function makePublicShortLabel(

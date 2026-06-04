@@ -63,7 +63,7 @@ export function OracleReportPanel({ report }: { report: Report }) {
         </div>
         {response ? (
           <span className="rounded-md border border-night-800 bg-night-900 px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">
-            {response.status === "sleeping" ? "Oracle sleeping" : "Oracle read"}
+            {getOracleStatusLabel(response.status)}
           </span>
         ) : null}
       </div>
@@ -140,6 +140,22 @@ function getOracleError(payload: OracleApiResponse | { error?: string }) {
   }
 
   return "The Oracle blinked twice and refused to parse the sky.";
+}
+
+function getOracleStatusLabel(status: OracleApiResponse["status"]) {
+  if (status === "sleeping") {
+    return "Oracle sleeping";
+  }
+
+  if (status === "cached") {
+    return "Cached read";
+  }
+
+  if (status === "fallback") {
+    return "Fallback read";
+  }
+
+  return "Oracle read";
 }
 
 function OracleList({ items, title }: { items: string[]; title: string }) {

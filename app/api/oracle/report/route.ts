@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   ORACLE_JSON_SCHEMA,
+  ORACLE_PROMPT_VERSION,
   ORACLE_SYSTEM_PROMPT,
   buildOracleUserInput,
   getFallbackOracleReading,
   getSleepingOracleReading,
   sanitizeOracleReading,
 } from "@/lib/oracle";
+import { getCachedOracleReading, saveOracleReading } from "@/lib/oracle-cache";
 import { getHomepageDisplayReports, getReports } from "@/lib/reports";
 
 export const dynamic = "force-dynamic";
@@ -41,11 +43,26 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const model = process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini";
+  const cached = await getCachedOracleReading(report, model);
+
+  if (cached) {
+    return NextResponse.json({
+      cachedAt: cached.cachedAt,
+      model: cached.model,
+      promptVersion: cached.promptVersion,
+      reading: cached.reading,
+      reportId: report.id,
+      status: cached.status,
+    });
+  }
+
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json({
       model: null,
+      promptVersion: ORACLE_PROMPT_VERSION,
       reading: getSleepingOracleReading(report),
       reportId: report.id,
       status: "sleeping",
@@ -53,12 +70,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const model = process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini";
     const response = await fetch("https://api.openai.com/v1/responses", {
       body: JSON.stringify({
         input: buildOracleUserInput(report),
         instructions: ORACLE_SYSTEM_PROMPT,
-        max_output_tokens: 900,
+        max_output_tokens: 700,
         model,
         store: false,
         text: {
@@ -80,6 +96,7 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       return NextResponse.json({
         model,
+        promptVersion: ORACLE_PROMPT_VERSION,
         reading: getFallbackOracleReading(report),
         reportId: report.id,
         status: "fallback",
@@ -89,10 +106,14 @@ export async function POST(request: NextRequest) {
     const payload = (await response.json()) as unknown;
     const outputText = getResponseOutputText(payload);
     const parsed = outputText ? JSON.parse(outputText) : null;
+    const reading = sanitizeOracleReading(parsed, report);
+
+    await saveOracleReading(report, model, reading, "ready");
 
     return NextResponse.json({
       model,
-      reading: sanitizeOracleReading(parsed, report),
+      promptVersion: ORACLE_PROMPT_VERSION,
+      reading,
       reportId: report.id,
       status: "ready",
     });
@@ -101,6 +122,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       model: process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini",
+      promptVersion: ORACLE_PROMPT_VERSION,
       reading: getFallbackOracleReading(report),
       reportId: report.id,
       status: "fallback",

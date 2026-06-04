@@ -331,6 +331,65 @@ What enrichment does not do:
 - use AI
 - expose the service role key
 
+## Public Report Lifecycle
+
+Public reports can stay in `public.reports` without always appearing in the
+homepage Field Log. This is display control only, not verification.
+
+Lifecycle fields:
+
+```text
+public_status: published, featured, archived, hidden
+is_featured
+display_priority
+archived_at
+hidden_at
+```
+
+Rules:
+
+- `published` reports can appear normally.
+- `featured` reports receive a display boost, but are still unverified.
+- `archived` reports stay in the database for history but leave the homepage.
+- `hidden` reports are kept out of public display.
+- `display_priority` only changes ordering; it does not imply truth or quality.
+
+Useful SQL:
+
+```sql
+-- Feature a reviewed public report without claiming it is verified.
+update public.reports
+set
+  public_status = 'featured',
+  is_featured = true,
+  display_priority = 25
+where id = '<report_id>';
+
+-- Move an older report out of the homepage preview.
+update public.reports
+set
+  public_status = 'archived',
+  archived_at = now()
+where id = '<report_id>';
+
+-- Hide a public report that should not display.
+update public.reports
+set
+  public_status = 'hidden',
+  hidden_at = now()
+where id = '<report_id>';
+
+-- Return a report to normal public display.
+update public.reports
+set
+  public_status = 'published',
+  is_featured = false,
+  display_priority = 0,
+  archived_at = null,
+  hidden_at = null
+where id = '<report_id>';
+```
+
 ## Manual Promotion Helper
 
 Step 1: collect or insert a raw source into `public.raw_sources`.

@@ -23,11 +23,15 @@ export type OracleReading = {
 };
 
 export type OracleApiResponse = {
+  cachedAt?: string;
   model: string | null;
+  promptVersion?: string;
   reading: OracleReading;
   reportId: string;
-  status: "fallback" | "ready" | "sleeping";
+  status: "cached" | "fallback" | "ready" | "sleeping";
 };
+
+export const ORACLE_PROMPT_VERSION = "oracle-alpha-v2";
 
 export const ORACLE_SYSTEM_PROMPT = [
   "You are the OddSkies Oracle, a playful field assistant for a public mystery atlas.",
@@ -35,6 +39,9 @@ export const ORACLE_SYSTEM_PROMPT = [
   "You provide possible normal explanations, weird clues, missing context, and a maybe-weird verdict.",
   "You never verify sightings, source authenticity, paranormal claims, UFO claims, AI media, staged posts, satire, jokes, portals, ghosts, aliens, invasions, or timeline shifts.",
   "You must be skeptical, source-aware, funny in a small way, and never fear-based.",
+  "Keep the reading compact: short paragraphs, short bullets, no essays.",
+  "Sound like OddSkies: spooky-lite, curious, playful, skeptical, and never corporate.",
+  "Prefer ordinary explanations first. Weird clues are context clues, not evidence.",
   "Do not tell users to trespass, harass people, contact private individuals, or treat the report as confirmed.",
   "Avoid conspiracy framing. Avoid certainty language like proof, confirmed, definitely alien, verified event, or real ghost.",
   "Return only JSON matching the schema.",
@@ -43,29 +50,29 @@ export const ORACLE_SYSTEM_PROMPT = [
 export const ORACLE_JSON_SCHEMA = {
   additionalProperties: false,
   properties: {
-    fieldNote: { maxLength: 320, minLength: 24, type: "string" },
+    fieldNote: { maxLength: 240, minLength: 24, type: "string" },
     headline: { maxLength: 90, minLength: 8, type: "string" },
     maybeWeirdScore: { maximum: 100, minimum: 0, type: "integer" },
     missingContext: {
-      items: { maxLength: 90, type: "string" },
+      items: { maxLength: 76, type: "string" },
       maxItems: 4,
       minItems: 2,
       type: "array",
     },
-    nextStep: { maxLength: 180, minLength: 24, type: "string" },
+    nextStep: { maxLength: 150, minLength: 24, type: "string" },
     normalExplanations: {
-      items: { maxLength: 90, type: "string" },
+      items: { maxLength: 76, type: "string" },
       maxItems: 4,
       minItems: 2,
       type: "array",
     },
-    safetyNote: { maxLength: 220, minLength: 24, type: "string" },
+    safetyNote: { maxLength: 180, minLength: 24, type: "string" },
     verdict: {
       enum: ORACLE_VERDICTS,
       type: "string",
     },
     weirdClues: {
-      items: { maxLength: 90, type: "string" },
+      items: { maxLength: 76, type: "string" },
       maxItems: 4,
       minItems: 2,
       type: "array",
@@ -119,12 +126,12 @@ export function buildOracleUserInput(report: Report) {
 export function getSleepingOracleReading(report: Report): OracleReading {
   return {
     fieldNote:
-      "The Oracle is currently asleep, so OddSkies is showing a safe local read instead of an AI-generated one.",
+      "The Oracle is asleep, so OddSkies is showing a safe local read instead of an AI-generated one.",
     headline: "Oracle sleeping, case still weird",
     maybeWeirdScore: getFallbackScore(report),
     missingContext: getMissingContext(report),
     nextStep:
-      "Check the original source, compare nearby reports, and keep the conclusion drawer firmly closed.",
+      "Check the original source, compare nearby reports, and keep conclusions parked.",
     normalExplanations: getNormalExplanations(report),
     safetyNote:
       "OddSkies cannot verify this report. Treat it as unverified public context, not confirmation.",
@@ -136,12 +143,12 @@ export function getSleepingOracleReading(report: Report): OracleReading {
 export function getFallbackOracleReading(report: Report): OracleReading {
   return {
     fieldNote:
-      "The Oracle had static on the line, so this fallback read keeps things cautious and unverified.",
+      "The Oracle had static on the line, so this fallback keeps things cautious and unverified.",
     headline: "Static in the oracle channel",
     maybeWeirdScore: getFallbackScore(report),
     missingContext: getMissingContext(report),
     nextStep:
-      "Open the source link, look for timestamps and witnesses, then compare it with other public reports.",
+      "Open the source, look for time and witness context, then compare nearby reports.",
     normalExplanations: getNormalExplanations(report),
     safetyNote:
       "OddSkies cannot verify this report. It may be mistaken, edited, staged, satire, a joke, or something ordinary.",
@@ -159,13 +166,13 @@ export function sanitizeOracleReading(
   }
 
   const reading: OracleReading = {
-    fieldNote: cleanOracleText(value.fieldNote, 320),
+    fieldNote: cleanOracleText(value.fieldNote, 240),
     headline: cleanOracleText(value.headline, 90),
     maybeWeirdScore: clampScore(value.maybeWeirdScore),
     missingContext: cleanOracleList(value.missingContext, 4),
-    nextStep: cleanOracleText(value.nextStep, 180),
+    nextStep: cleanOracleText(value.nextStep, 150),
     normalExplanations: cleanOracleList(value.normalExplanations, 4),
-    safetyNote: cleanOracleText(value.safetyNote, 220),
+    safetyNote: cleanOracleText(value.safetyNote, 180),
     verdict: isOracleVerdict(value.verdict)
       ? value.verdict
       : getFallbackVerdict(report),
@@ -292,7 +299,7 @@ function cleanOracleList(value: unknown, maxItems: number) {
   }
 
   return value
-    .map((item) => cleanOracleText(item, 90))
+    .map((item) => cleanOracleText(item, 76))
     .filter(Boolean)
     .slice(0, maxItems);
 }
