@@ -41,7 +41,7 @@ export function OracleReportPanel({ report }: { report: Report }) {
       setState({ response: payload, status: "loaded" });
     } catch {
       setState({
-        message: "The Oracle signal dropped. Try again after the static clears.",
+        message: "The Oracle lost the signal. Try again after the static clears.",
         status: "error",
       });
     }
@@ -79,10 +79,16 @@ export function OracleReportPanel({ report }: { report: Report }) {
         explanations, weird clues, and a maybe-weird verdict. It cannot verify
         anything.
       </p>
-      <p className="mt-1 text-[0.7rem] leading-4 text-muted/80">
-        Reading this as a {sourceMode.toLowerCase()}. The map may be snacking
-        on rough data.
-      </p>
+      {sourceMode === "Public report file" ? (
+        <p className="mt-1 text-[0.7rem] leading-4 text-muted/80">
+          Still unverified. The Oracle is a reality check, not a truth machine.
+        </p>
+      ) : (
+        <p className="mt-1 text-[0.7rem] leading-4 text-muted/80">
+          Reading this as a {sourceMode.toLowerCase()}. The map may be snacking
+          on rough data.
+        </p>
+      )}
 
       <button
         className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-signal-violet/40 bg-signal-violet/15 px-3 py-2 text-sm font-semibold text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/25 disabled:cursor-wait disabled:opacity-70"
@@ -90,7 +96,9 @@ export function OracleReportPanel({ report }: { report: Report }) {
         onClick={askOracle}
         type="button"
       >
-        {state.status === "loading" ? "Oracle is reading..." : "Ask the Oracle"}
+        {state.status === "loading"
+          ? "Oracle is checking the fog..."
+          : "Ask the Oracle"}
       </button>
 
       {state.status === "error" ? (
@@ -116,8 +124,11 @@ export function OracleReportPanel({ report }: { report: Report }) {
                 {getOracleVerdictLabel(reading.verdict)}
               </span>
             </div>
-            <p className="relative mt-4 border-l-2 border-signal-violet/60 pl-4 text-base font-semibold leading-7 text-parchment md:text-lg md:leading-8">
+            <p className="relative mt-4 border-l-2 border-signal-violet/60 pl-4 text-lg font-semibold leading-8 text-parchment md:text-xl md:leading-9 lg:text-2xl lg:leading-10">
               {reading.fieldNote}
+            </p>
+            <p className="relative mt-4 text-xs leading-5 text-muted">
+              {reading.oracleNote}
             </p>
           </div>
 
@@ -132,21 +143,19 @@ export function OracleReportPanel({ report }: { report: Report }) {
           <div className="grid gap-2 md:grid-cols-2">
             <OracleList
               items={reading.normalExplanations}
-              title="Possible normal"
+              title="Possible boring"
             />
-            <OracleList items={reading.weirdClues} title="Weird clues" />
+            <OracleList items={reading.weirdClues} title="Weird little clues" />
             <OracleList
               items={reading.missingContext}
-              title="Missing context"
+              title="Missing pieces"
             />
-            <div className="rounded-md border border-night-800 bg-night-900/50 p-2.5">
-              <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                Next step
-              </p>
-              <p className="mt-2 text-[0.78rem] leading-5 text-muted">
-                {reading.nextStep}
-              </p>
-            </div>
+            <OracleTextCard text={reading.sourceCheck} title="Source check" />
+            <OracleTextCard text={reading.nextStep} title="Next step" />
+            <OracleTextCard
+              text={reading.shareableSummary}
+              title="Pocket summary"
+            />
           </div>
 
           <p className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
@@ -184,14 +193,28 @@ function getOracleStatusLabel(status: OracleApiResponse["status"]) {
 
 function getOracleVerdictLabel(verdict: OracleApiResponse["reading"]["verdict"]) {
   const labels: Record<OracleApiResponse["reading"]["verdict"], string> = {
+    "Culture Note": "Culture note",
     "Mildly Odd": "Mildly odd",
-    "Needs More Witnesses": "Needs more witnesses",
-    "Probably Normal": "Probably normal",
-    "Sky Is Being Dramatic": "Sky is being dramatic",
+    "Needs Another Witness": "Bring another witness",
+    "Probably Normal": "Probably just Earth",
+    "Reality Mostly Intact": "Reality mostly intact",
+    "Sky Is Being Dramatic": "Sky being dramatic",
+    "Source Trail Is Thin": "Trail needs breadcrumbs",
     "Suspiciously Interesting": "Suspiciously interesting",
   };
 
   return labels[verdict];
+}
+
+function OracleTextCard({ text, title }: { text: string; title: string }) {
+  return (
+    <div className="rounded-md border border-night-800 bg-night-900/50 p-2.5">
+      <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-muted">
+        {title}
+      </p>
+      <p className="mt-2 text-[0.78rem] leading-5 text-muted">{text}</p>
+    </div>
+  );
 }
 
 function OracleList({ items, title }: { items: string[]; title: string }) {

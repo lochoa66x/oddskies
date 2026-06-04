@@ -4,7 +4,10 @@ export const ORACLE_VERDICTS = [
   "Probably Normal",
   "Mildly Odd",
   "Suspiciously Interesting",
-  "Needs More Witnesses",
+  "Needs Another Witness",
+  "Source Trail Is Thin",
+  "Culture Note",
+  "Reality Mostly Intact",
   "Sky Is Being Dramatic",
 ] as const;
 
@@ -17,7 +20,10 @@ export type OracleReading = {
   missingContext: string[];
   nextStep: string;
   normalExplanations: string[];
+  oracleNote: string;
   safetyNote: string;
+  shareableSummary: string;
+  sourceCheck: string;
   verdict: OracleVerdict;
   weirdClues: string[];
 };
@@ -31,24 +37,27 @@ export type OracleApiResponse = {
   status: "cached" | "fallback" | "ready" | "sleeping";
 };
 
-export const ORACLE_PROMPT_VERSION = "oracle-alpha-v5";
+export const ORACLE_PROMPT_VERSION = "oracle-alpha-v6";
 
 export const ORACLE_SYSTEM_PROMPT = [
   "You are the OddSkies Oracle, a playful field assistant for a public mystery atlas.",
   "You read one unverified public report at a time.",
-  "You provide possible normal explanations, weird clues, missing context, and a maybe-weird verdict.",
+  "You provide possible boring explanations, weird little clues, missing context, source checks, and a maybe-weird verdict.",
   "You never verify sightings, source authenticity, paranormal claims, UFO claims, AI media, staged posts, satire, jokes, portals, ghosts, aliens, invasions, or timeline shifts.",
   "You must be skeptical, source-aware, funny in a small way, and never fear-based.",
   "Your voice is a night-shift mystery atlas assistant with a flashlight, not a corporate analyst.",
-  "Use one tiny playful phrase when it fits, but keep the facts clear.",
+  "Use playful OddSkies phrasing, but keep the source posture clear.",
   "If sourceMode says Demo seed file, explicitly say this is demo seed data.",
   "If sourceMode says Collector test file or Low-context collector test, explicitly say this is rough collector-test data.",
-  "Keep the reading compact: short paragraphs, short bullets, no essays.",
-  "The fieldNote is the main Oracle read. Make it playful, skeptical, and memorable in 2-3 complete sentences.",
+  "If the report appears promotional, cultural, or not a direct sighting, call it a culture note rather than a confirmed event.",
+  "Keep the support cards compact: short bullets, no essays.",
+  "The fieldNote is the main Oracle read. Make it playful, skeptical, memorable, and complete in 3-5 sentences.",
+  "The fieldNote should be the most interesting part of the response, not a tiny summary.",
   "Never end the fieldNote mid-thought or mid-sentence.",
   "Avoid stiff phrases like keep our feet on the ground, actionable insight, or formal risk language.",
   "Sound like OddSkies: spooky-lite, curious, playful, skeptical, and never corporate.",
   "Prefer ordinary explanations first. Weird clues are context clues, not evidence.",
+  "maybeWeirdScore is internal only. Do not mention the numeric score in any text field.",
   "Do not tell users to trespass, harass people, contact private individuals, or treat the report as confirmed.",
   "Avoid conspiracy framing. Avoid certainty language like proof, confirmed, definitely alien, verified event, or real ghost.",
   "Return only JSON matching the schema.",
@@ -57,29 +66,32 @@ export const ORACLE_SYSTEM_PROMPT = [
 export const ORACLE_JSON_SCHEMA = {
   additionalProperties: false,
   properties: {
-    fieldNote: { maxLength: 480, minLength: 24, type: "string" },
-    headline: { maxLength: 90, minLength: 8, type: "string" },
+    fieldNote: { maxLength: 1100, minLength: 120, type: "string" },
+    headline: { maxLength: 110, minLength: 8, type: "string" },
     maybeWeirdScore: { maximum: 100, minimum: 0, type: "integer" },
     missingContext: {
-      items: { maxLength: 76, type: "string" },
+      items: { maxLength: 96, type: "string" },
       maxItems: 4,
       minItems: 2,
       type: "array",
     },
     nextStep: { maxLength: 150, minLength: 24, type: "string" },
     normalExplanations: {
-      items: { maxLength: 76, type: "string" },
+      items: { maxLength: 96, type: "string" },
       maxItems: 4,
       minItems: 2,
       type: "array",
     },
+    oracleNote: { maxLength: 180, minLength: 24, type: "string" },
     safetyNote: { maxLength: 180, minLength: 24, type: "string" },
+    shareableSummary: { maxLength: 220, minLength: 24, type: "string" },
+    sourceCheck: { maxLength: 220, minLength: 24, type: "string" },
     verdict: {
       enum: ORACLE_VERDICTS,
       type: "string",
     },
     weirdClues: {
-      items: { maxLength: 76, type: "string" },
+      items: { maxLength: 96, type: "string" },
       maxItems: 4,
       minItems: 2,
       type: "array",
@@ -92,7 +104,10 @@ export const ORACLE_JSON_SCHEMA = {
     "missingContext",
     "nextStep",
     "normalExplanations",
+    "oracleNote",
     "safetyNote",
+    "shareableSummary",
+    "sourceCheck",
     "verdict",
     "weirdClues",
   ],
@@ -138,31 +153,41 @@ export function buildOracleUserInput(report: Report) {
 }
 
 export function getSleepingOracleReading(report: Report): OracleReading {
+  const verdict = getFallbackVerdict(report);
+
   return {
-    fieldNote: `${getOracleSourceModeNote(report)} The Oracle is asleep, so OddSkies is using a cautious local read with the lights half on.`,
+    fieldNote: `${getOracleSourceModeNote(report)} The Oracle is asleep right now, so OddSkies is doing the careful flashlight version: ordinary explanations stay first in line, the source trail still matters, and the weird shelf remains open but clearly unlabeled as truth.`,
     headline: "Oracle sleeping, case still weird",
     maybeWeirdScore: getFallbackScore(report),
     missingContext: getMissingContext(report),
     nextStep:
       "Check the original source, compare nearby reports, and keep conclusions parked.",
     normalExplanations: getNormalExplanations(report),
+    oracleNote: getOracleNote(report),
     safetyNote: `${getOracleSourceMode(report)}. OddSkies cannot verify this report. Treat it as unverified context, not confirmation.`,
-    verdict: getFallbackVerdict(report),
+    shareableSummary: getShareableSummary(report, verdict),
+    sourceCheck: getSourceCheck(report),
+    verdict,
     weirdClues: getWeirdClues(report),
   };
 }
 
 export function getFallbackOracleReading(report: Report): OracleReading {
+  const verdict = getFallbackVerdict(report);
+
   return {
-    fieldNote: `${getOracleSourceModeNote(report)} The Oracle caught static on the line, so this fallback keeps the little weird meter cautious.`,
+    fieldNote: `${getOracleSourceModeNote(report)} The Oracle caught static on the line, so this local read keeps the odd meter playful and cautious. There may be something interesting in the report trail, but the boring explanations still get the first chair at the table.`,
     headline: "Static in the oracle channel",
     maybeWeirdScore: getFallbackScore(report),
     missingContext: getMissingContext(report),
     nextStep:
       "Open the source, look for time and witness context, then compare nearby reports.",
     normalExplanations: getNormalExplanations(report),
+    oracleNote: getOracleNote(report),
     safetyNote: `${getOracleSourceMode(report)}. OddSkies cannot verify this report. It may be mistaken, staged, satire, a joke, or ordinary.`,
-    verdict: getFallbackVerdict(report),
+    shareableSummary: getShareableSummary(report, verdict),
+    sourceCheck: getSourceCheck(report),
+    verdict,
     weirdClues: getWeirdClues(report),
   };
 }
@@ -176,13 +201,23 @@ export function sanitizeOracleReading(
   }
 
   const reading: OracleReading = {
-    fieldNote: cleanOracleText(value.fieldNote, 480),
-    headline: cleanOracleText(value.headline, 90),
+    fieldNote: cleanOracleText(value.fieldNote, 1100),
+    headline: cleanOracleText(value.headline, 110),
     maybeWeirdScore: clampScore(value.maybeWeirdScore),
     missingContext: cleanOracleList(value.missingContext, 4),
     nextStep: cleanOracleText(value.nextStep, 150),
     normalExplanations: cleanOracleList(value.normalExplanations, 4),
+    oracleNote:
+      cleanOracleText(value.oracleNote, 180) || getOracleNote(report),
     safetyNote: cleanOracleText(value.safetyNote, 180),
+    shareableSummary:
+      cleanOracleText(value.shareableSummary, 220) ||
+      getShareableSummary(
+        report,
+        isOracleVerdict(value.verdict) ? value.verdict : getFallbackVerdict(report),
+      ),
+    sourceCheck:
+      cleanOracleText(value.sourceCheck, 220) || getSourceCheck(report),
     verdict: isOracleVerdict(value.verdict)
       ? value.verdict
       : getFallbackVerdict(report),
@@ -193,7 +228,10 @@ export function sanitizeOracleReading(
     !reading.fieldNote ||
     !reading.headline ||
     !reading.nextStep ||
+    !reading.oracleNote ||
     !reading.safetyNote ||
+    !reading.shareableSummary ||
+    !reading.sourceCheck ||
     reading.missingContext.length < 2 ||
     reading.normalExplanations.length < 2 ||
     reading.weirdClues.length < 2 ||
@@ -210,7 +248,12 @@ export function sanitizeOracleReading(
     reading.fieldNote = ensureOracleSourceMode(
       reading.fieldNote,
       getOracleSourceModeNote(report),
-      480,
+      1100,
+    );
+    reading.sourceCheck = ensureOracleSourceMode(
+      reading.sourceCheck,
+      getOracleSourceMode(report),
+      220,
     );
     reading.safetyNote = ensureOracleSourceMode(
       reading.safetyNote,
@@ -287,11 +330,63 @@ function ensureOracleSourceMode(
   return cleanOracleText(`${sourceModeText} ${value}`, maxLength);
 }
 
+function getOracleNote(report: Report) {
+  const sourceMode = getOracleSourceMode(report);
+
+  if (sourceMode === "Demo seed file") {
+    return "Demo seed files help test the atlas. Useful? Yes. Proof? Absolutely not.";
+  }
+
+  if (sourceMode === "Low-context collector test") {
+    return "This collector-test file is thin on context, so the Oracle keeps one eyebrow raised.";
+  }
+
+  if (sourceMode === "Collector test file") {
+    return "Collector-test files can be messy. OddSkies keeps the trail, not the verdict.";
+  }
+
+  return "The Oracle gives a playful read only. The report remains unverified.";
+}
+
+function getShareableSummary(report: Report, verdict: OracleVerdict) {
+  const title = cleanOracleText(report.shortLabel || report.title, 80);
+
+  if (verdict === "Source Trail Is Thin") {
+    return `${title}: a strange report with a thin source trail. Interesting enough to file, not enough to believe on sight.`;
+  }
+
+  if (verdict === "Culture Note") {
+    return `${title}: more weird-culture signal than confirmed sighting. Filed for context, not proof.`;
+  }
+
+  return `${title}: ${verdict.toLowerCase()} and still unverified. Read the source before feeding the mystery machine.`;
+}
+
+function getSourceCheck(report: Report) {
+  const parts = [];
+
+  parts.push(report.sourceUrl ? "Source link captured" : "No source link captured");
+  parts.push(report.sourceName ? `Source: ${report.sourceName}` : "Source name missing");
+
+  if (report.isDemo) {
+    parts.push("demo seed");
+  } else {
+    parts.push("collector-test data");
+  }
+
+  return `${parts.join(" · ")}. OddSkies has not verified the claim.`;
+}
+
 function getFallbackVerdict(report: Report): OracleVerdict {
   const mood = report.confidenceMood.toLowerCase();
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+
+  if (sourceQuality.includes("culture")) {
+    return "Culture Note";
+  }
 
   if (mood.includes("low") || report.category === "Unknown") {
-    return "Needs More Witnesses";
+    return report.sourceUrl ? "Needs Another Witness" : "Source Trail Is Thin";
   }
 
   if (mood.includes("odd") || mood.includes("interesting")) {
@@ -387,7 +482,7 @@ function cleanOracleList(value: unknown, maxItems: number) {
   }
 
   return value
-    .map((item) => cleanOracleText(item, 76))
+    .map((item) => cleanOracleText(item, 96))
     .filter(Boolean)
     .slice(0, maxItems);
 }
@@ -403,7 +498,14 @@ function cleanOracleText(value: unknown, maxLength: number) {
     return cleaned;
   }
 
-  return `${cleaned.slice(0, maxLength - 1).trimEnd()}…`;
+  const clipped = cleaned.slice(0, maxLength - 1).trimEnd();
+  const lastSpace = clipped.lastIndexOf(" ");
+  const trimmed =
+    lastSpace > Math.floor(maxLength * 0.72)
+      ? clipped.slice(0, lastSpace)
+      : clipped;
+
+  return `${trimmed.replace(/[.,;:!?-]+$/, "").trimEnd()}…`;
 }
 
 function clampScore(value: unknown) {
@@ -423,7 +525,10 @@ function containsUnsafeCertainty(reading: OracleReading) {
     reading.fieldNote,
     reading.headline,
     reading.nextStep,
+    reading.oracleNote,
     reading.safetyNote,
+    reading.shareableSummary,
+    reading.sourceCheck,
     reading.verdict,
     ...reading.missingContext,
     ...reading.normalExplanations,

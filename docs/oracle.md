@@ -1,8 +1,8 @@
 # OddSkies Oracle Alpha
 
 The OddSkies Oracle is a playful report reader for public case files. It gives
-possible normal explanations, weird clues, missing context, and a maybe-weird
-verdict.
+a main field read, possible boring explanations, weird little clues, missing
+pieces, source checks, and a maybe-weird verdict.
 
 It does not verify reports, sightings, source authenticity, AI media, staged
 posts, satire, jokes, UFOs, hauntings, portals, ghosts, aliens, invasions, or
@@ -50,13 +50,23 @@ The Oracle returns:
 
 - headline
 - verdict
-- maybe-weird score
+- maybe-weird score, used internally only
+- main field note
 - possible normal explanations
 - weird clues
 - missing context
-- field note
+- source check
 - next step
+- shareable summary
+- Oracle note
 - safety note
+
+The public UI does not show the numeric score. It uses the verdict label and
+the main field note so the read feels like OddSkies, not a grading rubric.
+
+The main field note should be the “Oracle says” moment: complete, playful,
+skeptical, and large enough to feel like the point of the feature. Supporting
+cards stay compact.
 
 Every reading must preserve the OddSkies trust posture:
 

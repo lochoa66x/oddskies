@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         input: buildOracleUserInput(report),
         instructions: ORACLE_SYSTEM_PROMPT,
-        max_output_tokens: 1000,
+        max_output_tokens: 1400,
         model,
         store: false,
         text: {
