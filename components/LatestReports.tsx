@@ -36,23 +36,6 @@ export function LatestReports({ reports }: { reports: Report[] }) {
     filteredReports.find((report) => report.id === selectedId) ??
     filteredReports[0] ??
     reports[0];
-  const selectedCountry = selected ? getCountry(selected.location) : "";
-  const detailRows = selected
-    ? [
-        ["Category", selected.category],
-        ["Location", getDetailLocationLabel(selected.location)],
-        ["Region", selected.region],
-        ["Country", selectedCountry || "—"],
-        ["Event date/time", selected.eventDateTime],
-        ["Reported date/time", selected.reportedDateTime],
-        ["Source name", selected.sourceName],
-        ["Source type", selected.sourceType],
-        ["Source quality", selected.sourceQualityLabel ?? "Source-light"],
-        ["Location confidence", getLocationConfidenceLabel(selected)],
-        ["Verification", selected.verificationStatus],
-        ["Mood label", selected.confidenceMood],
-      ]
-    : [];
 
   function changeRegion(region: RegionFilter) {
     const nextReports = filterReportsByCategory(
@@ -298,11 +281,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
           </div>
 
           {selected ? (
-            <ReportDetail
-              detailRows={detailRows}
-              reports={filteredReports}
-              selected={selected}
-            />
+            <ReportDetail reports={filteredReports} selected={selected} />
           ) : null}
         </div>
       </div>
@@ -311,11 +290,9 @@ export function LatestReports({ reports }: { reports: Report[] }) {
 }
 
 function ReportDetail({
-  detailRows,
   reports,
   selected,
 }: {
-  detailRows: string[][];
   reports: Report[];
   selected: Report;
 }) {
@@ -323,6 +300,8 @@ function ReportDetail({
   const sourceHref = getSourceHref(selected.sourceUrl);
   const external = isExternalSource(selected.sourceUrl);
   const metaLine = getLocationMetaLine(selected);
+  const caseFacts = getCaseFacts(selected);
+  const caseBadges = getCaseBadges(selected);
 
   return (
     <aside className="field-card field-file-card overflow-hidden rounded-lg">
@@ -429,19 +408,31 @@ function ReportDetail({
           </p>
         </div>
 
-        <dl className="grid grid-cols-2 gap-2 xl:grid-cols-3">
-          {detailRows.map(([label, value]) => (
-            <div
-              className="rounded-md border border-night-800 bg-night-950/55 p-2.5"
-              key={label}
-            >
-              <dt className="text-[0.68rem] text-muted">{label}</dt>
-              <dd className="mt-1 text-xs font-semibold leading-5 text-parchment">
-                {value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <div className="rounded-md border border-night-800 bg-night-950/55 p-3.5">
+          <div className="flex flex-wrap gap-2">
+            {caseBadges.map((badge) => (
+              <span
+                className={`rounded border px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] ${badge.className}`}
+                key={badge.label}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </div>
+
+          <dl className="mt-3 grid gap-x-5 gap-y-3 border-t border-night-800/80 pt-3 text-sm sm:grid-cols-2">
+            {caseFacts.map((fact) => (
+              <div className={fact.wide ? "sm:col-span-2" : ""} key={fact.label}>
+                <dt className="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                  {fact.label}
+                </dt>
+                <dd className="mt-1 break-words text-sm font-semibold leading-5 text-parchment">
+                  {fact.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
 
         <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
           <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 p-3.5">
@@ -484,14 +475,6 @@ function getReportPosition(report: Report) {
   return coordinateToAtlasPosition(anchor.latitude, anchor.longitude);
 }
 
-function getCountry(location: string) {
-  if (isMissingLocation(location)) {
-    return "";
-  }
-
-  return location.split(",").at(-1)?.trim() || "";
-}
-
 function getLocationConfidenceLabel(report: Report) {
   const confidence = report.locationConfidence;
   const resolution = report.locationResolution;
@@ -530,11 +513,73 @@ function getDetailLocationLabel(location: string) {
 }
 
 function getLocationMetaLine(report: Report) {
-  const country = getCountry(report.location);
-
-  return [getDetailLocationLabel(report.location), report.region, country]
+  return [getDetailLocationLabel(report.location), report.region]
     .filter((value) => value && value !== "—" && value !== "Unknown")
     .join(" · ");
+}
+
+function getCaseFacts(report: Report) {
+  const reviewTrail = [
+    report.sourceQualityLabel ?? "Source-light",
+    getLocationConfidenceLabel(report) !== "—"
+      ? `location ${getLocationConfidenceLabel(report).toLowerCase()}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const sourceTrail = [report.sourceType, report.sourceName]
+    .filter((value) => value && value !== "Unknown")
+    .join(" · ");
+
+  return [
+    {
+      label: "Where",
+      value: getDetailLocationLabel(report.location),
+    },
+    {
+      label: "Region",
+      value: report.region,
+    },
+    {
+      label: "When",
+      value: getTimelineLabel(report),
+    },
+    {
+      label: "Review trail",
+      value: reviewTrail,
+    },
+    {
+      label: "Source trail",
+      value: sourceTrail,
+      wide: true,
+    },
+  ].filter((fact) => fact.value && fact.value !== "Unknown");
+}
+
+function getCaseBadges(report: Report) {
+  return [
+    {
+      className: "border-night-700 bg-night-950/70 text-parchment",
+      label: report.category,
+    },
+    {
+      className: "border-signal-amber/35 bg-signal-amber/10 text-signal-amber",
+      label: report.verificationStatus,
+    },
+    {
+      className: "border-signal-violet/35 bg-signal-violet/10 text-signal-violet",
+      label: report.confidenceMood,
+    },
+  ];
+}
+
+function getTimelineLabel(report: Report) {
+  if (report.eventDateTime === report.reportedDateTime) {
+    return report.eventDateTime;
+  }
+
+  return `${report.eventDateTime} · reported ${report.reportedDateTime}`;
 }
 
 function getSourceHref(sourceUrl: string) {
