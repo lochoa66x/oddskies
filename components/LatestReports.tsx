@@ -73,8 +73,8 @@ export function LatestReports({ reports }: { reports: Report[] }) {
             </p>
           </div>
           <p className="max-w-sm rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-            Global seed reports are concept data for Phase 2. Live collectors
-            are not connected yet.
+            Reports may include curated seed data and reviewed collector tests.
+            Everything remains unverified.
           </p>
         </div>
 
@@ -232,7 +232,7 @@ function ReportDetail({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
-              Open Field File
+              Selected Field File
             </p>
             <h3 className="mt-2 text-2xl font-semibold text-parchment">
               {selected.title}
@@ -403,11 +403,11 @@ function getLocationChipClass(location: string) {
 }
 
 function getCompactLocationLabel(location: string) {
-  return isMissingLocation(location) ? "" : location;
+  return isMissingLocation(location) ? "Loc: reviewing" : location;
 }
 
 function getDetailLocationLabel(location: string) {
-  return isMissingLocation(location) ? "—" : location;
+  return isMissingLocation(location) ? "Location under review" : location;
 }
 
 function getLocationMetaLine(report: Report) {

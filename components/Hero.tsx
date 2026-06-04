@@ -170,8 +170,8 @@ export function Hero({ reports }: { reports: Report[] }) {
               })}
             </div>
             <p className="text-xs leading-5 text-muted">
-              Global seed reports are concept data for Phase 2. Live collectors
-              are not connected yet.
+              Reports may include curated seed data and reviewed collector
+              tests. Everything remains unverified.
             </p>
           </div>
 

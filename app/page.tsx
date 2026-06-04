@@ -4,16 +4,17 @@ import { LatestReports } from "@/components/LatestReports";
 import { OddSkiesOracle } from "@/components/OddSkiesOracle";
 import { SignalsWeirdness } from "@/components/SignalsWeirdness";
 import { WeirdShelf } from "@/components/WeirdShelf";
-import { getReports } from "@/lib/reports";
+import { getHomepageDisplayReports, getReports } from "@/lib/reports";
 
 export default async function Home() {
   const reports = await getReports();
+  const displayReports = getHomepageDisplayReports(reports);
 
   return (
     <main className="min-h-screen overflow-hidden bg-night-950 text-parchment">
-      <Hero reports={reports} />
+      <Hero reports={displayReports} />
       <CategoryStrip />
-      <LatestReports reports={reports} />
+      <LatestReports reports={displayReports} />
       <OddSkiesOracle />
       <SignalsWeirdness reports={reports} />
       <WeirdShelf />

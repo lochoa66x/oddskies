@@ -319,6 +319,34 @@ export async function getReports(): Promise<Report[]> {
   }
 }
 
+export function getHomepageDisplayReports(reports: Report[]): Report[] {
+  const publishableReports = reports.filter((report) => !isRejectedLike(report));
+  const cleanReports = publishableReports.filter((report) => {
+    const score = getHomepageDisplayScore(report);
+
+    return score >= 5 && !isLowContextDisplay(report);
+  });
+
+  if (cleanReports.length >= 6) {
+    return cleanReports.slice(0, 24);
+  }
+
+  return publishableReports
+    .map((report) => ({
+      report,
+      score: getHomepageDisplayScore(report),
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+
+      return getReportTime(b.report) - getReportTime(a.report);
+    })
+    .map(({ report }) => report)
+    .slice(0, 24);
+}
+
 export function filterReportsByRegion(
   reports: Report[],
   region: RegionFilter,
@@ -464,10 +492,121 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
 
 function cleanPublicText(value: string) {
   return value
-    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/(?:https?:\/\/|www\.)\S+/gi, "")
     .replace(/(^|[\s([{])#[^\s#]+/gu, "$1")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function getHomepageDisplayScore(report: Report) {
+  let score = 0;
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+  const text = `${report.title} ${report.summary} ${report.originalTitle ?? ""} ${
+    report.originalSummary ?? ""
+  }`;
+
+  if (report.isDemo) {
+    score += 3;
+  }
+
+  if (report.hasSourceLink || report.sourceUrl) {
+    score += 3;
+  }
+
+  if (report.hasLocation || !isMissingReportLocation(report.location)) {
+    score += 2;
+  }
+
+  if (report.hasTime && report.eventDateTime !== "Date not listed") {
+    score += 2;
+  }
+
+  if (report.hasMediaHint) {
+    score += 1;
+  }
+
+  if (report.oracleReady) {
+    score += 1;
+  }
+
+  if (report.title.length >= 22) {
+    score += 1;
+  }
+
+  if (report.summary.length >= 90) {
+    score += 2;
+  }
+
+  if (sourceQuality.includes("context-rich")) {
+    score += 2;
+  }
+
+  if (sourceQuality.includes("demo seed") || sourceQuality.includes("linked trail")) {
+    score += 1;
+  }
+
+  if (sourceQuality.includes("source-light")) {
+    score -= 1;
+  }
+
+  if (isLowContextDisplay(report)) {
+    score -= 5;
+  }
+
+  if (report.category === "Unknown") {
+    score -= 2;
+  }
+
+  if (looksPromotionalOrOffTopic(text)) {
+    score -= 4;
+  }
+
+  return score;
+}
+
+function isLowContextDisplay(report: Report) {
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+
+  return (
+    sourceQuality.includes("needs more context") ||
+    sourceQuality.includes("low context") ||
+    sourceQuality.includes("unscored") ||
+    report.confidenceMood.toLowerCase().includes("low context")
+  );
+}
+
+function isMissingReportLocation(location: string) {
+  const normalized = location.trim().toLowerCase();
+
+  return (
+    !normalized ||
+    normalized === "unknown" ||
+    normalized === "location pending" ||
+    normalized === "location under review"
+  );
+}
+
+function isRejectedLike(report: Report) {
+  const status = report.verificationStatus.toLowerCase().replace(/[_-]+/g, " ");
+
+  return (
+    status.includes("rejected") ||
+    status.includes("duplicate") ||
+    status.includes("private") ||
+    status.includes("sensitive")
+  );
+}
+
+function looksPromotionalOrOffTopic(value: string) {
+  return /amazon\.com|\/dp\/|kindle|buy now|\.shop\b|survival kit|group chat|teaser|trailer|movie|film/i.test(
+    value,
+  );
+}
+
+function getReportTime(report: Report) {
+  const time = new Date(report.eventDateTimeRaw).getTime();
+
+  return Number.isFinite(time) ? time : 0;
 }
 
 function looksPreTruncated(value: string) {
