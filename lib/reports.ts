@@ -27,6 +27,7 @@ export type Report = {
   category: string;
   confidenceMood: string;
   createdAtRaw?: string;
+  curationLabel?: string;
   eventDateTime: string;
   eventDateTimeRaw: string;
   hasLocation?: boolean;
@@ -333,23 +334,23 @@ export async function getReports(): Promise<Report[]> {
 }
 
 export function getHomepageDisplayReports(reports: Report[]): Report[] {
-  const publishableReports = reports.filter((report) => !isRejectedLike(report));
+  const publishableReports = reports.filter(isHomepageDisplayableReport);
 
   return publishableReports
     .map((report) => ({
       report,
       score: getHomepageDisplayScore(report),
-      isMessy:
-        isLowContextDisplay(report) ||
-        looksPromotionalOrOffTopic(
-          `${report.title} ${report.summary} ${report.originalTitle ?? ""} ${
-            report.originalSummary ?? ""
-          }`,
-        ),
+      isWeak: isWeakHomepageReport(report),
     }))
     .sort((a, b) => {
-      if (a.isMessy !== b.isMessy) {
-        return a.isMessy ? 1 : -1;
+      if (a.isWeak !== b.isWeak) {
+        return a.isWeak ? 1 : -1;
+      }
+
+      const scoreDelta = b.score - a.score;
+
+      if (scoreDelta !== 0) {
+        return scoreDelta;
       }
 
       const timeDelta = getReportTime(b.report) - getReportTime(a.report);
@@ -362,6 +363,18 @@ export function getHomepageDisplayReports(reports: Report[]): Report[] {
     })
     .map(({ report }) => report)
     .slice(0, 48);
+}
+
+export function getPublicReportDisplayBadge(report: Report) {
+  if (isCultureNoteReport(report)) {
+    return "Culture note";
+  }
+
+  if (!report.sourceQualityLabel || isLowContextDisplay(report)) {
+    return "Reviewing";
+  }
+
+  return report.sourceQualityLabel;
 }
 
 export function filterReportsByRegion(
@@ -479,6 +492,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
       ) ??
       "Suspiciously Interesting",
     createdAtRaw: createdRaw,
+    curationLabel: readString(row, "curation_label", "review_label"),
     eventDateTime: formatDateTime(eventRaw),
     eventDateTimeRaw: eventRaw,
     hasLocation: Boolean(
@@ -537,12 +551,29 @@ function cleanPublicText(value: string) {
 function getHomepageDisplayScore(report: Report) {
   let score = 0;
   const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
-  const text = `${report.title} ${report.summary} ${report.originalTitle ?? ""} ${
-    report.originalSummary ?? ""
-  }`;
+  const curationLabel = report.curationLabel?.toLowerCase() ?? "";
 
   if (report.isDemo) {
-    score += 3;
+    score += 7;
+  }
+
+  if (sourceQuality.includes("context-rich")) {
+    score += 5;
+  }
+
+  if (
+    sourceQuality.includes("demo seed") ||
+    sourceQuality.includes("linked trail")
+  ) {
+    score += 4;
+  }
+
+  if (curationLabel.includes("strong")) {
+    score += 5;
+  } else if (curationLabel.includes("good")) {
+    score += 4;
+  } else if (curationLabel.includes("review")) {
+    score += 2;
   }
 
   if (report.hasSourceLink || report.sourceUrl) {
@@ -573,40 +604,93 @@ function getHomepageDisplayScore(report: Report) {
     score += 2;
   }
 
-  if (sourceQuality.includes("context-rich")) {
-    score += 2;
-  }
-
-  if (sourceQuality.includes("demo seed") || sourceQuality.includes("linked trail")) {
-    score += 1;
-  }
-
   if (sourceQuality.includes("source-light")) {
-    score -= 1;
+    score -= 3;
   }
 
   if (isLowContextDisplay(report)) {
-    score -= 5;
+    score -= 8;
   }
 
-  if (report.category === "Unknown") {
+  if (isMissingReportLocation(report.location)) {
+    score -= 3;
+  }
+
+  if (!report.hasTime || report.eventDateTime === "Date not listed") {
     score -= 2;
   }
 
-  if (looksPromotionalOrOffTopic(text)) {
-    score -= 4;
+  if (report.category === "Unknown" && !isFeaturedHomepageReport(report)) {
+    score -= 7;
+  }
+
+  if (hasObviousLocationCategoryMismatch(report)) {
+    score -= 6;
+  }
+
+  if (isCultureNoteReport(report)) {
+    score -= 5;
   }
 
   return score;
 }
 
+function isHomepageDisplayableReport(report: Report) {
+  if (isRejectedLike(report) || hasPrivateOrSensitiveSignal(report)) {
+    return false;
+  }
+
+  if (looksPromotionalOrOffTopic(getReportDisplayText(report))) {
+    return false;
+  }
+
+  if (report.category === "Unknown" && !isFeaturedHomepageReport(report)) {
+    return false;
+  }
+
+  if (hasObviousLocationCategoryMismatch(report) && !isFeaturedHomepageReport(report)) {
+    return false;
+  }
+
+  return true;
+}
+
+function isWeakHomepageReport(report: Report) {
+  return (
+    isLowContextDisplay(report) ||
+    isCultureNoteReport(report) ||
+    hasObviousLocationCategoryMismatch(report) ||
+    report.category === "Unknown" ||
+    isMissingReportLocation(report.location) ||
+    !report.hasTime ||
+    report.eventDateTime === "Date not listed"
+  );
+}
+
+function isFeaturedHomepageReport(report: Report) {
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+  const curationLabel = report.curationLabel?.toLowerCase() ?? "";
+
+  return (
+    report.isDemo ||
+    sourceQuality.includes("context-rich") ||
+    sourceQuality.includes("demo seed") ||
+    curationLabel.includes("strong") ||
+    curationLabel.includes("good")
+  );
+}
+
 function isLowContextDisplay(report: Report) {
   const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+  const curationLabel = report.curationLabel?.toLowerCase() ?? "";
 
   return (
     sourceQuality.includes("needs more context") ||
     sourceQuality.includes("low context") ||
+    sourceQuality.includes("low-context") ||
     sourceQuality.includes("unscored") ||
+    curationLabel.includes("low context") ||
+    curationLabel.includes("low-context") ||
     report.confidenceMood.toLowerCase().includes("low context")
   );
 }
@@ -617,6 +701,7 @@ function isMissingReportLocation(location: string) {
   return (
     !normalized ||
     normalized === "unknown" ||
+    normalized === "loc: reviewing" ||
     normalized === "location pending" ||
     normalized === "location under review"
   );
@@ -633,10 +718,66 @@ function isRejectedLike(report: Report) {
   );
 }
 
+function hasPrivateOrSensitiveSignal(report: Report) {
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+  const curationLabel = report.curationLabel?.toLowerCase() ?? "";
+  const reasons = report.sourceQualityReasons?.join(" ").toLowerCase() ?? "";
+
+  return (
+    sourceQuality.includes("private") ||
+    sourceQuality.includes("sensitive") ||
+    curationLabel.includes("private") ||
+    curationLabel.includes("sensitive") ||
+    reasons.includes("private") ||
+    reasons.includes("sensitive")
+  );
+}
+
 function looksPromotionalOrOffTopic(value: string) {
-  return /amazon\.com|\/dp\/|kindle|buy now|\.shop\b|survival kit|group chat|teaser|trailer|movie|film/i.test(
+  return /amazon\.com|\/dp\/|kindle|buy now|coupon|discount|\.shop\b|survival kit|group chat|teaser|trailer|movie|film|cinematic survival kit|product link|available now/i.test(
     value,
   );
+}
+
+function isCultureNoteReport(report: Report) {
+  const text = getReportDisplayText(report);
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+  const sourceRich =
+    report.isDemo ||
+    Boolean(report.sourceUrl) ||
+    sourceQuality.includes("context-rich") ||
+    sourceQuality.includes("linked trail");
+
+  return (
+    sourceRich &&
+    /fairytaletuesday|fabled event|mandela|movie quote|memory glitch|internet weirdness|folklore note|culture note|mythology/i.test(
+      text,
+    )
+  );
+}
+
+function hasObviousLocationCategoryMismatch(report: Report) {
+  const text = getReportDisplayText(report).toLowerCase();
+  const location = report.location.toLowerCase();
+
+  if (
+    report.region === "Latin America" &&
+    /japan|kitsune|kyoto|tokyo|fox's wedding/.test(text)
+  ) {
+    return true;
+  }
+
+  if (location.includes("rio") && /japan|kitsune|fox's wedding/.test(text)) {
+    return true;
+  }
+
+  return false;
+}
+
+function getReportDisplayText(report: Report) {
+  return `${report.title} ${report.summary} ${report.originalTitle ?? ""} ${
+    report.originalSummary ?? ""
+  }`;
 }
 
 function getReportTime(report: Report) {

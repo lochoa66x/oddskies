@@ -6,6 +6,7 @@ import {
   coordinateToAtlasPosition,
   filterReportsByCategory,
   filterReportsByRegion,
+  getPublicReportDisplayBadge,
   isCategoryFilter,
   regionAnchors,
   regionFilters,
@@ -212,7 +213,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                           Field note {String(index + 1).padStart(2, "0")}
                         </span>
                         <span className="rounded border border-night-800 bg-night-950/60 px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                          {report.sourceQualityLabel ?? "Source trail"}
+                          {getPublicReportDisplayBadge(report)}
                         </span>
                       </div>
                       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -319,7 +320,7 @@ function ReportDetail({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
-              Selected Field File
+              Open Case File
             </p>
             <h3 className="mt-2 line-clamp-3 text-2xl font-semibold text-parchment">
               {selected.title}
