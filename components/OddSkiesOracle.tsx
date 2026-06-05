@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function OddSkiesOracle() {
   return (
     <section className="bg-night-950 px-5 py-8 md:py-10" id="oracle">
@@ -22,12 +24,12 @@ export function OddSkiesOracle() {
             mistaken, staged, satire, or a joke.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <a
+            <Link
               className="inline-flex min-h-12 items-center justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/25"
               href="/field-log"
             >
               Ask in Field Log
-            </a>
+            </Link>
             <span className="rounded-md border border-night-800 bg-night-900 px-3 py-2 text-xs font-semibold text-muted">
               Report-based alpha
             </span>

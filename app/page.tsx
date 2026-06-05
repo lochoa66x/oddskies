@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CategoryStrip } from "@/components/CategoryStrip";
 import { Hero } from "@/components/Hero";
 import { LatestReports } from "@/components/LatestReports";
@@ -44,36 +45,36 @@ export default async function Home() {
               </p>
             </div>
             <div className="flex flex-wrap gap-5">
-              <a
+              <Link
                 className="transition hover:text-signal-teal"
                 href="/field-log"
               >
                 Field Log
-              </a>
-              <a className="transition hover:text-signal-teal" href="/about">
+              </Link>
+              <Link className="transition hover:text-signal-teal" href="/about">
                 About
-              </a>
-              <a
+              </Link>
+              <Link
                 className="transition hover:text-signal-teal"
                 href="/send-signal"
               >
                 Send a Signal
-              </a>
-              <a
+              </Link>
+              <Link
                 className="transition hover:text-signal-teal"
                 href="/source-guidelines"
               >
                 Source Guidelines
-              </a>
+              </Link>
               <a className="transition hover:text-signal-teal" href="#">
                 Privacy
               </a>
-              <a
+              <Link
                 className="transition hover:text-signal-teal"
                 href="/about#policy"
               >
                 Policy
-              </a>
+              </Link>
               <a className="transition hover:text-signal-teal" href="#oracle">
                 Oracle
               </a>

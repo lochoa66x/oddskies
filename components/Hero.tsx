@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import {
@@ -84,13 +85,13 @@ export function Hero({ reports }: { reports: Report[] }) {
 
         <nav className="hidden items-center gap-1 rounded-md border border-night-800 bg-night-900/80 p-1 text-sm text-muted md:flex">
           {navItems.map((item) => (
-            <a
+            <Link
               className="rounded px-3 py-2 transition hover:bg-night-850 hover:text-parchment"
               href={item.href}
               key={item.label}
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
       </header>
@@ -119,12 +120,12 @@ export function Hero({ reports }: { reports: Report[] }) {
               <span aria-hidden="true" className="cta-glyph cta-glyph-map" />
               Explore the Map
             </a>
-            <a
+            <Link
               className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-teal/40 bg-signal-teal/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/70 hover:bg-signal-teal/20"
               href="/field-log"
             >
               Browse the Field Log
-            </a>
+            </Link>
             <a
               className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-violet/40 bg-signal-violet/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/60 hover:bg-signal-teal/10"
               href="#oracle"
