@@ -107,15 +107,23 @@ export async function POST(request: NextRequest) {
     const outputText = getResponseOutputText(payload);
     const parsed = outputText ? JSON.parse(outputText) : null;
     const reading = sanitizeOracleReading(parsed, report);
+    const fallbackReading = getFallbackOracleReading(report);
+    const status =
+      reading.fieldNote === fallbackReading.fieldNote &&
+      reading.headline === fallbackReading.headline
+        ? "fallback"
+        : "ready";
 
-    await saveOracleReading(report, model, reading, "ready");
+    if (status === "ready") {
+      await saveOracleReading(report, model, reading, status);
+    }
 
     return NextResponse.json({
       model,
       promptVersion: ORACLE_PROMPT_VERSION,
       reading,
       reportId: report.id,
-      status: "ready",
+      status,
     });
   } catch (error) {
     console.error("Oracle report request failed", formatError(error));

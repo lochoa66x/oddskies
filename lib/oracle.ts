@@ -37,7 +37,7 @@ export type OracleApiResponse = {
   status: "cached" | "fallback" | "ready" | "sleeping";
 };
 
-export const ORACLE_PROMPT_VERSION = "oracle-alpha-v6";
+export const ORACLE_PROMPT_VERSION = "oracle-alpha-v7";
 
 export const ORACLE_SYSTEM_PROMPT = [
   "You are the OddSkies Oracle, a playful field assistant for a public mystery atlas.",
@@ -537,7 +537,7 @@ function containsUnsafeCertainty(reading: OracleReading) {
     .join(" ")
     .toLowerCase();
 
-  return /confirmed|verified event|proof of|definitely alien|real ghost|100% real|invasion confirmed|portal confirmed/.test(
+  return /verified event|proof of|definitely alien|real ghost|100% real|invasion confirmed|portal confirmed|confirmed alien|confirmed ghost|confirmed portal/.test(
     text,
   );
 }
