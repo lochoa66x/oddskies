@@ -28,8 +28,8 @@ export default function SendSignalPage() {
             <Link className="transition hover:text-signal-teal" href="/#map">
               Map
             </Link>
-            <Link className="transition hover:text-signal-teal" href="/#reports">
-              Reports
+            <Link className="transition hover:text-signal-teal" href="/field-log">
+              Field Log
             </Link>
             <Link className="transition hover:text-signal-teal" href="/about">
               About
@@ -52,7 +52,7 @@ export default function SendSignalPage() {
               Add a little spice to the skies.
             </h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">
-              Saw something odd in a public post, article, archive entry, or
+              Saw something odd in a public post, article, old field note, or
               local story? Send the source link into the OddSkies review queue.
               We check the trail before anything reaches the map.
             </p>

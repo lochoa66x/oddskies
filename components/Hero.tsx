@@ -12,12 +12,13 @@ import {
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
+import { AtlasMotionGuard } from "@/components/AtlasMotionGuard";
 import { WorldMapBase } from "@/components/WorldMapBase";
 
 const heroTags = ["UFO / UAP", "Strange Lights", "Haunted Places", "Unknown"];
 const navItems = [
   { href: "#map", label: "Map" },
-  { href: "#reports", label: "Reports" },
+  { href: "/field-log", label: "Field Log" },
   { href: "#oracle", label: "Oracle" },
   { href: "/about", label: "About" },
 ];
@@ -119,6 +120,12 @@ export function Hero({ reports }: { reports: Report[] }) {
               Explore the Map
             </a>
             <a
+              className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-teal/40 bg-signal-teal/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/70 hover:bg-signal-teal/20"
+              href="/field-log"
+            >
+              Browse the Field Log
+            </a>
+            <a
               className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-violet/40 bg-signal-violet/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/60 hover:bg-signal-teal/10"
               href="#oracle"
             >
@@ -175,7 +182,7 @@ export function Hero({ reports }: { reports: Report[] }) {
             </p>
           </div>
 
-          <div className="atlas-grid relative min-h-[350px] overflow-hidden lg:min-h-[455px] xl:min-h-[500px]">
+          <AtlasMotionGuard className="atlas-grid relative min-h-[350px] overflow-hidden lg:min-h-[455px] xl:min-h-[500px]">
             <div className="atlas-map-texture absolute inset-0" />
             <div className="scan-line absolute left-0 top-20 h-px w-full" />
             <WorldMapBase className="absolute inset-x-4 top-8 h-[72%] w-[calc(100%-2rem)]" />
@@ -296,7 +303,7 @@ export function Hero({ reports }: { reports: Report[] }) {
                 <span>Active regions</span>
               </div>
             </div>
-          </div>
+          </AtlasMotionGuard>
         </div>
       </div>
     </section>

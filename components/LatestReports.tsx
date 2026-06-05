@@ -15,6 +15,7 @@ import {
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
+import { AtlasMotionGuard } from "@/components/AtlasMotionGuard";
 import { OracleReportPanel } from "@/components/OracleReportPanel";
 import { WorldMapBase } from "@/components/WorldMapBase";
 
@@ -31,7 +32,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
       ),
     [activeCategory, activeRegion, reports],
   );
-  const visibleReports = filteredReports.slice(0, 4);
+  const visibleReports = filteredReports.slice(0, 5);
   const selected =
     filteredReports.find((report) => report.id === selectedId) ??
     filteredReports[0] ??
@@ -106,8 +107,20 @@ export function LatestReports({ reports }: { reports: Report[] }) {
               Latest reports, filed as unverified.
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-              Source-aware, time-stamped, and linked whenever possible.
+              Showing the latest 5 public field notes. Source-aware,
+              time-stamped, and linked whenever possible.
             </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-signal-teal/40 bg-signal-teal/15 px-4 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
+                href="/field-log"
+              >
+                Browse the Full Field Log
+              </Link>
+              <span className="text-xs leading-5 text-muted">
+                Homepage is the live preview. The full log keeps the rest.
+              </span>
+            </div>
           </div>
           <div className="field-card max-w-md border-signal-teal/25 bg-night-950/65 p-3.5">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-signal-teal">
@@ -290,12 +303,12 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                   No reports are listed for this filter yet.
                 </div>
               )}
-              {filteredReports.length > visibleReports.length ? (
-                <p className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs leading-5 text-muted">
-                  Showing {visibleReports.length} preview artifacts from this
-                  filter. More report browsing comes later.
-                </p>
-              ) : null}
+              <Link
+                className="rounded-md border border-signal-teal/30 bg-signal-teal/10 px-3 py-2 text-xs font-semibold leading-5 text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
+                href="/field-log"
+              >
+                Browse the Full Field Log →
+              </Link>
             </div>
           </div>
 
@@ -346,7 +359,7 @@ function ReportDetail({
         {metaLine ? <p className="mt-1 text-sm text-muted">{metaLine}</p> : null}
       </div>
 
-      <div className="atlas-grid detail-atlas relative min-h-[360px] overflow-hidden md:min-h-[430px] xl:min-h-[460px]">
+      <AtlasMotionGuard className="atlas-grid detail-atlas relative min-h-[360px] overflow-hidden md:min-h-[430px] xl:min-h-[460px]">
         <WorldMapBase className="absolute inset-x-4 top-5 h-[82%] w-[calc(100%-2rem)] md:inset-x-5 md:h-[83%] md:w-[calc(100%-2.5rem)]" />
         <svg
           aria-hidden="true"
@@ -415,7 +428,7 @@ function ReportDetail({
             Selected marker
           </p>
         </div>
-      </div>
+      </AtlasMotionGuard>
 
       <div className="space-y-3 p-4 md:p-5">
         <div className="rounded-md border border-night-800 bg-night-950/55 p-3.5">

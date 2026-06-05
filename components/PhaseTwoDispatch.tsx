@@ -65,7 +65,7 @@ export function PhaseTwoDispatch() {
               <div className="flex flex-col gap-2 sm:flex-row">
                 <a
                   className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-signal-teal/40 bg-signal-teal/15 px-4 py-2 text-sm font-bold text-signal-teal transition hover:border-signal-teal/70 hover:bg-signal-teal/20"
-                  href="#reports"
+                  href="/field-log"
                 >
                   Watch the field log
                 </a>

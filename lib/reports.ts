@@ -375,6 +375,20 @@ export function getHomepageDisplayReports(reports: Report[]): Report[] {
     .slice(0, 48);
 }
 
+export function getFieldLogReports(reports: Report[]): Report[] {
+  return reports.filter(isFieldLogDisplayableReport).sort(sortReportsNewestFirst);
+}
+
+export function getHomepageFieldLogReports(reports: Report[]): Report[] {
+  return getFieldLogReports(reports)
+    .filter((report) => {
+      const status = normalizePublicStatus(report.publicStatus);
+
+      return !report.isArchived && status !== "archived";
+    })
+    .slice(0, 5);
+}
+
 export function getPublicReportDisplayBadge(report: Report) {
   if (isCultureNoteReport(report)) {
     return "Culture note";
@@ -687,6 +701,30 @@ function isHomepageDisplayableReport(report: Report) {
   return true;
 }
 
+function isFieldLogDisplayableReport(report: Report) {
+  const status = normalizePublicStatus(report.publicStatus);
+
+  if (report.isHidden) {
+    return false;
+  }
+
+  if (isRejectedLike(report) || hasPrivateOrSensitiveSignal(report)) {
+    return false;
+  }
+
+  if (looksPromotionalOrOffTopic(getReportDisplayText(report))) {
+    return false;
+  }
+
+  return (
+    !status ||
+    status === "published" ||
+    status === "featured" ||
+    status === "archived" ||
+    report.isArchived
+  );
+}
+
 function isWeakHomepageReport(report: Report) {
   return (
     isLowContextDisplay(report) ||
@@ -838,6 +876,10 @@ function getReportTime(report: Report) {
   const time = new Date(report.eventDateTimeRaw).getTime();
 
   return Number.isFinite(time) ? time : 0;
+}
+
+function sortReportsNewestFirst(a: Report, b: Report) {
+  return getReportTime(b) - getReportTime(a);
 }
 
 function looksPreTruncated(value: string) {

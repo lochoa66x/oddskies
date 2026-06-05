@@ -354,6 +354,19 @@ a {
   stroke-width: 1.6;
 }
 
+.atlas-motion-paused .atlas-route-lines path,
+.atlas-motion-paused .radar-ring,
+.atlas-motion-paused .atlas-region-glow,
+.atlas-motion-paused .heat-cluster,
+.atlas-motion-paused .atlas-pin,
+.atlas-motion-paused .scan-line {
+  animation-play-state: paused !important;
+}
+
+.atlas-motion-paused .scan-line {
+  opacity: 0.22;
+}
+
 .radar-ring {
   animation: radar-breathe 4.8s ease-in-out infinite;
   border: 1px solid rgba(72, 224, 194, 0.18);

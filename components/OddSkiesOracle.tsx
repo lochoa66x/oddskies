@@ -24,7 +24,7 @@ export function OddSkiesOracle() {
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <a
               className="inline-flex min-h-12 items-center justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/25"
-              href="#reports"
+              href="/field-log"
             >
               Ask in Field Log
             </a>

@@ -5,17 +5,22 @@ import { OddSkiesOracle } from "@/components/OddSkiesOracle";
 import { PhaseTwoDispatch } from "@/components/PhaseTwoDispatch";
 import { SignalsWeirdness } from "@/components/SignalsWeirdness";
 import { WeirdShelf } from "@/components/WeirdShelf";
-import { getHomepageDisplayReports, getReports } from "@/lib/reports";
+import {
+  getHomepageDisplayReports,
+  getHomepageFieldLogReports,
+  getReports,
+} from "@/lib/reports";
 
 export default async function Home() {
   const reports = await getReports();
   const displayReports = getHomepageDisplayReports(reports);
+  const latestFieldLogReports = getHomepageFieldLogReports(reports);
 
   return (
     <main className="min-h-screen overflow-hidden bg-night-950 text-parchment">
       <Hero reports={displayReports} />
       <CategoryStrip />
-      <LatestReports reports={displayReports} />
+      <LatestReports reports={latestFieldLogReports} />
       <OddSkiesOracle />
       <SignalsWeirdness reports={reports} />
       <WeirdShelf />
@@ -39,6 +44,12 @@ export default async function Home() {
               </p>
             </div>
             <div className="flex flex-wrap gap-5">
+              <a
+                className="transition hover:text-signal-teal"
+                href="/field-log"
+              >
+                Field Log
+              </a>
               <a className="transition hover:text-signal-teal" href="/about">
                 About
               </a>

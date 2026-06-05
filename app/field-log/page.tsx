@@ -1,0 +1,77 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { FieldLogBrowser } from "@/components/FieldLogBrowser";
+import { getFieldLogReports, getReports } from "@/lib/reports";
+
+export const metadata: Metadata = {
+  title: "Full Field Log | OddSkies",
+  description:
+    "Browse public, unverified OddSkies field notes by month, category, region, source, and date.",
+};
+
+export default async function FieldLogPage() {
+  const reports = getFieldLogReports(await getReports());
+
+  return (
+    <main className="min-h-screen bg-night-950 bg-star-field px-5 py-6 text-parchment">
+      <div className="mx-auto max-w-7xl">
+        <header className="flex flex-col gap-4 border-b border-night-800 pb-5 md:flex-row md:items-center md:justify-between">
+          <Link className="flex items-center gap-3" href="/">
+            <span className="grid size-11 place-items-center rounded-md border border-signal-teal/40 bg-signal-teal/10 text-sm font-black text-signal-teal">
+              OS
+            </span>
+            <span>
+              <span className="block text-sm font-semibold uppercase tracking-[0.34em] text-parchment">
+                OddSkies
+              </span>
+              <span className="text-sm text-muted">oddskies.com</span>
+            </span>
+          </Link>
+          <nav className="flex flex-wrap gap-3 text-sm text-muted">
+            <Link className="transition hover:text-signal-teal" href="/#map">
+              Map
+            </Link>
+            <Link className="transition hover:text-signal-teal" href="/#reports">
+              Homepage Preview
+            </Link>
+            <Link className="transition hover:text-signal-teal" href="/#oracle">
+              Oracle
+            </Link>
+            <Link className="transition hover:text-signal-teal" href="/send-signal">
+              Send a Signal
+            </Link>
+          </nav>
+        </header>
+
+        <section className="grid gap-5 py-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.32em] text-signal-teal">
+              Full Field Log
+            </p>
+            <h1 className="mt-4 max-w-4xl text-4xl font-black leading-tight md:text-6xl">
+              Browse the living record of weird.
+            </h1>
+            <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">
+              Public, unverified field notes grouped into monthly sweeps.
+              Search by title, source, location, region, category, quality, and
+              date without cluttering the front map.
+            </p>
+          </div>
+
+          <aside className="field-card border-signal-amber/25 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-signal-amber">
+              Reading rules
+            </p>
+            <p className="mt-3 text-sm leading-6 text-muted">
+              Every case file stays unverified. Source links are kept visible
+              when available, and the Oracle can only offer a playful reality
+              check.
+            </p>
+          </aside>
+        </section>
+
+        <FieldLogBrowser reports={reports} />
+      </div>
+    </main>
+  );
+}
