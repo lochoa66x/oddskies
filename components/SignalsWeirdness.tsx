@@ -3,6 +3,7 @@ import {
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
+import Link from "next/link";
 
 type CountItem = {
   count: number;
@@ -290,8 +291,9 @@ function WeirdnessGrid({
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {displayedDays.length > 0 ? (
             displayedDays.map((cell) => (
-              <article
+              <Link
                 className="rounded-md border border-night-800 bg-night-950/80 p-2.5"
+                href={`/field-log?date=${toDateKey(cell.date)}`}
                 key={toDateKey(cell.date)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -324,7 +326,7 @@ function WeirdnessGrid({
                 <p className="mt-2.5 text-xs leading-5 text-muted">
                   {getActivityMood(cell.count)}
                 </p>
-              </article>
+              </Link>
             ))
           ) : (
             <div className="rounded-md border border-night-800 bg-night-950/80 p-4 text-sm leading-6 text-muted sm:col-span-2 xl:col-span-4">

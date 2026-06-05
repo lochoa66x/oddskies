@@ -9,7 +9,7 @@ import {
   sanitizeOracleReading,
 } from "@/lib/oracle";
 import { getCachedOracleReading, saveOracleReading } from "@/lib/oracle-cache";
-import { getHomepageDisplayReports, getReports } from "@/lib/reports";
+import { getFieldLogReports, getReports } from "@/lib/reports";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   }
 
   const reports = await getReports();
-  const publicReports = getHomepageDisplayReports(reports);
+  const publicReports = getFieldLogReports(reports);
   const report =
     publicReports.find((item) => item.id === reportId) ??
     reports.find((item) => item.id === reportId && item.isDemo);

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   categoryFilters,
@@ -16,16 +17,41 @@ const allSourceTypes = "All source types";
 const allSourceQualities = "All source quality";
 const pageSize = 12;
 
-export function FieldLogBrowser({ reports }: { reports: Report[] }) {
-  const [query, setQuery] = useState("");
-  const [activeRegion, setActiveRegion] = useState<RegionFilter>("All");
+export type FieldLogInitialFilters = {
+  category?: string;
+  date?: string;
+  from?: string;
+  query?: string;
+  region?: string;
+  sourceQuality?: string;
+  sourceType?: string;
+  to?: string;
+};
+
+export function FieldLogBrowser({
+  initialFilters = {},
+  reports,
+}: {
+  initialFilters?: FieldLogInitialFilters;
+  reports: Report[];
+}) {
+  const [query, setQuery] = useState(initialFilters.query ?? "");
+  const [activeRegion, setActiveRegion] = useState<RegionFilter>(
+    getInitialRegion(initialFilters.region),
+  );
   const [activeCategory, setActiveCategory] =
-    useState<CategoryFilter>("All categories");
-  const [activeSourceType, setActiveSourceType] = useState(allSourceTypes);
+    useState<CategoryFilter>(getInitialCategory(initialFilters.category));
+  const [activeSourceType, setActiveSourceType] = useState(
+    initialFilters.sourceType ?? allSourceTypes,
+  );
   const [activeSourceQuality, setActiveSourceQuality] =
-    useState(allSourceQualities);
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+    useState(initialFilters.sourceQuality ?? allSourceQualities);
+  const [fromDate, setFromDate] = useState(
+    getInitialDate(initialFilters.from ?? initialFilters.date),
+  );
+  const [toDate, setToDate] = useState(
+    getInitialDate(initialFilters.to ?? initialFilters.date),
+  );
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const [selectedId, setSelectedId] = useState(reports[0]?.id ?? "");
 
@@ -233,7 +259,7 @@ export function FieldLogBrowser({ reports }: { reports: Report[] }) {
         ) : null}
       </section>
 
-      {selected ? <FieldLogDetail report={selected} /> : null}
+      {selected ? <FieldLogCaseFile report={selected} sticky /> : null}
     </div>
   );
 }
@@ -305,12 +331,22 @@ function FieldLogCard({
   );
 }
 
-function FieldLogDetail({ report }: { report: Report }) {
+export function FieldLogCaseFile({
+  report,
+  sticky = false,
+}: {
+  report: Report;
+  sticky?: boolean;
+}) {
   const sourceHref = getSourceHref(report.sourceUrl);
   const external = sourceHref.startsWith("http");
 
   return (
-    <aside className="field-card overflow-hidden rounded-lg lg:sticky lg:top-4">
+    <aside
+      className={`field-card overflow-hidden rounded-lg ${
+        sticky ? "lg:sticky lg:top-4" : ""
+      }`}
+    >
       <div className="border-b border-night-800 bg-night-850 px-4 py-4">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
           Open Case File
@@ -358,6 +394,12 @@ function FieldLogDetail({ report }: { report: Report }) {
         </dl>
 
         <div className="grid gap-2">
+          <Link
+            className="inline-flex min-h-11 items-center justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-sm font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
+            href={`/field-log/${encodeURIComponent(report.id)}`}
+          >
+            Share this case file
+          </Link>
           <a
             className="source-link inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
             href={sourceHref}
@@ -434,6 +476,22 @@ function getUniqueValues(reports: Report[], key: keyof Report) {
   return [...new Set(reports.map((report) => report[key]))]
     .filter((value): value is string => typeof value === "string" && value.length > 0)
     .sort((a, b) => a.localeCompare(b));
+}
+
+function getInitialRegion(value?: string): RegionFilter {
+  return regionFilters.find((region) => region === value) ?? "All";
+}
+
+function getInitialCategory(value?: string): CategoryFilter {
+  return categoryFilters.find((category) => category === value) ?? "All categories";
+}
+
+function getInitialDate(value?: string) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return "";
+  }
+
+  return value;
 }
 
 function groupReportsByMonth(reports: Report[]) {

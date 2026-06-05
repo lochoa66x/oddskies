@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FieldLogBrowser } from "@/components/FieldLogBrowser";
+import {
+  FieldLogBrowser,
+  type FieldLogInitialFilters,
+} from "@/components/FieldLogBrowser";
 import { getFieldLogReports, getReports } from "@/lib/reports";
 
 export const metadata: Metadata = {
@@ -9,8 +12,23 @@ export const metadata: Metadata = {
     "Browse public, unverified OddSkies field notes by month, category, region, source, and date.",
 };
 
-export default async function FieldLogPage() {
+type FieldLogPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function FieldLogPage({ searchParams }: FieldLogPageProps) {
+  const params = (await searchParams) ?? {};
   const reports = getFieldLogReports(await getReports());
+  const initialFilters: FieldLogInitialFilters = {
+    category: readSearchParam(params.category),
+    date: readSearchParam(params.date),
+    from: readSearchParam(params.from),
+    query: readSearchParam(params.query),
+    region: readSearchParam(params.region),
+    sourceQuality: readSearchParam(params.sourceQuality),
+    sourceType: readSearchParam(params.sourceType),
+    to: readSearchParam(params.to),
+  };
 
   return (
     <main className="min-h-screen bg-night-950 bg-star-field px-5 py-6 text-parchment">
@@ -70,8 +88,12 @@ export default async function FieldLogPage() {
           </aside>
         </section>
 
-        <FieldLogBrowser reports={reports} />
+        <FieldLogBrowser initialFilters={initialFilters} reports={reports} />
       </div>
     </main>
   );
+}
+
+function readSearchParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
