@@ -85,8 +85,8 @@ export function OracleReportPanel({ report }: { report: Report }) {
         </p>
       ) : (
         <p className="mt-1 text-[0.7rem] leading-4 text-muted/80">
-          Reading this as a {sourceMode.toLowerCase()}. The map may be snacking
-          on rough data.
+          Reading this as a {sourceMode.toLowerCase()}. That label describes
+          source context, not truth.
         </p>
       )}
 
@@ -124,7 +124,7 @@ export function OracleReportPanel({ report }: { report: Report }) {
                 {getOracleVerdictLabel(reading.verdict)}
               </span>
             </div>
-            <p className="relative mt-4 border-l-2 border-signal-violet/60 pl-4 text-lg font-semibold leading-8 text-parchment md:text-xl md:leading-9 lg:text-2xl lg:leading-10">
+            <p className="relative mt-4 border-l-2 border-signal-violet/60 pl-4 text-base font-semibold leading-7 text-parchment md:text-lg md:leading-8 lg:text-xl lg:leading-9">
               {reading.fieldNote}
             </p>
             <p className="relative mt-4 text-xs leading-5 text-muted">
@@ -185,7 +185,7 @@ function getOracleStatusLabel(status: OracleApiResponse["status"]) {
   }
 
   if (status === "fallback") {
-    return "Fallback read";
+    return "Static fallback";
   }
 
   return "Oracle read";

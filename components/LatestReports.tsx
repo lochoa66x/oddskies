@@ -19,7 +19,13 @@ import { AtlasMotionGuard } from "@/components/AtlasMotionGuard";
 import { OracleReportPanel } from "@/components/OracleReportPanel";
 import { WorldMapBase } from "@/components/WorldMapBase";
 
-export function LatestReports({ reports }: { reports: Report[] }) {
+export function LatestReports({
+  reports,
+  totalCount,
+}: {
+  reports: Report[];
+  totalCount?: number;
+}) {
   const [activeRegion, setActiveRegion] = useState<RegionFilter>("All");
   const [activeCategory, setActiveCategory] =
     useState<CategoryFilter>("All categories");
@@ -107,9 +113,15 @@ export function LatestReports({ reports }: { reports: Report[] }) {
               Latest reports, filed as unverified.
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-              Showing the latest 5 public field notes. Source-aware,
-              time-stamped, and linked whenever possible.
+              Showing the latest curated field notes. Older reports live in the
+              Full Field Log, grouped into monthly sweeps.
             </p>
+            {totalCount ? (
+              <p className="mt-1 text-xs leading-5 text-muted">
+                Showing latest {Math.min(reports.length, totalCount)} of{" "}
+                {totalCount} public field notes.
+              </p>
+            ) : null}
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Link
                 className="inline-flex min-h-11 items-center justify-center rounded-md border border-signal-teal/40 bg-signal-teal/15 px-4 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
@@ -118,7 +130,7 @@ export function LatestReports({ reports }: { reports: Report[] }) {
                 Browse the Full Field Log
               </Link>
               <span className="text-xs leading-5 text-muted">
-                Homepage is the live preview. The full log keeps the rest.
+                Homepage is the preview. The Full Field Log keeps the rest.
               </span>
             </div>
           </div>

@@ -6,8 +6,8 @@ const phaseTwoSignals = [
     status: "Warming up",
   },
   {
-    label: "Oracle",
-    status: "Sleeping lightly",
+    label: "Oracle Alpha",
+    status: "Awake-ish",
   },
   {
     label: "Global map",
@@ -38,8 +38,8 @@ export function PhaseTwoDispatch() {
                 The map is about to get weirder.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted md:text-base md:leading-7">
-                Live collectors go online. The Oracle wakes up. The map starts
-                moving on its own.
+                Collectors are warming up. The Oracle is awake-ish. Reports
+                still wait for review before joining the public Field Log.
               </p>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
                 Reports will still be unverified. OddSkies just gets better at
@@ -75,7 +75,7 @@ export function PhaseTwoDispatch() {
                   className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-signal-violet/35 bg-signal-violet/10 px-4 py-2 text-sm font-bold text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/20"
                   href="#oracle"
                 >
-                  Check the Oracle preview
+                  Check the Oracle Alpha
                 </a>
               </div>
 

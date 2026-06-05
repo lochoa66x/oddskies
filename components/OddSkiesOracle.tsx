@@ -6,7 +6,7 @@ export function OddSkiesOracle() {
       <div className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-violet">
-            Feature Preview
+            Oracle Alpha
           </p>
           <h2 className="mt-2 max-w-2xl text-3xl font-semibold text-parchment md:text-4xl">
             OddSkies Oracle
@@ -37,7 +37,7 @@ export function OddSkiesOracle() {
         </div>
 
         <div
-          aria-label="OddSkies Oracle coming soon preview"
+          aria-label="OddSkies Oracle sample report read"
           className="oracle-card rounded-lg border border-night-800 p-4"
         >
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-night-800 pb-3.5">
@@ -61,8 +61,8 @@ export function OddSkiesOracle() {
               sky is just being dramatic tonight.
             </p>
             <p className="mt-3 text-xs text-muted">
-              Alpha mode. Confidence: playful. Verification: none. Suggested
-              next step: open a case file and compare source context.
+              Alpha mode. Confidence: playful. Verification: none. Open a case
+              file for a live report-based read.
             </p>
           </div>
 

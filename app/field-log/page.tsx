@@ -85,6 +85,10 @@ export default async function FieldLogPage({ searchParams }: FieldLogPageProps) 
               when available, and the Oracle can only offer a playful reality
               check.
             </p>
+            <p className="mt-3 rounded-md border border-night-800 bg-night-950/60 px-3 py-2 text-xs leading-5 text-muted">
+              Monthly Sweeps keep older weirdness organized without turning the
+              homepage into a filing cabinet.
+            </p>
           </aside>
         </section>
 

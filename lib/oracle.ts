@@ -37,7 +37,7 @@ export type OracleApiResponse = {
   status: "cached" | "fallback" | "ready" | "sleeping";
 };
 
-export const ORACLE_PROMPT_VERSION = "oracle-alpha-v7";
+export const ORACLE_PROMPT_VERSION = "oracle-alpha-v8";
 
 export const ORACLE_SYSTEM_PROMPT = [
   "You are the OddSkies Oracle, a playful field assistant for a public mystery atlas.",
@@ -273,21 +273,34 @@ export function sanitizeOracleReading(
 }
 
 export function getOracleSourceMode(report: Report) {
-  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+  const sourceText = [
+    report.sourceQualityLabel,
+    report.sourceType,
+    report.sourceName,
+    report.curationLabel,
+    ...(report.sourceQualityReasons ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
 
-  if (report.isDemo || sourceQuality.includes("demo seed")) {
+  if (report.isDemo || sourceText.includes("demo seed")) {
     return "Demo seed file";
   }
 
   if (
-    sourceQuality.includes("low context") ||
-    sourceQuality.includes("low-context") ||
-    sourceQuality.includes("unscored")
+    sourceText.includes("low context") ||
+    sourceText.includes("low-context") ||
+    sourceText.includes("unscored")
   ) {
     return "Low-context collector test";
   }
 
-  if (!report.isDemo) {
+  if (
+    sourceText.includes("collector test") ||
+    sourceText.includes("collector-test") ||
+    sourceText.includes("staged")
+  ) {
     return "Collector test file";
   }
 

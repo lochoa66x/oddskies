@@ -7,6 +7,7 @@ import { PhaseTwoDispatch } from "@/components/PhaseTwoDispatch";
 import { SignalsWeirdness } from "@/components/SignalsWeirdness";
 import { WeirdShelf } from "@/components/WeirdShelf";
 import {
+  getFieldLogReports,
   getHomepageDisplayReports,
   getHomepageFieldLogReports,
   getReports,
@@ -15,13 +16,17 @@ import {
 export default async function Home() {
   const reports = await getReports();
   const displayReports = getHomepageDisplayReports(reports);
+  const fieldLogReports = getFieldLogReports(reports);
   const latestFieldLogReports = getHomepageFieldLogReports(reports);
 
   return (
     <main className="min-h-screen overflow-hidden bg-night-950 text-parchment">
       <Hero reports={displayReports} />
       <CategoryStrip />
-      <LatestReports reports={latestFieldLogReports} />
+      <LatestReports
+        reports={latestFieldLogReports}
+        totalCount={fieldLogReports.length}
+      />
       <OddSkiesOracle />
       <SignalsWeirdness reports={reports} />
       <WeirdShelf />

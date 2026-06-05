@@ -197,7 +197,8 @@ export function FieldLogBrowser({
             </p>
             <p className="mt-1 text-sm text-muted">
               Showing {visibleReports.length} of {filteredReports.length} field
-              notes.
+              notes. Older reports stay here instead of disappearing from the
+              map preview.
             </p>
           </div>
           <button
@@ -413,6 +414,9 @@ export function FieldLogCaseFile({
             OddSkies has not verified this report. The Oracle can compare
             context, but it cannot confirm the claim.
           </p>
+          <p className="rounded-md border border-night-800 bg-night-950/60 px-3 py-2 text-xs leading-5 text-muted">
+            {getSourceModeExplanation(report)}
+          </p>
         </div>
 
         <OracleReportPanel report={report} />
@@ -569,6 +573,41 @@ function getLocationLabel(location: string) {
   }
 
   return location;
+}
+
+function getSourceModeExplanation(report: Report) {
+  const sourceText = [
+    report.sourceQualityLabel,
+    report.sourceType,
+    report.sourceName,
+    report.curationLabel,
+    ...(report.sourceQualityReasons ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (report.isDemo || sourceText.includes("demo seed")) {
+    return "Demo seed file: sample content for testing the atlas, not a live claim.";
+  }
+
+  if (
+    sourceText.includes("low context") ||
+    sourceText.includes("low-context") ||
+    sourceText.includes("unscored")
+  ) {
+    return "Low-context collector test: staged material with a thin trail, still under review.";
+  }
+
+  if (
+    sourceText.includes("collector test") ||
+    sourceText.includes("collector-test") ||
+    sourceText.includes("staged")
+  ) {
+    return "Collector test file: staged collector output, reviewed before it appears publicly.";
+  }
+
+  return "Public report file: included for review and curiosity, still unverified.";
 }
 
 function getSourceHref(sourceUrl: string) {
