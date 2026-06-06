@@ -183,6 +183,20 @@ type CollectorSummary = {
     normalized: number;
     url: string;
   }[];
+  sources?: {
+    duplicatesSkipped: number;
+    emptySkipped: number;
+    errors: string[];
+    exclusionsSkipped: number;
+    fetched: number;
+    inserted: number;
+    insertedIds: string[];
+    instance: string;
+    normalized: number;
+    query: string;
+    repliesSkipped?: number;
+    tag: string;
+  }[];
   queries?: {
     duplicatesSkipped: number;
     emptySkipped: number;
@@ -376,6 +390,12 @@ export function RawSourcesReview() {
   const [rssCollectorLimit, setRssCollectorLimit] = useState("3");
   const [rssCollectorLoading, setRssCollectorLoading] = useState(false);
   const [rssCollectorSummary, setRssCollectorSummary] =
+    useState<CollectorSummary | null>(null);
+  const [fediverseCollectorDryRun, setFediverseCollectorDryRun] = useState(true);
+  const [fediverseCollectorLimit, setFediverseCollectorLimit] = useState("3");
+  const [fediverseCollectorLoading, setFediverseCollectorLoading] =
+    useState(false);
+  const [fediverseCollectorSummary, setFediverseCollectorSummary] =
     useState<CollectorSummary | null>(null);
   const [collectorRuns, setCollectorRuns] = useState<CollectorRun[]>([]);
   const [collectorRunsLoading, setCollectorRunsLoading] = useState(true);
@@ -814,6 +834,37 @@ export function RawSourcesReview() {
     }
   }
 
+  async function runFediverseCollectorTest() {
+    setFediverseCollectorLoading(true);
+    setFediverseCollectorSummary(null);
+    setError("");
+
+    try {
+      const body = await adminFetch<CollectorSummary>(
+        "/api/admin/collectors/fediverse",
+        {
+          body: JSON.stringify({
+            dryRun: fediverseCollectorDryRun,
+            limit: Number(fediverseCollectorLimit),
+          }),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        },
+      );
+
+      setFediverseCollectorSummary(body);
+      await loadCollectorRuns();
+
+      if (!body.dryRun && body.totals.inserted > 0) {
+        await loadSources();
+      }
+    } catch (collectorError) {
+      setError(formatError(collectorError));
+    } finally {
+      setFediverseCollectorLoading(false);
+    }
+  }
+
   async function refreshSelectedScore() {
     if (!selected) {
       return;
@@ -1042,7 +1093,7 @@ export function RawSourcesReview() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-4 xl:grid-cols-2">
+        <div className="mt-5 grid gap-4 xl:grid-cols-3">
           <div className="rounded-lg border border-night-800 bg-night-950 p-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-teal">
@@ -1160,6 +1211,66 @@ export function RawSourcesReview() {
 
             {rssCollectorSummary ? (
               <CollectorSummaryPanel summary={rssCollectorSummary} />
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-night-800 bg-night-950 p-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-violet">
+                Fediverse
+              </p>
+              <h3 className="mt-2 text-lg font-bold text-parchment">
+                Staged tag pull
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                Reads configured public Mastodon/Fediverse instance tags and
+                stages candidates into raw_sources only.
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
+                  Sources
+                </p>
+                <p className="mt-2 leading-5">
+                  Server-configured instance and tag list. No account required.
+                </p>
+              </div>
+              <FilterInput
+                label="Limit"
+                onChange={setFediverseCollectorLimit}
+                value={fediverseCollectorLimit}
+              />
+              <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted sm:col-span-2">
+                <input
+                  checked={fediverseCollectorDryRun}
+                  className="size-4 accent-signal-teal"
+                  onChange={(event) =>
+                    setFediverseCollectorDryRun(event.target.checked)
+                  }
+                  type="checkbox"
+                />
+                Dry run first
+              </label>
+              <button
+                className="rounded-lg border border-signal-violet/40 bg-signal-violet/10 px-4 py-2 text-sm font-bold text-signal-violet transition hover:bg-signal-violet hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+                disabled={fediverseCollectorLoading}
+                onClick={() => void runFediverseCollectorTest()}
+              >
+                {fediverseCollectorLoading
+                  ? "Reading tags..."
+                  : "Run staged Fediverse pull"}
+              </button>
+            </div>
+
+            <p className="mt-3 rounded-lg border border-signal-violet/30 bg-signal-violet/10 px-3 py-2 text-xs leading-5 text-parchment">
+              If no sources are configured, the dry run will say so. Add
+              ODDSKIES_FEDIVERSE_SOURCES in server env before staging real posts.
+            </p>
+
+            {fediverseCollectorSummary ? (
+              <CollectorSummaryPanel summary={fediverseCollectorSummary} />
             ) : null}
           </div>
         </div>

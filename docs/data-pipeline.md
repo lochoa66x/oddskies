@@ -384,6 +384,73 @@ off inserts only into `public.raw_sources`. The admin page does not expose feed
 URLs or server environment values; it only runs the server-configured list and
 shows fetched, normalized, inserted, duplicate, excluded, and error counts.
 
+## Mastodon / Fediverse Collector
+
+Fediverse collector V1 adds a public tag-timeline lane for configured Mastodon
+or compatible Fediverse instances. It is accountless and conservative:
+
+```text
+Fediverse instance tag -> raw_sources -> scoring/location hints -> admin review -> manual promotion -> public reports
+```
+
+The collector reads configured `instance|tag` pairs, fetches small public tag
+timelines through the instance API, skips replies, normalizes status text,
+checks staged duplicates, respects active `collector_exclusions` for
+`platform = 'fediverse'`, and logs runs in `public.collector_runs`.
+
+It does not:
+
+- publish anything to `public.reports`
+- verify claims
+- follow accounts
+- crawl a whole instance
+- require a Fediverse account
+- expose raw posts publicly
+
+Configure sources with a server-only environment variable:
+
+```text
+ODDSKIES_FEDIVERSE_SOURCES=mastodon.social|ufo|UFO / UAP
+```
+
+Multiple sources can be separated by new lines. JSON is also supported:
+
+```json
+[
+  {
+    "instance": "mastodon.social",
+    "tag": "ufo",
+    "category": "UFO / UAP"
+  },
+  {
+    "instance": "mstdn.social",
+    "tag": "paranormal",
+    "category": "Paranormal"
+  }
+]
+```
+
+Useful dry run:
+
+```bash
+npm run collect:fediverse -- --dry-run --source "mastodon.social|ufo" --limit 3
+```
+
+Small live staging pull:
+
+```bash
+npm run collect:fediverse -- --source "mastodon.social|ufo|UFO / UAP" --limit 3
+```
+
+Protected admin API:
+
+```text
+POST /api/admin/collectors/fediverse
+```
+
+The protected review UI defaults to dry-run mode and does not expose configured
+instance/tag values. Turning dry-run off inserts only into `public.raw_sources`.
+
 ## Curation Scoring
 
 V1.6 adds deterministic curation hints for `public.raw_sources`.
