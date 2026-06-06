@@ -104,6 +104,18 @@ export default async function Home() {
               >
                 Field Log
               </Link>
+              <Link
+                className="transition hover:text-signal-teal"
+                href="/categories"
+              >
+                Categories
+              </Link>
+              <Link
+                className="transition hover:text-signal-teal"
+                href="/regions"
+              >
+                Regions
+              </Link>
               <Link className="transition hover:text-signal-teal" href="/about">
                 About
               </Link>

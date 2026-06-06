@@ -1,4 +1,10 @@
 import type { MetadataRoute } from "next";
+import {
+  categoryDefinitions,
+  getReportsForCategory,
+  getReportsForRegion,
+  regionDefinitions,
+} from "@/lib/report-taxonomy";
 import { getFieldLogReports, getReportCasePath, getReports } from "@/lib/reports";
 
 const siteUrl = "https://oddskies.com";
@@ -17,6 +23,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.8,
       url: getAbsoluteUrl("/field-log"),
+    },
+    {
+      changeFrequency: "weekly",
+      priority: 0.7,
+      url: getAbsoluteUrl("/categories"),
+    },
+    {
+      changeFrequency: "weekly",
+      priority: 0.7,
+      url: getAbsoluteUrl("/regions"),
     },
     {
       changeFrequency: "monthly",
@@ -43,8 +59,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
     url: getAbsoluteUrl(getReportCasePath(report)),
   }));
+  const categoryRoutes = categoryDefinitions
+    .filter((category) => getReportsForCategory(reports, category).length > 0)
+    .map((category) => ({
+      changeFrequency: "weekly" as const,
+      priority: 0.55,
+      url: getAbsoluteUrl(`/categories/${category.slug}`),
+    }));
+  const regionRoutes = regionDefinitions
+    .filter((region) => getReportsForRegion(reports, region).length > 0)
+    .map((region) => ({
+      changeFrequency: "weekly" as const,
+      priority: 0.55,
+      url: getAbsoluteUrl(`/regions/${region.slug}`),
+    }));
 
-  return dedupeSitemapRoutes([...staticRoutes, ...reportRoutes]);
+  return dedupeSitemapRoutes([
+    ...staticRoutes,
+    ...categoryRoutes,
+    ...regionRoutes,
+    ...reportRoutes,
+  ]);
 }
 
 function getAbsoluteUrl(path: string) {

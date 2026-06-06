@@ -80,6 +80,12 @@ export default async function FieldLogPage({ searchParams }: FieldLogPageProps) 
             <Link className="transition hover:text-signal-teal" href="/#reports">
               Homepage Preview
             </Link>
+            <Link className="transition hover:text-signal-teal" href="/categories">
+              Categories
+            </Link>
+            <Link className="transition hover:text-signal-teal" href="/regions">
+              Regions
+            </Link>
             <Link className="transition hover:text-signal-teal" href="/#oracle">
               Oracle
             </Link>
