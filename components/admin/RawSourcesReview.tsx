@@ -171,7 +171,19 @@ type CollectorSummary = {
   };
   dryRun: boolean;
   errors: string[];
-  queries: {
+  feeds?: {
+    duplicatesSkipped: number;
+    emptySkipped: number;
+    errors: string[];
+    exclusionsSkipped: number;
+    feed: string;
+    fetched: number;
+    inserted: number;
+    insertedIds: string[];
+    normalized: number;
+    url: string;
+  }[];
+  queries?: {
     duplicatesSkipped: number;
     emptySkipped: number;
     exclusionsSkipped?: number;
@@ -181,7 +193,7 @@ type CollectorSummary = {
     insertedIds: string[];
     normalized: number;
     query: string;
-    repliesSkipped: number;
+    repliesSkipped?: number;
   }[];
   runId?: string;
   totals: {
@@ -193,7 +205,7 @@ type CollectorSummary = {
     insertedIds: string[];
     locationNormalized?: number;
     normalized: number;
-    repliesSkipped: number;
+    repliesSkipped?: number;
     scored?: number;
   };
   warnings: string[];
@@ -359,6 +371,11 @@ export function RawSourcesReview() {
   const [collectorSince, setCollectorSince] = useState("");
   const [collectorUntil, setCollectorUntil] = useState("");
   const [collectorSummary, setCollectorSummary] =
+    useState<CollectorSummary | null>(null);
+  const [rssCollectorDryRun, setRssCollectorDryRun] = useState(true);
+  const [rssCollectorLimit, setRssCollectorLimit] = useState("3");
+  const [rssCollectorLoading, setRssCollectorLoading] = useState(false);
+  const [rssCollectorSummary, setRssCollectorSummary] =
     useState<CollectorSummary | null>(null);
   const [collectorRuns, setCollectorRuns] = useState<CollectorRun[]>([]);
   const [collectorRunsLoading, setCollectorRunsLoading] = useState(true);
@@ -766,6 +783,37 @@ export function RawSourcesReview() {
     }
   }
 
+  async function runRssCollectorTest() {
+    setRssCollectorLoading(true);
+    setRssCollectorSummary(null);
+    setError("");
+
+    try {
+      const body = await adminFetch<CollectorSummary>(
+        "/api/admin/collectors/rss",
+        {
+          body: JSON.stringify({
+            dryRun: rssCollectorDryRun,
+            limit: Number(rssCollectorLimit),
+          }),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        },
+      );
+
+      setRssCollectorSummary(body);
+      await loadCollectorRuns();
+
+      if (!body.dryRun && body.totals.inserted > 0) {
+        await loadSources();
+      }
+    } catch (collectorError) {
+      setError(formatError(collectorError));
+    } finally {
+      setRssCollectorLoading(false);
+    }
+  }
+
   async function refreshSelectedScore() {
     if (!selected) {
       return;
@@ -973,72 +1021,148 @@ export function RawSourcesReview() {
       ) : null}
 
       <div className="rounded-lg border border-night-800 bg-night-900 p-4">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-2xl">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-signal-teal">
               Collector control
             </p>
             <h2 className="mt-2 text-xl font-bold text-parchment">
-              Staged Bluesky pull
+              Staged source pulls
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted">
-              Pulls a small batch into raw_sources only. Nothing becomes public
+              Pull tiny batches into raw_sources only. Nothing becomes public
               until a raw source is reviewed and promoted.
             </p>
+          </div>
+          <div className="xl:min-w-[420px]">
             <CollectorRunStatusPanel
               loading={collectorRunsLoading}
               runs={collectorRuns}
             />
           </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[680px] xl:grid-cols-4">
-            <FilterInput
-              className="xl:col-span-3"
-              label="Query"
-              onChange={setCollectorQuery}
-              value={collectorQuery}
-            />
-            <FilterInput
-              label="Limit"
-              onChange={setCollectorLimit}
-              value={collectorLimit}
-            />
-            <FilterInput
-              className="xl:col-span-2"
-              label="From date"
-              onChange={setCollectorSince}
-              type="date"
-              value={collectorSince}
-            />
-            <FilterInput
-              className="xl:col-span-2"
-              label="To date"
-              onChange={setCollectorUntil}
-              type="date"
-              value={collectorUntil}
-            />
-            <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-950 px-3 py-2 text-sm text-muted sm:col-span-2 xl:col-span-4">
-              <input
-                checked={collectorDryRun}
-                className="size-4 accent-signal-teal"
-                onChange={(event) => setCollectorDryRun(event.target.checked)}
-                type="checkbox"
-              />
-              Dry run first
-            </label>
-            <button
-              className="rounded-lg border border-signal-teal/40 bg-signal-teal/10 px-4 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2 xl:col-span-4"
-              disabled={collectorLoading}
-              onClick={() => void runBlueskyCollectorTest()}
-            >
-              {collectorLoading ? "Checking the sky..." : "Run staged Bluesky pull"}
-            </button>
-          </div>
         </div>
 
-        {collectorSummary ? (
-          <CollectorSummaryPanel summary={collectorSummary} />
-        ) : null}
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
+          <div className="rounded-lg border border-night-800 bg-night-950 p-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-teal">
+                Bluesky
+              </p>
+              <h3 className="mt-2 text-lg font-bold text-parchment">
+                Staged Bluesky pull
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                Search a small public Bluesky batch and stage candidates for review.
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <FilterInput
+                className="xl:col-span-3"
+                label="Query"
+                onChange={setCollectorQuery}
+                value={collectorQuery}
+              />
+              <FilterInput
+                label="Limit"
+                onChange={setCollectorLimit}
+                value={collectorLimit}
+              />
+              <FilterInput
+                className="xl:col-span-2"
+                label="From date"
+                onChange={setCollectorSince}
+                type="date"
+                value={collectorSince}
+              />
+              <FilterInput
+                className="xl:col-span-2"
+                label="To date"
+                onChange={setCollectorUntil}
+                type="date"
+                value={collectorUntil}
+              />
+              <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted sm:col-span-2 xl:col-span-4">
+                <input
+                  checked={collectorDryRun}
+                  className="size-4 accent-signal-teal"
+                  onChange={(event) => setCollectorDryRun(event.target.checked)}
+                  type="checkbox"
+                />
+                Dry run first
+              </label>
+              <button
+                className="rounded-lg border border-signal-teal/40 bg-signal-teal/10 px-4 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2 xl:col-span-4"
+                disabled={collectorLoading}
+                onClick={() => void runBlueskyCollectorTest()}
+              >
+                {collectorLoading ? "Checking the sky..." : "Run staged Bluesky pull"}
+              </button>
+            </div>
+
+            {collectorSummary ? (
+              <CollectorSummaryPanel summary={collectorSummary} />
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-night-800 bg-night-950 p-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-amber">
+                RSS / News
+              </p>
+              <h3 className="mt-2 text-lg font-bold text-parchment">
+                Staged RSS feed pull
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                Reads configured public RSS or Atom feeds and stages candidates
+                into raw_sources only.
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
+                  Feeds
+                </p>
+                <p className="mt-2 leading-5">
+                  Server-configured list. Feed URLs and keys stay hidden here.
+                </p>
+              </div>
+              <FilterInput
+                label="Limit"
+                onChange={setRssCollectorLimit}
+                value={rssCollectorLimit}
+              />
+              <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted sm:col-span-2">
+                <input
+                  checked={rssCollectorDryRun}
+                  className="size-4 accent-signal-teal"
+                  onChange={(event) =>
+                    setRssCollectorDryRun(event.target.checked)
+                  }
+                  type="checkbox"
+                />
+                Dry run first
+              </label>
+              <button
+                className="rounded-lg border border-signal-amber/40 bg-signal-amber/10 px-4 py-2 text-sm font-bold text-signal-amber transition hover:bg-signal-amber hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+                disabled={rssCollectorLoading}
+                onClick={() => void runRssCollectorTest()}
+              >
+                {rssCollectorLoading ? "Reading feeds..." : "Run staged RSS pull"}
+              </button>
+            </div>
+
+            <p className="mt-3 rounded-lg border border-signal-amber/30 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-parchment">
+              If no feeds are configured, the dry run will say so. Add
+              ODDSKIES_RSS_FEEDS in server env before staging real feed items.
+            </p>
+
+            {rssCollectorSummary ? (
+              <CollectorSummaryPanel summary={rssCollectorSummary} />
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <CollectorExclusionsPanel
@@ -1624,6 +1748,10 @@ function CollectorExclusionsPanel({
 }
 
 function CollectorSummaryPanel({ summary }: { summary: CollectorSummary }) {
+  const queryRows = summary.queries ?? [];
+  const feedRows = summary.feeds ?? [];
+  const repliesSkipped = summary.totals.repliesSkipped;
+
   return (
     <div className="mt-4 rounded-lg border border-night-800 bg-night-950 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1659,7 +1787,9 @@ function CollectorSummaryPanel({ summary }: { summary: CollectorSummary }) {
           label="Duplicates"
           value={summary.totals.duplicatesSkipped}
         />
-        <CollectorStat label="Replies skipped" value={summary.totals.repliesSkipped} />
+        {typeof repliesSkipped === "number" ? (
+          <CollectorStat label="Replies skipped" value={repliesSkipped} />
+        ) : null}
         <CollectorStat label="Empty skipped" value={summary.totals.emptySkipped} />
         <CollectorStat label="Scored" value={summary.totals.scored ?? 0} />
         <CollectorStat
@@ -1668,14 +1798,27 @@ function CollectorSummaryPanel({ summary }: { summary: CollectorSummary }) {
         />
       </div>
 
-      {summary.queries.length > 0 ? (
+      {queryRows.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
-          {summary.queries.map((query) => (
+          {queryRows.map((query) => (
             <span
               className="rounded-full border border-night-800 px-3 py-1 text-xs text-muted"
               key={query.query}
             >
               {query.query}: {query.normalized} staged candidates
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {feedRows.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {feedRows.map((feed) => (
+            <span
+              className="rounded-full border border-night-800 px-3 py-1 text-xs text-muted"
+              key={feed.url}
+            >
+              {feed.feed}: {feed.normalized} staged candidates
             </span>
           ))}
         </div>

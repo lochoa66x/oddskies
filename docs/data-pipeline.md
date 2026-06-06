@@ -379,10 +379,10 @@ Protected admin API:
 POST /api/admin/collectors/rss
 ```
 
-The admin route defaults to dry-run mode. Turning dry-run off inserts only into
-`public.raw_sources`. Step 2 can add a visible RSS control to the existing
-protected review page; step 1 keeps the collector backend/API/documentation
-isolated.
+The admin route and protected review UI default to dry-run mode. Turning dry-run
+off inserts only into `public.raw_sources`. The admin page does not expose feed
+URLs or server environment values; it only runs the server-configured list and
+shows fetched, normalized, inserted, duplicate, excluded, and error counts.
 
 ## Curation Scoring
 
