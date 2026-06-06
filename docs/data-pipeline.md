@@ -172,6 +172,8 @@ Signal Shelf rules:
   `raw_sources.curated_link_id`, and does not create a public report.
 - Rejecting a raw source and suppressing future collector matches are separate,
   intentional actions.
+- `raw_sources.status = 'ignored'` is the neutral private archive bucket for
+  reviewed material that should not become a report or curated link.
 
 Signal Shelf conversion flow:
 
@@ -201,10 +203,12 @@ Supported match types:
 - `text_contains`
 - `search_query`
 
-The raw source review UI can create exclusion rows while rejecting a source.
-Exact source/post suppression is narrow. Author, domain, search query, and text
-phrase suppression are broader and should be used carefully. Exclusion rules can
-be deactivated and reactivated from the admin review room.
+The raw source review UI can create exclusion rows while rejecting, ignoring,
+or otherwise closing a source. Suppression is opt-in: changing the status of the
+current raw source does not silently block future collector matches. Exact
+source/post suppression is narrow. Author, domain, search query, and text phrase
+suppression are broader and should be used carefully. Exclusion rules can be
+deactivated and reactivated from the admin review room.
 
 Example manual insert:
 
@@ -708,10 +712,12 @@ Manual review flow:
 4. Review source text, URL, metadata, notes, and reason fields.
 5. Refresh curation score and normalize approximate location when useful.
 6. Reject unsafe, junk, private, sensitive, harassing, doxxing, exact personal-location, duplicate, joke-like, AI-generated, or low-context items.
-7. Dry-run promotion and inspect the public report draft.
-8. Promote only good candidates.
-9. Confirm the promoted item appears in `public.reports`.
-10. The public site displays it as unverified report data.
+7. Ignore/archive reviewed material that is simply not useful.
+8. Add future collector suppression only when the match should be skipped again.
+9. Dry-run promotion and inspect the public report draft.
+10. Promote only good candidates.
+11. Confirm the promoted item appears in `public.reports`.
+12. The public site displays it as unverified report data.
 
 Protection model:
 
@@ -722,6 +728,8 @@ Protection model:
 - Never expose `SUPABASE_SERVICE_ROLE_KEY` to the browser or prefix it with `NEXT_PUBLIC`.
 
 The review UI never adds `raw_sources` to the homepage or any public route.
+Demo, sample, placeholder, and collector-test rows should stay private even if a
+testing pass accidentally promoted them.
 
 ## Review Helper SQL
 

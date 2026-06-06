@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dispatch, ReactNode, Ref, SetStateAction } from "react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type RawSource = {
@@ -235,6 +236,7 @@ const statusOptions = [
   ["all", "All"],
   ["new", "New"],
   ["needs_review", "Needs review"],
+  ["ignored", "Ignored"],
   ["rejected", "Rejected"],
   ["duplicate", "Duplicate"],
   ["low_context", "Low context"],
@@ -247,6 +249,7 @@ const statusOptions = [
 
 const reviewActions = [
   ["needs_review", "Needs review"],
+  ["ignored", "Ignore / archive"],
   ["rejected", "Reject"],
   ["duplicate", "Duplicate"],
   ["low_context", "Low context"],
@@ -263,6 +266,7 @@ const quickReasonOptions = [
   "Possible joke/satire",
   "Possible AI/edited",
   "Spam/noise",
+  "Reviewed, not useful",
   "Useful link, convert instead",
 ] as const;
 
@@ -363,6 +367,15 @@ export function RawSourcesReview() {
   const selected = useMemo(
     () => rows.find((row) => row.id === selectedId) ?? rows[0] ?? null,
     [rows, selectedId],
+  );
+  const selectedExclusions = useMemo(
+    () =>
+      selected
+        ? exclusions.filter(
+            (exclusion) => exclusion.source_raw_source_id === selected.id,
+          )
+        : [],
+    [exclusions, selected],
   );
 
   const loadSources = useCallback(async () => {
@@ -508,8 +521,8 @@ export function RawSourcesReview() {
       author_handle: false,
       domain: false,
       search_query: false,
-      source_post_id: Boolean(selected?.source_post_id),
-      source_url: Boolean(selected?.source_url),
+      source_post_id: false,
+      source_url: false,
       text_contains: "",
     });
   }, [
@@ -1124,6 +1137,11 @@ export function RawSourcesReview() {
 
               <WarningList source={selected} preview={preview} />
 
+              <ReviewDecisionPanel
+                exclusions={selectedExclusions}
+                source={selected}
+              />
+
               <CurationPanel source={selected} />
 
               <LocationPanel source={selected} />
@@ -1285,6 +1303,93 @@ export function RawSourcesReview() {
   );
 }
 
+function ReviewDecisionPanel({
+  exclusions,
+  source,
+}: {
+  exclusions: CollectorExclusion[];
+  source: RawSource;
+}) {
+  const state = getReviewDecisionState(source);
+  const activeExclusions = exclusions.filter((exclusion) => exclusion.is_active);
+
+  return (
+    <div className="rounded-lg border border-night-800 bg-night-950 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
+            Review decision
+          </p>
+          <p className="mt-2 text-sm font-semibold text-parchment">
+            {state.title}
+          </p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
+            {state.description}
+          </p>
+        </div>
+        <span className={`rounded-full border px-3 py-1 text-xs ${state.badgeClass}`}>
+          {state.badge}
+        </span>
+      </div>
+
+      <div className="mt-3 grid gap-2 md:grid-cols-3">
+        <DecisionMiniCard
+          label="Public destination"
+          value={getPublicDestinationLabel(source)}
+        />
+        <DecisionMiniCard
+          label="Suppression"
+          value={
+            activeExclusions.length > 0
+              ? `${activeExclusions.length} active private rule${
+                  activeExclusions.length === 1 ? "" : "s"
+                }`
+              : "No future skip rules"
+          }
+        />
+        <DecisionMiniCard
+          label="Reason"
+          value={source.rejection_reason || "No reason saved yet"}
+        />
+      </div>
+
+      {source.approved_report_id || source.curated_link_id ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {source.approved_report_id ? (
+            <Link
+              className={secondaryButtonClass}
+              href={`/field-log/${source.approved_report_id}`}
+            >
+              Open public case file
+            </Link>
+          ) : null}
+          {source.curated_link_id ? (
+            <Link className={secondaryButtonClass} href="/signal-shelf">
+              Open Signal Shelf
+            </Link>
+          ) : null}
+          {source.curated_link_id ? (
+            <Link className={secondaryButtonClass} href="/admin/curated-links">
+              Manage curated links
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function DecisionMiniCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-night-800 bg-night-900 p-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+        {label}
+      </p>
+      <p className="mt-2 text-sm leading-5 text-parchment">{value}</p>
+    </div>
+  );
+}
+
 function QuickReasonChips({
   onPick,
 }: {
@@ -1337,15 +1442,23 @@ function SuppressionControls({
   };
 }) {
   const domain = getDomain(selected.source_url);
+  const suppressionCount = buildSuppressionTargets(selected, suppression).length;
 
   return (
     <div className="rounded-lg border border-night-800 bg-night-950 p-3">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-        Also suppress future pulls from
+        Optional future suppression
       </p>
       <p className="mt-1 text-xs leading-5 text-muted">
-        Suppression is private and reversible. Keep broad author/domain rules
-        intentional.
+        Unchecked means this review decision only. Checked rules are private,
+        reversible, and skip future collector matches.
+      </p>
+      <p className="mt-2 rounded-md border border-night-800 bg-night-900 px-3 py-2 text-xs leading-5 text-muted">
+        {suppressionCount > 0
+          ? `${suppressionCount} future skip rule${
+              suppressionCount === 1 ? "" : "s"
+            } will be saved with this decision.`
+          : "No future skip rules selected."}
       </p>
       <div className="mt-3 grid gap-2 md:grid-cols-2">
         <SuppressionCheckbox
@@ -2380,7 +2493,73 @@ function statusClass(status: string) {
     return "border-signal-amber/40 bg-signal-amber/10 text-signal-amber";
   }
 
+  if (status === "ignored") {
+    return "border-night-800 bg-night-950 text-muted";
+  }
+
   return "border-signal-ember/35 bg-signal-ember/10 text-signal-ember";
+}
+
+function getReviewDecisionState(source: RawSource) {
+  if (source.status === "approved" || source.approved_report_id) {
+    return {
+      badge: "public report",
+      badgeClass: "border-signal-amber/40 bg-signal-amber/10 text-signal-amber",
+      description:
+        "This staged source has already created a public Field Log report. Raw review notes remain private.",
+      title: "Promoted to Field Log",
+    };
+  }
+
+  if (source.status === "converted_to_signal_shelf" || source.curated_link_id) {
+    return {
+      badge: "public link",
+      badgeClass: "border-signal-amber/40 bg-signal-amber/10 text-signal-amber",
+      description:
+        "This staged source became a public Signal Shelf link, not a Field Log report.",
+      title: "Converted to Signal Shelf",
+    };
+  }
+
+  if (source.status === "ignored") {
+    return {
+      badge: "private archive",
+      badgeClass: "border-night-800 bg-night-950 text-muted",
+      description:
+        "This source was reviewed and kept private. It does not block future collector matches unless suppression rules are active.",
+      title: "Ignored after review",
+    };
+  }
+
+  if (source.status === "new" || source.status === "needs_review") {
+    return {
+      badge: "staged only",
+      badgeClass: "border-signal-teal/35 bg-signal-teal/10 text-signal-teal",
+      description:
+        "This source is still private staging. Use review status, promotion, or Signal Shelf conversion intentionally.",
+      title: "Awaiting review decision",
+    };
+  }
+
+  return {
+    badge: "kept private",
+    badgeClass: "border-signal-ember/35 bg-signal-ember/10 text-signal-ember",
+    description:
+      "This source has a non-public review decision. Future collector suppression only happens when selected below.",
+    title: "Non-public review decision",
+  };
+}
+
+function getPublicDestinationLabel(source: RawSource) {
+  if (source.approved_report_id) {
+    return "Field Log case file";
+  }
+
+  if (source.curated_link_id) {
+    return "Signal Shelf link";
+  }
+
+  return "None";
 }
 
 function curationClass(label: string) {

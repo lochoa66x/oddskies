@@ -18,6 +18,7 @@ export const rawSourceStatuses = [
   "needs_review",
   "approved",
   "converted_to_signal_shelf",
+  "ignored",
   "rejected",
   "duplicate",
   "low_context",
@@ -260,6 +261,7 @@ const REPORT_COLUMNS = [
 const promotableStatuses = new Set<RawSourceStatus>(["new", "needs_review"]);
 const reviewStatuses = new Set<ReviewStatus>([
   "needs_review",
+  "ignored",
   "rejected",
   "duplicate",
   "low_context",
@@ -269,6 +271,7 @@ const reviewStatuses = new Set<ReviewStatus>([
 ]);
 const reasonRequiredStatuses = new Set<ReviewStatus>([
   "rejected",
+  "ignored",
   "duplicate",
   "low_context",
   "private_or_sensitive",

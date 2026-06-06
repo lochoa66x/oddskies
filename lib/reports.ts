@@ -678,12 +678,12 @@ function isDemoLikeReport(report: Report) {
   const curationLabel = report.curationLabel?.toLowerCase() ?? "";
   const reasons = report.sourceQualityReasons?.join(" ").toLowerCase() ?? "";
   const status = report.publicStatus?.toLowerCase() ?? "";
-  const labels = `${sourceQuality} ${curationLabel} ${reasons} ${status}`;
+  const labels = `${sourceQuality} ${curationLabel} ${reasons} ${status} ${report.sourceName} ${report.sourceType} ${report.verificationStatus}`.toLowerCase();
   const text = getReportDisplayText(report);
 
   return (
     report.isDemo ||
-    /demo seed|demo file|demo report|sample report|placeholder report|collector[-\s]?test|test file|staging\/review/.test(
+    /demo seed|demo file|demo report|sample report|placeholder report|test row|test file|collector[-\s]?test|staging\/review|review helper/.test(
       labels,
     ) ||
     looksLikePlaceholderReportText(text)
