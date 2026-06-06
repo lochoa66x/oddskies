@@ -8,10 +8,10 @@ export const metadata: Metadata = {
   },
   title: "Send a Signal | OddSkies",
   description:
-    "Submit a public link to a strange report, UFO / UAP sighting, haunted place, paranormal story, local legend, or weird internet artifact for OddSkies review.",
+    "Submit a public link or screenshot of a strange report, UFO / UAP sighting, haunted place, paranormal story, local legend, or weird internet artifact for OddSkies review.",
   openGraph: {
     description:
-      "Submit a public strange-report source link for OddSkies review. Review-first, source-aware, and always unverified.",
+      "Submit a public strange-report link or screenshot for OddSkies review. Review-first, source-aware, and always unverified.",
     images: ["/images/oddskies-hero.png"],
     siteName: "OddSkies",
     title: "Send a Signal | OddSkies",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     description:
-      "Submit a public strange-report source link for OddSkies review. Review-first, source-aware, and always unverified.",
+      "Submit a public strange-report link or screenshot for OddSkies review. Review-first, source-aware, and always unverified.",
     images: ["/images/oddskies-hero.png"],
     title: "Send a Signal | OddSkies",
   },
@@ -88,8 +88,8 @@ export default function SendSignalPage() {
               Before you drop it
             </p>
             <ul className="mt-4 grid gap-3 text-sm leading-6 text-muted">
-              <li>Public links are best.</li>
-              <li>No private messages, private accounts, or exact addresses.</li>
+              <li>Public links are best. Screenshots are okay when needed.</li>
+              <li>No private messages, private accounts, faces, or exact addresses.</li>
               <li>No harassment, doxxing, or unsafe material.</li>
               <li>OddSkies may reject low-context or messy signals.</li>
             </ul>

@@ -82,6 +82,45 @@ never be imported into client components or exposed to the browser.
 User-submitted signals can become public only after manual review and promotion.
 Public reports remain unverified even after promotion.
 
+## Screenshot Signal Intake
+
+The public `/send-signal` page also supports screenshot submissions. This is a
+review aid for public strange-report screenshots, not a publishing workflow.
+
+```text
+/send-signal
+-> /api/send-signal/screenshot
+-> OCR/extraction when available
+-> public.raw_sources
+-> curation scoring / location review
+-> human review
+-> maybe public.reports
+```
+
+Screenshot signal rules:
+
+- Accepted files are JPG, PNG, and WebP images up to 5 MB.
+- Screenshots are processed server-side and not retained in V2.7a.
+- Extracted text may be wrong, incomplete, or missing.
+- If OCR is unavailable, a submitter note is required so review has context.
+- Screenshots are never shown publicly.
+- Private messages, private accounts, faces, exact addresses, personal
+  information, harassment, doxxing, or unsafe material should be rejected.
+- Contact email is optional, internal-only, and must never be copied into
+  `public.reports`.
+- Nothing from this flow auto-publishes.
+
+Rows are inserted into `public.raw_sources` with:
+
+```text
+platform = user_screenshot
+search_query = user_screenshot
+status = new or needs_review
+```
+
+Review notes should say whether OCR worked, include extraction/privacy warnings,
+and include: `Screenshot processed; original image not retained.`
+
 ## Bluesky Collector Prototype
 
 The Bluesky collector is a manual, server-only staging tool. It can run from
