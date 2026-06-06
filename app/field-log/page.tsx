@@ -7,9 +7,35 @@ import {
 import { getFieldLogReports, getReports } from "@/lib/reports";
 
 export const metadata: Metadata = {
-  title: "OddSkies Field Log | Unverified Strange Reports Archive",
+  alternates: {
+    canonical: "/field-log",
+  },
   description:
-    "Browse the OddSkies Field Log: public, unverified strange reports organized by date, location, category, source quality, and source trail.",
+    "Browse the OddSkies Field Log: unverified UFO / UAP, strange light, haunted place, paranormal, local legend, and weird public reports organized by source, place, and time.",
+  openGraph: {
+    description:
+      "Browse the OddSkies Field Log: unverified UFO / UAP, strange light, haunted place, paranormal, local legend, and weird public reports organized by source, place, and time.",
+    images: [
+      {
+        alt: "A strange twilight sky above a distant horizon.",
+        height: 916,
+        url: "/images/oddskies-hero.png",
+        width: 1718,
+      },
+    ],
+    siteName: "OddSkies",
+    title: "OddSkies Field Log -- Unverified UFO, Paranormal & Strange Reports",
+    type: "website",
+    url: "/field-log",
+  },
+  title: "OddSkies Field Log -- Unverified UFO, Paranormal & Strange Reports",
+  twitter: {
+    card: "summary_large_image",
+    description:
+      "Browse the OddSkies Field Log: unverified UFO / UAP, strange light, haunted place, paranormal, local legend, and weird public reports organized by source, place, and time.",
+    images: ["/images/oddskies-hero.png"],
+    title: "OddSkies Field Log -- Unverified UFO, Paranormal & Strange Reports",
+  },
 };
 
 type FieldLogPageProps = {
@@ -59,6 +85,12 @@ export default async function FieldLogPage({ searchParams }: FieldLogPageProps) 
             </Link>
             <Link className="transition hover:text-signal-teal" href="/send-signal">
               Send a Signal
+            </Link>
+            <Link
+              className="transition hover:text-signal-teal"
+              href="/source-guidelines"
+            >
+              Source Guidelines
             </Link>
           </nav>
         </header>

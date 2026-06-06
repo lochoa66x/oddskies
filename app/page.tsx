@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CategoryStrip } from "@/components/CategoryStrip";
 import { FieldDispatch } from "@/components/FieldDispatch";
@@ -13,6 +14,40 @@ import {
   getReports,
 } from "@/lib/reports";
 
+const homeTitle =
+  "OddSkies -- Strange Reports, UFO / UAP Reports & Paranormal Field Log";
+const homeDescription =
+  "OddSkies maps unverified UFO / UAP, strange light, haunted place, paranormal, local legend, and weird public reports by source, place, and time. Verified? No. Interesting? Maybe. Source-linked? Always.";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+  description: homeDescription,
+  openGraph: {
+    description: homeDescription,
+    images: [
+      {
+        alt: "A strange twilight sky above a distant horizon.",
+        height: 916,
+        url: "/images/oddskies-hero.png",
+        width: 1718,
+      },
+    ],
+    siteName: "OddSkies",
+    title: homeTitle,
+    type: "website",
+    url: "/",
+  },
+  title: homeTitle,
+  twitter: {
+    card: "summary_large_image",
+    description: homeDescription,
+    images: ["/images/oddskies-hero.png"],
+    title: homeTitle,
+  },
+};
+
 export default async function Home() {
   const reports = await getReports();
   const displayReports = getHomepageDisplayReports(reports);
@@ -21,6 +56,19 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-night-950 text-parchment">
+      <script
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            description:
+              "A source-linked, unverified strange report atlas and Field Log.",
+            name: "OddSkies",
+            url: "https://oddskies.com",
+          }),
+        }}
+        type="application/ld+json"
+      />
       <Hero reports={displayReports} />
       <CategoryStrip />
       <LatestReports

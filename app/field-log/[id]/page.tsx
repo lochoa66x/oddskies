@@ -37,12 +37,26 @@ export async function generateMetadata({
     description,
     openGraph: {
       description,
+      images: [
+        {
+          alt: "A strange twilight sky above a distant horizon.",
+          height: 916,
+          url: "/images/oddskies-hero.png",
+          width: 1718,
+        },
+      ],
       siteName: "OddSkies",
       title: `${report.title} | OddSkies Field Log`,
       type: "article",
       url,
     },
     title: `${report.title} | OddSkies Field Log`,
+    twitter: {
+      card: "summary_large_image",
+      description,
+      images: ["/images/oddskies-hero.png"],
+      title: `${report.title} | OddSkies Field Log`,
+    },
   };
 }
 
@@ -66,6 +80,12 @@ export default async function CaseFilePage({ params }: CaseFilePageProps) {
 
   return (
     <main className="min-h-screen bg-night-950 bg-star-field px-5 py-6 text-parchment">
+      <script
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(getReportJsonLd(report)),
+        }}
+        type="application/ld+json"
+      />
       <div className="mx-auto max-w-5xl">
         <header className="flex flex-col gap-4 border-b border-night-800 pb-5 md:flex-row md:items-center md:justify-between">
           <Link className="flex items-center gap-3" href="/">
@@ -233,10 +253,10 @@ function getMetadataDescription(report: Report) {
   const summary = truncateDescription(report.summary);
 
   if (location) {
-    return `Unverified OddSkies report in ${location}: ${summary}. Source-linked, not confirmed.`;
+    return `Unverified OddSkies report in ${location}: ${summary}. Source-linked when available. Not confirmed.`;
   }
 
-  return `Unverified OddSkies Field Log report: ${summary}. Source-linked, not confirmed.`;
+  return `Unverified OddSkies report: ${summary}. Source-linked when available. Not confirmed.`;
 }
 
 function getMetadataLocation(report: Report) {
@@ -253,4 +273,41 @@ function truncateDescription(value: string) {
   }
 
   return `${cleaned.slice(0, 142).trim()}...`;
+}
+
+function getReportJsonLd(report: Report) {
+  const url = `https://oddskies.com${getReportCasePath(report)}`;
+  const datePublished = getJsonDate(report.eventDateTimeRaw) ?? getJsonDate(report.createdAtRaw);
+  const dateModified = getJsonDate(report.createdAtRaw) ?? datePublished;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    author: {
+      "@type": "Organization",
+      name: "OddSkies",
+      url: "https://oddskies.com",
+    },
+    dateModified,
+    datePublished,
+    description: getMetadataDescription(report),
+    headline: report.title,
+    image: "https://oddskies.com/images/oddskies-hero.png",
+    mainEntityOfPage: url,
+    publisher: {
+      "@type": "Organization",
+      name: "OddSkies",
+      url: "https://oddskies.com",
+    },
+  };
+}
+
+function getJsonDate(value?: string) {
+  if (!value) {
+    return undefined;
+  }
+
+  const date = new Date(value);
+
+  return Number.isFinite(date.getTime()) ? date.toISOString() : undefined;
 }
