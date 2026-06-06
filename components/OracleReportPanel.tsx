@@ -172,7 +172,7 @@ function getOracleError(payload: OracleApiResponse | { error?: string }) {
     return payload.error;
   }
 
-  return "The Oracle blinked twice and refused to parse the sky.";
+  return "The Oracle is staring into the fog and needs a moment.";
 }
 
 function getOracleStatusLabel(status: OracleApiResponse["status"]) {

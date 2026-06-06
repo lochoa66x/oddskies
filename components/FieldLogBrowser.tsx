@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   categoryFilters,
   filterReportsByCategory,
+  getReportCasePath,
   getPublicReportDisplayBadge,
   regionFilters,
   type CategoryFilter,
@@ -351,66 +352,86 @@ function FieldLogCard({
   report: Report;
   selected: boolean;
 }) {
+  const sourceHref = getSourceHref(report.sourceUrl);
+  const external = sourceHref.startsWith("http");
+
   return (
-    <button
+    <article
       className={`field-log-card report-card group min-h-[17rem] rounded-lg border bg-night-850 p-3 text-left transition ${
         selected
           ? "border-signal-teal/60 shadow-glow"
           : "border-night-800 hover:border-signal-teal/45"
       }`}
-      onClick={onSelect}
-      type="button"
     >
-      <div className="mb-3 flex items-center justify-between gap-3 border-b border-night-800/80 pb-2.5">
-        <span className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
-          Field note
-        </span>
-        <span className="rounded border border-night-800 bg-night-950/60 px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-muted">
-          {getPublicReportDisplayBadge(report)}
-        </span>
-      </div>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className={`size-2.5 shrink-0 rounded-full ${report.marker}`} />
-          <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-parchment">
-            {report.category}
-          </p>
-        </div>
-        <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
-          Unverified
-        </span>
-      </div>
-      <h3 className="mt-3 line-clamp-2 text-base font-semibold leading-6 text-parchment transition group-hover:text-signal-teal">
-        {report.title}
-      </h3>
-      <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
-        <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
-          {getLocationLabel(report.location)}
-        </span>
-        <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
-          {report.eventDateTime}
-        </span>
-        <span className="rounded border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-signal-violet">
-          {report.confidenceMood}
-        </span>
-        {report.locationConfidence ? (
-          <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
-            Location {toDisplayLabel(report.locationConfidence)}
+      <button className="block w-full text-left" onClick={onSelect} type="button">
+        <div className="mb-3 flex items-center justify-between gap-3 border-b border-night-800/80 pb-2.5">
+          <span className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
+            Field note
           </span>
-        ) : null}
+          <span className="rounded border border-night-800 bg-night-950/60 px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-muted">
+            {getPublicReportDisplayBadge(report)}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className={`size-2.5 shrink-0 rounded-full ${report.marker}`} />
+            <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-parchment">
+              {report.category}
+            </p>
+          </div>
+          <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
+            Unverified
+          </span>
+        </div>
+        <h3 className="mt-3 line-clamp-2 text-base font-semibold leading-6 text-parchment transition group-hover:text-signal-teal">
+          {report.title}
+        </h3>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
+          <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
+            {getLocationLabel(report.location)}
+          </span>
+          <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
+            {report.eventDateTime}
+          </span>
+          <span className="rounded border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-signal-violet">
+            {report.confidenceMood}
+          </span>
+          {report.locationConfidence ? (
+            <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
+              Location {toDisplayLabel(report.locationConfidence)}
+            </span>
+          ) : null}
+        </div>
+        <p className="field-log-summary mt-2.5 line-clamp-3 text-sm leading-6 text-muted">
+          {report.summary}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
+          <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2">
+            {report.sourceType}
+          </span>
+          <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2">
+            {report.sourceQualityLabel ?? "Source-light"}
+          </span>
+        </div>
+      </button>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <Link
+          className="inline-flex min-h-10 items-center justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
+          href={getReportCasePath(report)}
+        >
+          Open Case File
+        </Link>
+        <a
+          className="source-link inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-semibold"
+          href={sourceHref}
+          rel={external ? "noreferrer" : undefined}
+          target={external ? "_blank" : undefined}
+        >
+          {report.sourceUrl ? "View original source" : "Source guidelines"}
+          <span aria-hidden="true">↗</span>
+        </a>
       </div>
-      <p className="field-log-summary mt-2.5 line-clamp-3 text-sm leading-6 text-muted">
-        {report.summary}
-      </p>
-      <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
-        <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2">
-          {report.sourceType}
-        </span>
-        <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2">
-          {report.sourceQualityLabel ?? "Source-light"}
-        </span>
-      </div>
-    </button>
+    </article>
   );
 }
 
@@ -459,6 +480,9 @@ export function FieldLogCaseFile({
           <span className="rounded-md border border-night-800 bg-night-950/70 px-2 py-1 text-xs text-muted">
             {report.category}
           </span>
+          <span className="rounded-md border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-xs text-signal-violet">
+            {report.confidenceMood}
+          </span>
         </div>
       </div>
 
@@ -478,6 +502,8 @@ export function FieldLogCaseFile({
         <dl className="grid gap-3 rounded-md border border-night-800 bg-night-950/55 p-3.5 text-sm sm:grid-cols-2">
           {[
             ["Where", getLocationLabel(report.location)],
+            ...(report.country ? [["Country", report.country]] : []),
+            ["Region", report.region],
             ["When", report.eventDateTime],
             ...(reportedDateTime ? [["Reported", reportedDateTime]] : []),
             ...(locationConfidence
@@ -514,7 +540,7 @@ export function FieldLogCaseFile({
         <div className="grid gap-2">
           <Link
             className="inline-flex min-h-11 items-center justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-sm font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
-            href={`/field-log/${encodeURIComponent(report.id)}`}
+            href={getReportCasePath(report)}
           >
             Share this case file
           </Link>
@@ -524,12 +550,13 @@ export function FieldLogCaseFile({
             rel={external ? "noreferrer" : undefined}
             target={external ? "_blank" : undefined}
           >
-            {report.sourceUrl ? "Open source" : "Source link placeholder"}
+            {report.sourceUrl ? "View original source" : "Source guidelines"}
             <span aria-hidden="true">↗</span>
           </a>
           <p className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-            OddSkies has not verified this report. The Oracle can compare
-            context, but it cannot confirm the claim.
+            OddSkies has not verified this report. It may be real, mistaken,
+            AI-generated, staged, satire, folklore, or a joke. Check the
+            original source when available.
           </p>
           <p className="rounded-md border border-night-800 bg-night-950/60 px-3 py-2 text-xs leading-5 text-muted">
             {getSourceModeExplanation(report)}

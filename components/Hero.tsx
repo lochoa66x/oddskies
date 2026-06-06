@@ -181,8 +181,8 @@ export function Hero({ reports }: { reports: Report[] }) {
               })}
             </div>
             <p className="text-xs leading-5 text-muted">
-              Reports may include curated seed data and reviewed collector
-              tests. Everything remains unverified.
+              Reports are approved public field notes. Everything remains
+              unverified until a source trail says otherwise.
             </p>
           </div>
 

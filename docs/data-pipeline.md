@@ -376,12 +376,25 @@ What enrichment does not do:
 Public reports can stay in `public.reports` without always appearing in the
 homepage Field Log. This is display control only, not verification.
 
+Public display surfaces:
+
+```text
+homepage -> curated preview
+/field-log -> full approved public archive
+/field-log/[slug-or-id] -> public case file for one approved report
+```
+
+Report pages improve browsing and SEO, but they do not imply verification.
+They read from `public.reports` only. `public.raw_sources` remains internal
+staging and must never appear on public case-file pages.
+
 Lifecycle fields:
 
 ```text
 public_status: published, featured, archived, hidden
 is_featured
 display_priority
+slug text unique -- optional, for permanent readable case-file URLs
 archived_at
 hidden_at
 ```
@@ -389,7 +402,8 @@ hidden_at
 Rules:
 
 - `published` reports can appear normally.
-- `featured` reports receive a display boost, but are still unverified.
+- `featured` reports remain eligible for public surfaces, but the homepage
+  Field Log still favors latest approved reports over subjective strength.
 - `archived` reports stay in the database for history but leave the homepage.
 - `hidden` reports are kept out of public display.
 - `display_priority` only changes ordering; it does not imply truth or quality.

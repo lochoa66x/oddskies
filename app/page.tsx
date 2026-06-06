@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { CategoryStrip } from "@/components/CategoryStrip";
+import { FieldDispatch } from "@/components/FieldDispatch";
 import { Hero } from "@/components/Hero";
 import { LatestReports } from "@/components/LatestReports";
 import { OddSkiesOracle } from "@/components/OddSkiesOracle";
-import { PhaseTwoDispatch } from "@/components/PhaseTwoDispatch";
 import { SignalsWeirdness } from "@/components/SignalsWeirdness";
 import { WeirdShelf } from "@/components/WeirdShelf";
 import {
@@ -28,9 +28,9 @@ export default async function Home() {
         totalCount={fieldLogReports.length}
       />
       <OddSkiesOracle />
-      <SignalsWeirdness reports={reports} />
+      <SignalsWeirdness reports={fieldLogReports} />
       <WeirdShelf />
-      <PhaseTwoDispatch />
+      <FieldDispatch />
       <footer className="site-footer px-5 py-6">
         <div className="mx-auto max-w-7xl border-t border-night-800 pt-5 text-sm text-muted">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">

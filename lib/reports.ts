@@ -26,6 +26,7 @@ export type CategoryFilter = (typeof categoryFilters)[number];
 export type Report = {
   category: string;
   confidenceMood: string;
+  country?: string;
   createdAtRaw?: string;
   curationLabel?: string;
   displayPriority?: number;
@@ -53,6 +54,7 @@ export type Report = {
   region: AtlasRegion;
   reportedDateTime: string;
   shortLabel: string;
+  slug?: string;
   sourceName: string;
   sourceQualityLabel?: string;
   sourceQualityReasons?: string[];
@@ -340,39 +342,9 @@ export async function getReports(): Promise<Report[]> {
 }
 
 export function getHomepageDisplayReports(reports: Report[]): Report[] {
-  const publishableReports = reports.filter(isHomepageDisplayableReport);
-
-  return publishableReports
-    .map((report) => ({
-      report,
-      isDemoLike: isDemoLikeReport(report),
-      score: getHomepageDisplayScore(report),
-      isWeak: isWeakHomepageReport(report),
-    }))
-    .sort((a, b) => {
-      if (a.isDemoLike !== b.isDemoLike) {
-        return a.isDemoLike ? 1 : -1;
-      }
-
-      if (a.isWeak !== b.isWeak) {
-        return a.isWeak ? 1 : -1;
-      }
-
-      const scoreDelta = b.score - a.score;
-
-      if (scoreDelta !== 0) {
-        return scoreDelta;
-      }
-
-      const timeDelta = getReportTime(b.report) - getReportTime(a.report);
-
-      if (timeDelta !== 0) {
-        return timeDelta;
-      }
-
-      return b.score - a.score;
-    })
-    .map(({ report }) => report)
+  return reports
+    .filter(isHomepageDisplayableReport)
+    .sort(sortReportsNewestFirst)
     .slice(0, 48);
 }
 
@@ -380,24 +352,46 @@ export function getFieldLogReports(reports: Report[]): Report[] {
   return reports.filter(isFieldLogDisplayableReport).sort(sortReportsNewestFirst);
 }
 
-export function getHomepageFieldLogReports(reports: Report[]): Report[] {
-  const candidates = getFieldLogReports(reports)
-    .filter(isHomepageFieldLogReport)
-    .sort(compareHomepageFieldLogReports);
-  const selected = candidates.slice(0, 5);
+export function getReportSlug(report: Report) {
+  const explicitSlug = normalizeReportSlug(report.slug);
 
-  if (selected.length >= 5) {
-    return selected;
+  if (explicitSlug) {
+    return explicitSlug;
   }
 
-  const selectedIds = new Set(selected.map((report) => report.id));
-  const fallbackSeeds = getFieldLogReports(demoReports)
-    .filter(isHomepageFieldLogReport)
-    .filter((report) => !selectedIds.has(report.id))
-    .sort(compareHomepageFieldLogReports)
-    .slice(0, 5 - selected.length);
+  const base =
+    slugify(report.shortLabel) ||
+    slugify(report.title) ||
+    slugify(report.originalTitle ?? "") ||
+    "case-file";
+  const idFragment = getReportIdFragment(report.id);
 
-  return [...selected, ...fallbackSeeds];
+  if (!idFragment || base.endsWith(idFragment)) {
+    return base;
+  }
+
+  return `${base}-${idFragment}`;
+}
+
+export function getReportCasePath(report: Report) {
+  return `/field-log/${encodeURIComponent(getReportSlug(report))}`;
+}
+
+export function findReportBySlugOrId(reports: Report[], value: string) {
+  const decoded = decodeURIComponent(value).trim();
+  const normalizedSlug = normalizeReportSlug(decoded);
+
+  return reports.find((report) => {
+    if (report.id === decoded || report.id === value) {
+      return true;
+    }
+
+    return getReportSlug(report) === normalizedSlug;
+  });
+}
+
+export function getHomepageFieldLogReports(reports: Report[]): Report[] {
+  return getFieldLogReports(reports).filter(isHomepageFieldLogReport).slice(0, 5);
 }
 
 export function getPublicReportDisplayBadge(report: Report) {
@@ -510,6 +504,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
     readString(row, "reported_datetime", "reported_at", "created_at") ?? "";
   const createdRaw = readString(row, "created_at", "updated_at", "published_at");
   const rawLocation = readString(row, "location", "place", "location_name");
+  const country = readString(row, "country", "location_country", "normalized_country");
   const location = formatPublicLocation(rawLocation);
   const hasUsableLocation = !isPlaceholderLocation(rawLocation);
   const locationConfidence = formatPublicLocationConfidence(
@@ -533,6 +528,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
       ) ??
       "Suspiciously Interesting",
     createdAtRaw: createdRaw,
+    country,
     curationLabel: readString(row, "curation_label", "review_label"),
     displayPriority: readNumber(row, "display_priority") ?? 0,
     eventDateTime: formatDateTime(eventRaw),
@@ -547,7 +543,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
       Boolean(readString(row, "source_url", "url", "link")),
     hasTime: readBoolean(row, "has_time") ?? Boolean(eventRaw || reportedRaw),
     id:
-      readString(row, "id", "slug", "report_id") ??
+      readString(row, "id", "report_id") ??
       `${slugify(rawTitle)}-${index}`,
     isArchived:
       normalizePublicStatus(readString(row, "public_status")) === "archived" ||
@@ -575,6 +571,7 @@ function normalizeReport(row: SupabaseReportRow, index: number): Report {
       title,
       rawLocation,
     ),
+    slug: normalizeReportSlug(readString(row, "slug")),
     sourceName:
       readString(row, "source_name", "source", "publisher") ??
       "Source not listed",
@@ -600,98 +597,12 @@ function cleanPublicText(value: string) {
     .trim();
 }
 
-function getHomepageDisplayScore(report: Report) {
-  let score = report.displayPriority ?? 0;
-  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
-  const curationLabel = report.curationLabel?.toLowerCase() ?? "";
-
-  if (report.isFeatured || report.publicStatus === "featured") {
-    score += 10;
+function isHomepageDisplayableReport(report: Report) {
+  if (!isPubliclyListedReport(report)) {
+    return false;
   }
 
   if (isDemoLikeReport(report)) {
-    score -= 6;
-  } else {
-    score += 7;
-  }
-
-  if (sourceQuality.includes("context-rich")) {
-    score += 5;
-  }
-
-  if (sourceQuality.includes("linked trail")) {
-    score += 4;
-  }
-
-  if (curationLabel.includes("strong")) {
-    score += 5;
-  } else if (curationLabel.includes("good")) {
-    score += 4;
-  } else if (curationLabel.includes("review")) {
-    score += 2;
-  }
-
-  if (report.hasSourceLink || report.sourceUrl) {
-    score += 3;
-  }
-
-  if (report.hasLocation || !isMissingReportLocation(report.location)) {
-    score += 2;
-  }
-
-  if (report.hasTime && report.eventDateTime !== "Date not listed") {
-    score += 2;
-  }
-
-  if (report.hasMediaHint) {
-    score += 1;
-  }
-
-  if (report.oracleReady) {
-    score += 1;
-  }
-
-  if (report.title.length >= 22) {
-    score += 1;
-  }
-
-  if (report.summary.length >= 90) {
-    score += 2;
-  }
-
-  if (sourceQuality.includes("source-light")) {
-    score -= 3;
-  }
-
-  if (isLowContextDisplay(report)) {
-    score -= 8;
-  }
-
-  if (isMissingReportLocation(report.location)) {
-    score -= 3;
-  }
-
-  if (!report.hasTime || report.eventDateTime === "Date not listed") {
-    score -= 2;
-  }
-
-  if (report.category === "Unknown" && !isFeaturedHomepageReport(report)) {
-    score -= 7;
-  }
-
-  if (hasObviousLocationCategoryMismatch(report)) {
-    score -= 6;
-  }
-
-  if (isCultureNoteReport(report)) {
-    score -= 5;
-  }
-
-  return score;
-}
-
-function isHomepageDisplayableReport(report: Report) {
-  if (!isPubliclyListedReport(report)) {
     return false;
   }
 
@@ -700,14 +611,6 @@ function isHomepageDisplayableReport(report: Report) {
   }
 
   if (looksPromotionalOrOffTopic(getReportDisplayText(report))) {
-    return false;
-  }
-
-  if (
-    report.category === "Unknown" &&
-    isDemoLikeReport(report) &&
-    !isFeaturedHomepageReport(report)
-  ) {
     return false;
   }
 
@@ -735,41 +638,15 @@ function isHomepageFieldLogReport(report: Report) {
     return false;
   }
 
-  if (isWeakHomepageReport(report) && !featured) {
-    return false;
-  }
-
   return true;
-}
-
-function compareHomepageFieldLogReports(a: Report, b: Report) {
-  const aDisplayType = getReportDisplayType(a);
-  const bDisplayType = getReportDisplayType(b);
-  const aFieldReport = aDisplayType === "field_report";
-  const bFieldReport = bDisplayType === "field_report";
-
-  if (aFieldReport !== bFieldReport) {
-    return aFieldReport ? -1 : 1;
-  }
-
-  const aDemoLike = isDemoLikeReport(a);
-  const bDemoLike = isDemoLikeReport(b);
-
-  if (aDemoLike !== bDemoLike) {
-    return aDemoLike ? 1 : -1;
-  }
-
-  const scoreDelta = getHomepageDisplayScore(b) - getHomepageDisplayScore(a);
-
-  if (scoreDelta !== 0) {
-    return scoreDelta;
-  }
-
-  return getReportTime(b) - getReportTime(a);
 }
 
 function isFieldLogDisplayableReport(report: Report) {
   const status = normalizePublicStatus(report.publicStatus);
+
+  if (isDemoLikeReport(report)) {
+    return false;
+  }
 
   if (report.isHidden) {
     return false;
@@ -792,29 +669,8 @@ function isFieldLogDisplayableReport(report: Report) {
   );
 }
 
-function isWeakHomepageReport(report: Report) {
-  return (
-    isLowContextDisplay(report) ||
-    isCultureNoteReport(report) ||
-    hasObviousLocationCategoryMismatch(report) ||
-    report.category === "Unknown" ||
-    isMissingReportLocation(report.location) ||
-    !report.hasTime ||
-    report.eventDateTime === "Date not listed"
-  );
-}
-
 function isFeaturedHomepageReport(report: Report) {
-  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
-  const curationLabel = report.curationLabel?.toLowerCase() ?? "";
-
-  return (
-    report.isFeatured ||
-    report.publicStatus === "featured" ||
-    sourceQuality.includes("context-rich") ||
-    curationLabel.includes("strong") ||
-    curationLabel.includes("good")
-  );
+  return report.isFeatured || report.publicStatus === "featured";
 }
 
 function isDemoLikeReport(report: Report) {
@@ -845,18 +701,6 @@ function isLowContextDisplay(report: Report) {
     curationLabel.includes("low context") ||
     curationLabel.includes("low-context") ||
     report.confidenceMood.toLowerCase().includes("low context")
-  );
-}
-
-function isMissingReportLocation(location: string) {
-  const normalized = location.trim().toLowerCase();
-
-  return (
-    !normalized ||
-    normalized === "unknown" ||
-    normalized === "loc: reviewing" ||
-    normalized === "location pending" ||
-    normalized === "location under review"
   );
 }
 
@@ -1403,6 +1247,16 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function normalizeReportSlug(value?: string) {
+  const slug = slugify(value ?? "");
+
+  return slug || undefined;
+}
+
+function getReportIdFragment(id: string) {
+  return slugify(id).slice(0, 8);
 }
 
 function clamp(value: number, min: number, max: number) {

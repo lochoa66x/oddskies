@@ -11,18 +11,24 @@ reports stay browsable without crowding the atlas.
   and date filters help keep the room navigable.
 - Sort controls support newest, oldest, source-rich, and maybe-weird archive
   reads.
-- `/field-log/[id]` gives each public case file a shareable URL.
+- `/field-log/[slug-or-id]` gives each public case file a shareable URL.
+- Case-file links prefer a stored `slug` when one exists. Without a stored
+  slug, OddSkies generates a readable fallback from the short label/title plus
+  an id fragment, while old id-based links still resolve.
 - Case files expose report timing, source quality notes, and location confidence
   when available while keeping the report clearly unverified.
+- Report pages improve browsing and SEO, but they do not imply verification.
 - Raw sources stay private and must not be exposed publicly.
-- Homepage Field Log preview uses local display classification to prefer strong
-  field reports and keep culture/link-style items out of the top preview unless
-  intentionally featured.
+- Homepage Field Log preview shows the latest approved non-demo field reports.
+  Culture/link-style items stay out of the top preview unless intentionally
+  featured.
 
 ## Future Improvements
 
 - URL-synced filters for every Field Log control.
 - Richer Monthly Sweeps with short summaries.
+- Optional `public.reports.slug text unique` migration for fully stored public
+  slugs instead of generated fallbacks.
 - Optional database-backed `display_type` values for Field Report, Culture Note,
   and Signal Shelf. Today this separation is handled by helper logic only.
 - Better public/private/RLS verification checks.

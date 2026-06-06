@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const phaseTwoSignals = [
+const fieldDispatchSignals = [
   {
     label: "Collectors",
     status: "Controlled tests",
@@ -19,7 +19,7 @@ const phaseTwoSignals = [
   },
 ];
 
-export function PhaseTwoDispatch() {
+export function FieldDispatch() {
   return (
     <section className="bg-night-950 px-5 py-6 md:py-8" id="field-dispatch">
       <div className="mx-auto max-w-7xl">
@@ -53,7 +53,7 @@ export function PhaseTwoDispatch() {
 
             <div className="grid gap-3">
               <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                {phaseTwoSignals.map((signal) => (
+                {fieldDispatchSignals.map((signal) => (
                   <div
                     className="rounded-md border border-night-800 bg-night-950/70 p-3"
                     key={signal.label}

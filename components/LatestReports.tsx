@@ -7,6 +7,7 @@ import {
   coordinateToAtlasPosition,
   filterReportsByCategory,
   filterReportsByRegion,
+  getReportCasePath,
   getPublicReportDisplayBadge,
   isCategoryFilter,
   regionAnchors,
@@ -113,13 +114,13 @@ export function LatestReports({
               Latest reports, filed as unverified.
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-              Showing the latest curated field notes. Older reports live in the
+              Showing the latest approved field notes. Older reports live in the
               Full Field Log, grouped into monthly sweeps.
             </p>
             {totalCount ? (
               <p className="mt-1 text-xs leading-5 text-muted">
                 Showing latest {Math.min(reports.length, totalCount)} of{" "}
-                {totalCount} public field notes.
+                {totalCount} approved reports.
               </p>
             ) : null}
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -127,7 +128,7 @@ export function LatestReports({
                 className="inline-flex min-h-11 items-center justify-center rounded-md border border-signal-teal/40 bg-signal-teal/15 px-4 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
                 href="/field-log"
               >
-                Browse the Full Field Log
+                View Full Field Log
               </Link>
               <span className="text-xs leading-5 text-muted">
                 Homepage is the preview. The Full Field Log keeps the rest.
@@ -155,8 +156,8 @@ export function LatestReports({
               )}
             </div>
             <p className="mt-3 rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-              Reports may include curated seed data and reviewed collector tests.
-              Everything remains unverified.
+              Submitted links wait for review before joining the public Field
+              Log. Everything remains unverified.
             </p>
             <Link
               className="mt-3 inline-flex w-full justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
@@ -294,6 +295,13 @@ export function LatestReports({
                         <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs text-muted">
                           {report.sourceType} · {report.sourceName}
                         </span>
+                        <Link
+                          className="inline-flex items-center gap-2 rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
+                          href={getReportCasePath(report)}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          Open Case File
+                        </Link>
                         <a
                           className="source-link inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold"
                           href={getSourceHref(report.sourceUrl)}
@@ -302,8 +310,8 @@ export function LatestReports({
                           target={isExternalSource(report.sourceUrl) ? "_blank" : undefined}
                         >
                           {report.sourceUrl
-                            ? "View source"
-                            : "Source link placeholder"}
+                            ? "View original source"
+                            : "Source guidelines"}
                           <span aria-hidden="true">↗</span>
                         </a>
                       </div>
@@ -481,8 +489,9 @@ function ReportDetail({
         <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
           <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 p-3.5">
             <p className="text-sm leading-6 text-signal-amber">
-              OddSkies has not verified this report. Check the original source
-              when available.
+              OddSkies has not verified this report. It may be real, mistaken,
+              AI-generated, staged, satire, folklore, or a joke. Check the
+              original source when available.
             </p>
             {selected.oracleReady ? (
               <p className="mt-2 text-xs leading-5 text-muted">
@@ -492,13 +501,19 @@ function ReportDetail({
             ) : null}
           </div>
           <div className="grid gap-2">
+            <Link
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-sm font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
+              href={getReportCasePath(selected)}
+            >
+              Open Case File
+            </Link>
             <a
               className="source-link inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
               href={sourceHref}
               rel={external ? "noreferrer" : undefined}
               target={external ? "_blank" : undefined}
             >
-              {selected.sourceUrl ? "Open source" : "Source link placeholder"}
+              {selected.sourceUrl ? "View original source" : "Source guidelines"}
               <span aria-hidden="true">↗</span>
             </a>
           </div>
@@ -581,6 +596,14 @@ function getCaseFacts(report: Report) {
       label: "Where",
       value: getDetailLocationLabel(report.location),
     },
+    ...(report.country
+      ? [
+          {
+            label: "Country",
+            value: report.country,
+          },
+        ]
+      : []),
     {
       label: "Region",
       value: report.region,

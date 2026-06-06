@@ -120,8 +120,8 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
             </p>
           </div>
           <p className="max-w-sm rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-            These stats are based on unverified reports and demo data. They are
-            for curiosity and entertainment, not confirmation.
+            These stats are based on unverified public reports. They are for
+            curiosity and entertainment, not confirmation.
           </p>
         </div>
 
@@ -196,7 +196,7 @@ function SignalStrip({
       accent: "text-muted",
       label: "Indexed",
       meter: Math.min(4, Math.max(1, Math.ceil(reportsCount / 8))),
-      note: "Seed/demo activity",
+      note: "Approved public activity",
       value: `${reportsCount} reports`,
     },
   ];
@@ -331,7 +331,7 @@ function WeirdnessGrid({
           ) : (
             <div className="rounded-md border border-night-800 bg-night-950/80 p-4 text-sm leading-6 text-muted sm:col-span-2 xl:col-span-4">
               No active days in the recent scan. Quiet skies, at least for the
-              demo layer.
+              public log.
             </div>
           )}
         </div>

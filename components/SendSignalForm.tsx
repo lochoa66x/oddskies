@@ -98,7 +98,7 @@ export function SendSignalForm() {
             Drop the public trail here.
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            A link is the strongest signal. A short note helps the reviewer see
+            A public link is the best trail. A short note helps the reviewer see
             what felt odd without turning it into a claim.
           </p>
         </div>
