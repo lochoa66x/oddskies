@@ -5,9 +5,13 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 export function AtlasMotionGuard({
   children,
   className = "",
+  pausedClassName = "atlas-motion-paused",
+  rootMargin = "0px 0px -12% 0px",
 }: {
   children: ReactNode;
   className?: string;
+  pausedClassName?: string;
+  rootMargin?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const visibleRef = useRef(true);
@@ -31,9 +35,9 @@ export function AtlasMotionGuard({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        syncMotion(Boolean(entry?.isIntersecting));
+        syncMotion(Boolean(entry?.isIntersecting && entry.intersectionRatio > 0));
       },
-      { rootMargin: "160px 0px" },
+      { rootMargin, threshold: 0 },
     );
 
     observer.observe(element);
@@ -46,11 +50,12 @@ export function AtlasMotionGuard({
       observer.disconnect();
       motionQuery.removeEventListener("change", handleMotionChange);
     };
-  }, []);
+  }, [rootMargin]);
 
   return (
     <div
-      className={`${className} ${pauseMotion ? "atlas-motion-paused" : ""}`}
+      className={`${className} ${pauseMotion ? pausedClassName : ""}`}
+      data-motion-paused={pauseMotion ? "true" : "false"}
       ref={ref}
     >
       {children}

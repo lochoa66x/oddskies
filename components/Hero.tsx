@@ -56,7 +56,10 @@ export function Hero({ reports }: { reports: Report[] }) {
   }, [filteredReports]);
 
   return (
-    <section className="hero-shell relative overflow-hidden border-b border-night-800 bg-night-950">
+    <AtlasMotionGuard
+      className="hero-shell relative overflow-hidden border-b border-night-800 bg-night-950"
+      pausedClassName="atlas-motion-paused hero-motion-paused"
+    >
       <div className="absolute inset-0 bg-star-field opacity-80" />
       <div className="paranormal-haze absolute inset-0" />
       <div className="sky-noise absolute inset-0" />
@@ -307,7 +310,7 @@ export function Hero({ reports }: { reports: Report[] }) {
           </AtlasMotionGuard>
         </div>
       </div>
-    </section>
+    </AtlasMotionGuard>
   );
 }
 

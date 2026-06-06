@@ -35,6 +35,11 @@ a {
   text-decoration: none;
 }
 
+.hero-shell {
+  contain: layout paint;
+  isolation: isolate;
+}
+
 ::selection {
   background: rgba(72, 224, 194, 0.35);
   color: white;
@@ -73,6 +78,24 @@ a {
     linear-gradient(180deg, rgba(7, 10, 18, 0), rgba(7, 10, 18, 0.62));
   filter: blur(0.2px);
   pointer-events: none;
+}
+
+.hero-motion-paused .paranormal-haze,
+.hero-motion-paused .sky-noise,
+.hero-motion-paused .ufo-beam,
+.hero-motion-paused .haunted-horizon,
+.hero-motion-paused .terrain-silhouette,
+.hero-motion-paused .saucer-silhouette,
+.hero-motion-paused .abduction-easter-egg {
+  opacity: 0.08;
+  filter: none !important;
+  transition: none !important;
+}
+
+.hero-motion-paused .sky-noise,
+.hero-motion-paused .ufo-beam,
+.hero-motion-paused .abduction-easter-egg {
+  opacity: 0;
 }
 
 .sky-noise {
@@ -224,6 +247,7 @@ a {
 }
 
 .atlas-hero-card {
+  contain: layout paint;
   box-shadow:
     0 24px 80px rgba(0, 0, 0, 0.38),
     0 0 0 1px rgba(72, 224, 194, 0.07),
@@ -360,11 +384,47 @@ a {
 .atlas-motion-paused .heat-cluster,
 .atlas-motion-paused .atlas-pin,
 .atlas-motion-paused .scan-line {
-  animation-play-state: paused !important;
+  animation: none !important;
+  transition: none !important;
 }
 
 .atlas-motion-paused .scan-line {
-  opacity: 0.22;
+  opacity: 0;
+}
+
+.atlas-motion-paused .atlas-map-base,
+.atlas-motion-paused .atlas-map-base .atlas-country-layer,
+.atlas-motion-paused .atlas-landmass,
+.atlas-motion-paused .atlas-shape {
+  filter: none !important;
+}
+
+.atlas-motion-paused.atlas-grid,
+.atlas-motion-paused .atlas-grid {
+  background: #101522;
+}
+
+.atlas-motion-paused .atlas-map-texture {
+  opacity: 0.12;
+}
+
+.atlas-motion-paused .atlas-region-glow,
+.atlas-motion-paused .heat-cluster {
+  opacity: 0.18;
+  box-shadow: none;
+}
+
+.atlas-motion-paused .atlas-route-lines {
+  opacity: 0.2;
+}
+
+.atlas-motion-paused .atlas-report-point,
+.atlas-motion-paused .atlas-region-glow,
+.atlas-motion-paused .heat-cluster,
+.atlas-motion-paused .atlas-pin,
+.atlas-motion-paused .radar-ring,
+.atlas-motion-paused .scan-line {
+  will-change: auto;
 }
 
 .radar-ring {
@@ -389,6 +449,7 @@ a {
     0 0 34px rgba(249, 115, 91, 0.12);
   transform: translate(-50%, -50%);
   z-index: 1;
+  will-change: opacity, transform;
 }
 
 .heat-cluster {
@@ -396,12 +457,14 @@ a {
   background:
     radial-gradient(circle, rgba(246, 180, 75, 0.44) 0 10%, rgba(249, 115, 91, 0.22) 29%, rgba(249, 115, 91, 0.05) 58%, rgba(249, 115, 91, 0) 72%);
   box-shadow: 0 0 30px rgba(249, 115, 91, 0.24);
+  will-change: opacity, transform;
 }
 
 .atlas-report-point {
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 2;
+  will-change: transform;
 }
 
 .atlas-report-point-teal {
@@ -701,6 +764,7 @@ a {
   box-shadow:
     0 0 0 8px rgba(246, 180, 75, 0.08),
     0 0 26px rgba(249, 115, 91, 0.72);
+  will-change: opacity, transform;
 }
 
 .detail-atlas .selected-atlas-pin {
@@ -962,6 +1026,7 @@ a {
 .scan-line {
   background: linear-gradient(90deg, transparent, rgba(72, 224, 194, 0.38), transparent);
   animation: scan 5.5s ease-in-out infinite;
+  will-change: transform;
 }
 
 @keyframes radar-breathe {
@@ -1094,5 +1159,15 @@ a {
   .atlas-pin,
   .scan-line {
     animation: none !important;
+  }
+
+  .paranormal-haze,
+  .ufo-beam,
+  .haunted-horizon::before,
+  .atlas-map-base,
+  .atlas-map-base .atlas-country-layer,
+  .atlas-landmass,
+  .atlas-shape {
+    filter: none !important;
   }
 }
