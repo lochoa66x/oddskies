@@ -26,6 +26,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       changeFrequency: "weekly",
+      priority: 0.65,
+      url: getAbsoluteUrl("/signal-shelf"),
+    },
+    {
+      changeFrequency: "weekly",
       priority: 0.7,
       url: getAbsoluteUrl("/categories"),
     },

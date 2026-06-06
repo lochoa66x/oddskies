@@ -5,8 +5,10 @@ import { FieldDispatch } from "@/components/FieldDispatch";
 import { Hero } from "@/components/Hero";
 import { LatestReports } from "@/components/LatestReports";
 import { OddSkiesOracle } from "@/components/OddSkiesOracle";
+import { SignalShelfPreview } from "@/components/SignalShelfPreview";
 import { SignalsWeirdness } from "@/components/SignalsWeirdness";
 import { WeirdShelf } from "@/components/WeirdShelf";
+import { getCuratedLinks } from "@/lib/curated-links";
 import {
   getFieldLogReports,
   getHomepageDisplayReports,
@@ -53,6 +55,7 @@ export default async function Home() {
   const displayReports = getHomepageDisplayReports(reports);
   const fieldLogReports = getFieldLogReports(reports);
   const latestFieldLogReports = getHomepageFieldLogReports(reports);
+  const curatedLinks = await getCuratedLinks();
 
   return (
     <main className="min-h-screen overflow-hidden bg-night-950 text-parchment">
@@ -78,6 +81,7 @@ export default async function Home() {
       <OddSkiesOracle />
       <SignalsWeirdness reports={fieldLogReports} />
       <WeirdShelf />
+      <SignalShelfPreview links={curatedLinks} />
       <FieldDispatch />
       <footer className="site-footer px-5 py-6">
         <div className="mx-auto max-w-7xl border-t border-night-800 pt-5 text-sm text-muted">
@@ -103,6 +107,12 @@ export default async function Home() {
                 href="/field-log"
               >
                 Field Log
+              </Link>
+              <Link
+                className="transition hover:text-signal-teal"
+                href="/signal-shelf"
+              >
+                Signal Shelf
               </Link>
               <Link
                 className="transition hover:text-signal-teal"

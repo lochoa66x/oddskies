@@ -22,6 +22,9 @@ reports stay browsable without crowding the atlas.
 - Homepage Field Log preview shows the latest approved non-demo field reports.
   Culture/link-style items stay out of the top preview unless intentionally
   featured.
+- Signal Shelf (`/signal-shelf`) is a separate curated-link shelf for source
+  context and OddSkies navigation. It is not a report archive and does not imply
+  verification.
 
 ## Future Improvements
 
@@ -29,7 +32,7 @@ reports stay browsable without crowding the atlas.
 - Richer Monthly Sweeps with short summaries.
 - Optional `public.reports.slug text unique` migration for fully stored public
   slugs instead of generated fallbacks.
-- Optional database-backed `display_type` values for Field Report, Culture Note,
-  and Signal Shelf. Today this separation is handled by helper logic only.
+- Optional database-backed `display_type` values for Field Report and Culture
+  Note. Signal Shelf now has a separate `public.curated_links` table and route.
 - Better public/private/RLS verification checks.
 - No public `raw_sources` exposure.

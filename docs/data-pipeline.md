@@ -34,6 +34,22 @@ Internal staging for future collectors or manual capture. This table can contain
 
 Public, approved report records used by the OddSkies homepage, atlas, field log, and weirdness signals. These records are still unverified by default.
 
+`public.curated_links`
+
+Public Signal Shelf links used for curated navigation and source-context
+resources. These rows are not reports, not verification, and not raw source
+staging.
+
+Review outcomes can be:
+
+- reject or discard a raw source
+- keep a raw source internal for later review
+- promote a reviewed item into `public.reports`
+- manually create a related `public.curated_links` row when the source is
+  useful context but should not become a report
+
+Signal Shelf never reads from `public.raw_sources`.
+
 ## Public Signal Intake
 
 The public `/send-signal` page lets visitors submit a source link for human
@@ -120,6 +136,58 @@ status = new or needs_review
 
 Review notes should say whether OCR worked, include extraction/privacy warnings,
 and include: `Screenshot processed; original image not retained.`
+
+## Signal Shelf / Curated Links
+
+The public `/signal-shelf` page lists active rows from `public.curated_links`.
+It is a shelf for useful navigation and source-context links, not a second Field
+Log and not a publishing shortcut.
+
+```text
+human review / manual curation
+-> public.curated_links
+-> /signal-shelf
+```
+
+Signal Shelf rules:
+
+- `is_active = true` is required for public display.
+- Public RLS allows SELECT for active rows only.
+- There is no public insert, update, or delete policy.
+- External links should be public, source-aware, and non-private.
+- Curated links do not verify reports, sources, folklore, or claims.
+- Do not store private reviewer notes in `public.curated_links.notes`.
+- Do not copy raw source text into Signal Shelf as a workaround for review.
+
+Example manual insert:
+
+```sql
+insert into public.curated_links (
+  title,
+  description,
+  url,
+  source_name,
+  category,
+  link_type,
+  region,
+  tags,
+  is_featured,
+  safety_label,
+  notes
+) values (
+  'Source Guidelines',
+  'How OddSkies treats source trails, public links, screenshots, and uncertainty.',
+  '/source-guidelines',
+  'OddSkies',
+  'OddSkies',
+  'source_guidance',
+  'Global',
+  array['sources', 'review', 'privacy'],
+  true,
+  'internal_resource',
+  'Internal reference. Useful before sending or reading a signal.'
+);
+```
 
 ## Bluesky Collector Prototype
 
