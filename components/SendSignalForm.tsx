@@ -9,6 +9,7 @@ const categories = [
   "Haunted Places",
   "Paranormal",
   "Local Legends",
+  "Mandela / Reality Weirdness",
   "Unknown",
 ];
 
@@ -59,8 +60,8 @@ export function SendSignalForm() {
         message:
           payload.message ??
           (response.ok
-            ? "Signal received. It is now waiting in the fog for review."
-            : "The signal did not come through. Check the link and try again."),
+            ? "Signal received. It is waiting in the fog for review. If it fits OddSkies, it may appear later as an unverified Field Log entry."
+            : "The signal got lost in the fog. Try again soon."),
         ok: Boolean(response.ok && payload.ok !== false),
       });
 
@@ -76,7 +77,7 @@ export function SendSignalForm() {
       }
     } catch {
       setResult({
-        message: "The signal did not come through. Check the link and try again.",
+        message: "The signal got lost in the fog. Try again soon.",
         ok: false,
       });
     } finally {
@@ -105,29 +106,32 @@ export function SendSignalForm() {
 
         <label className="grid gap-2">
           <span className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-teal">
-            Public source link
+            Public link
           </span>
           <input
             className="rounded-md border border-night-800 bg-night-950 px-4 py-3 text-sm text-parchment outline-none transition placeholder:text-muted focus:border-signal-teal"
             inputMode="url"
             maxLength={2048}
             onChange={(event) => setSourceUrl(event.target.value)}
-            placeholder="https://public-post-or-article.example/..."
+            placeholder="Paste a Bluesky, Reddit, YouTube, news, blog, Threads, or public source link"
             required
             type="url"
             value={sourceUrl}
           />
+          <span className="text-xs leading-5 text-muted">
+            Use a public link whenever possible. Source trails matter.
+          </span>
         </label>
 
         <label className="grid gap-2">
           <span className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
-            What should we notice?
+            What makes this odd?
           </span>
           <textarea
             className="min-h-32 rounded-md border border-night-800 bg-night-950 px-4 py-3 text-sm leading-6 text-parchment outline-none transition placeholder:text-muted focus:border-signal-teal"
             maxLength={1200}
             onChange={(event) => setSubmitterNote(event.target.value)}
-            placeholder="What is weird, where did it happen, and why should the map take a peek? Keep it public and source-aware."
+            placeholder="Strange lights? Haunted hallway? Local legend? Timeline behaving badly?"
             value={submitterNote}
           />
         </label>
@@ -135,7 +139,7 @@ export function SendSignalForm() {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="grid gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
-              Category guess
+              Category
             </span>
             <select
               className="rounded-md border border-night-800 bg-night-950 px-4 py-3 text-sm text-parchment outline-none transition focus:border-signal-teal"
@@ -159,7 +163,7 @@ export function SendSignalForm() {
               className="rounded-md border border-night-800 bg-night-950 px-4 py-3 text-sm text-parchment outline-none transition placeholder:text-muted focus:border-signal-teal"
               maxLength={160}
               onChange={(event) => setLocationHint(event.target.value)}
-              placeholder="City, region, or broad place"
+              placeholder="City, region, landmark, or unknown"
               value={locationHint}
             />
           </label>
@@ -168,29 +172,33 @@ export function SendSignalForm() {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="grid gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
-              Event time hint
+              When did it happen?
             </span>
             <input
               className="rounded-md border border-night-800 bg-night-950 px-4 py-3 text-sm text-parchment outline-none transition placeholder:text-muted focus:border-signal-teal"
               maxLength={160}
               onChange={(event) => setEventTimeHint(event.target.value)}
-              placeholder="Tonight, May 2026, around 9 PM..."
+              placeholder="Tonight, last night, May 29, around midnight, unknown..."
               value={eventTimeHint}
             />
           </label>
 
           <label className="grid gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
-              Contact email
+              Email, optional
             </span>
             <input
               className="rounded-md border border-night-800 bg-night-950 px-4 py-3 text-sm text-parchment outline-none transition placeholder:text-muted focus:border-signal-teal"
               maxLength={254}
               onChange={(event) => setContactEmail(event.target.value)}
-              placeholder="Optional, internal follow-up only"
+              placeholder="Only if you are okay with internal follow-up"
               type="email"
               value={contactEmail}
             />
+            <span className="text-xs leading-5 text-muted">
+              Only add this if you are okay with us contacting you about the
+              submission. We do not need it.
+            </span>
           </label>
         </div>
 
@@ -215,8 +223,8 @@ export function SendSignalForm() {
             type="checkbox"
           />
           <span>
-            I understand OddSkies may review, edit, label, reject, or ignore
-            this signal, and any public report remains unverified.
+            I understand this submission will be reviewed, may be edited or
+            rejected, and will remain unverified if published.
           </span>
         </label>
 
@@ -229,8 +237,8 @@ export function SendSignalForm() {
             type="checkbox"
           />
           <span>
-            This is a public source, not a private message, private account,
-            exact private address, personal info, harassment, or unsafe material.
+            I am not submitting private messages, private accounts, exact home
+            addresses, personal information, harassment, or unsafe content.
           </span>
         </label>
 
@@ -239,7 +247,7 @@ export function SendSignalForm() {
           disabled={loading || !sourceUrl || !consent || !safety}
           type="submit"
         >
-          {loading ? "Sending through the fog..." : "Send Signal for Review"}
+          {loading ? "Sending signal into the fog..." : "Send a Signal"}
         </button>
 
         {result ? (

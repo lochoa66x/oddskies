@@ -209,6 +209,7 @@ const categoryOptions = [
   "Haunted Places",
   "Paranormal",
   "Local Legends",
+  "Mandela / Reality Weirdness",
   "Unknown",
 ] as const;
 

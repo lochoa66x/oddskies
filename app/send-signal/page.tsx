@@ -3,9 +3,28 @@ import Link from "next/link";
 import { SendSignalForm } from "@/components/SendSignalForm";
 
 export const metadata: Metadata = {
+  alternates: {
+    canonical: "/send-signal",
+  },
   title: "Send a Signal | OddSkies",
   description:
-    "Send a public strange-report source link into the OddSkies review queue.",
+    "Submit a public link to a strange report, UFO / UAP sighting, haunted place, paranormal story, local legend, or weird internet artifact for OddSkies review.",
+  openGraph: {
+    description:
+      "Submit a public strange-report source link for OddSkies review. Review-first, source-aware, and always unverified.",
+    images: ["/images/oddskies-hero.png"],
+    siteName: "OddSkies",
+    title: "Send a Signal | OddSkies",
+    type: "website",
+    url: "/send-signal",
+  },
+  twitter: {
+    card: "summary_large_image",
+    description:
+      "Submit a public strange-report source link for OddSkies review. Review-first, source-aware, and always unverified.",
+    images: ["/images/oddskies-hero.png"],
+    title: "Send a Signal | OddSkies",
+  },
 };
 
 export default function SendSignalPage() {
@@ -49,12 +68,15 @@ export default function SendSignalPage() {
               Signal Drop
             </p>
             <h1 className="mt-4 max-w-4xl text-4xl font-black leading-tight md:text-6xl">
-              Add a little spice to the skies.
+              Send a Signal
             </h1>
+            <p className="mt-3 text-xl font-semibold leading-8 text-parchment">
+              Found something odd? Drop a public link into the atlas fog.
+            </p>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">
-              Saw something odd in a public post, article, old field note, or
-              local story? Send the source link into the OddSkies review queue.
-              We check the trail before anything reaches the map.
+              OddSkies reviews strange public links before they become Field Log
+              entries. We do not confirm reports. We organize the trail so
+              curious people can explore it.
             </p>
             <p className="mt-4 inline-flex rounded-md border border-signal-amber/35 bg-signal-amber/10 px-3 py-2 text-sm font-semibold text-signal-amber">
               Reviewed before public. Reports remain unverified.

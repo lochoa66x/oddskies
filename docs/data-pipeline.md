@@ -43,6 +43,7 @@ review. It is a relationship and discovery intake, not a publishing workflow.
 /send-signal
 -> /api/send-signal
 -> public.raw_sources
+-> curation scoring / location review
 -> human review
 -> maybe public.reports
 ```
@@ -58,7 +59,14 @@ Public signal rules:
   harassment, or unsafe material.
 - Optional context such as category, location, event time, and contact email is
   stored only as internal review context.
+- Event time and location hints are stored for review and can feed later scoring
+  or normalization, but they are not treated as confirmed facts.
+- Contact email is optional, internal-only, and must never be copied into
+  `public.reports`.
 - Nothing from this flow auto-publishes.
+- The current public form uses a honeypot and server validation. Turnstile,
+  request throttling, screenshots, OCR, notifications, and submission status
+  tracking are future work.
 
 Rows are inserted into `public.raw_sources` with:
 

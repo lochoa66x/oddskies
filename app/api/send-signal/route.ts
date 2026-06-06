@@ -15,9 +15,13 @@ type SignalRequestBody = {
 };
 
 const SUCCESS_MESSAGE =
-  "Signal received. It is now waiting in the fog for review.";
+  "Signal received. It is waiting in the fog for review. If it fits OddSkies, it may appear later as an unverified Field Log entry.";
 const FAILURE_MESSAGE =
-  "The signal did not come through. Check the link and try again.";
+  "The signal got lost in the fog. Try again soon.";
+const VALIDATION_MESSAGE =
+  "The signal is missing something. Check the link and required boxes.";
+const UNSAFE_MESSAGE =
+  "Please avoid private messages, exact addresses, personal information, or anything that could put someone at risk.";
 
 const MAX_BODY_LENGTH = 9_000;
 const MAX_URL_LENGTH = 2_048;
@@ -32,6 +36,7 @@ const ALLOWED_CATEGORIES = new Set([
   "Haunted Places",
   "Paranormal",
   "Local Legends",
+  "Mandela / Reality Weirdness",
   "Unknown",
 ]);
 
@@ -137,15 +142,25 @@ function hasSensitiveText(value: string) {
   );
 }
 
+function hasUnsafeLanguage(value: string) {
+  return /\b(doxx|dox|swat|harass|stalk|kill|hurt|attack|home address|private address)\b/i.test(
+    value,
+  );
+}
+
 function getHostnameTitle(url: URL) {
   return `User signal: ${url.hostname.replace(/^www\./, "")}`;
 }
 
-function buildFailure(status: number, detail?: string) {
+function buildFailure(
+  status: number,
+  detail?: string,
+  message = FAILURE_MESSAGE,
+) {
   return NextResponse.json(
     {
       detail,
-      message: FAILURE_MESSAGE,
+      message,
       ok: false,
     },
     { status },
@@ -156,7 +171,7 @@ export async function POST(request: Request) {
   const rawBody = await request.text();
 
   if (rawBody.length > MAX_BODY_LENGTH) {
-    return buildFailure(413, "Signal payload is too large.");
+    return buildFailure(413, "Signal payload is too large.", VALIDATION_MESSAGE);
   }
 
   let body: SignalRequestBody;
@@ -164,7 +179,7 @@ export async function POST(request: Request) {
   try {
     body = JSON.parse(rawBody) as SignalRequestBody;
   } catch {
-    return buildFailure(400, "Signal payload could not be read.");
+    return buildFailure(400, "Signal payload could not be read.", VALIDATION_MESSAGE);
   }
 
   if (getString(body.company, 80)) {
@@ -184,11 +199,11 @@ export async function POST(request: Request) {
   const safety = body.safety === true;
 
   if (!sourceUrl || !consent || !safety) {
-    return buildFailure(400, "Required signal fields are missing.");
+    return buildFailure(400, "Required signal fields are missing.", VALIDATION_MESSAGE);
   }
 
   if (!ALLOWED_CATEGORIES.has(categoryGuess)) {
-    return buildFailure(400, "Category is not recognized.");
+    return buildFailure(400, "Category is not recognized.", VALIDATION_MESSAGE);
   }
 
   let parsedUrl: URL;
@@ -196,26 +211,40 @@ export async function POST(request: Request) {
   try {
     parsedUrl = new URL(sourceUrl);
   } catch {
-    return buildFailure(400, "Source link is not a valid URL.");
+    return buildFailure(400, "Source link is not a valid URL.", VALIDATION_MESSAGE);
   }
 
   if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-    return buildFailure(400, "Only public http or https links are accepted.");
+    return buildFailure(
+      400,
+      "Only public http or https links are accepted.",
+      VALIDATION_MESSAGE,
+    );
   }
 
   if (isBlockedHost(parsedUrl.hostname)) {
-    return buildFailure(400, "Internal or local links are not accepted.");
+    return buildFailure(400, "Internal or local links are not accepted.", UNSAFE_MESSAGE);
   }
 
   if (looksLikePrivateMessageUrl(parsedUrl)) {
-    return buildFailure(400, "Private message or account links are not accepted.");
+    return buildFailure(
+      400,
+      "Private message or account links are not accepted.",
+      UNSAFE_MESSAGE,
+    );
+  }
+
+  const publicContext = `${submitterNote} ${locationHint}`;
+
+  if (hasSensitiveText(publicContext) || hasUnsafeLanguage(publicContext)) {
+    return buildFailure(
+      400,
+      "Signal includes private, personal, or unsafe content.",
+      UNSAFE_MESSAGE,
+    );
   }
 
   const warnings: string[] = [];
-
-  if (hasSensitiveText(`${submitterNote} ${locationHint}`)) {
-    warnings.push("possible_sensitive_personal_detail");
-  }
 
   if (!submitterNote) {
     warnings.push("no_submitter_note");
@@ -232,6 +261,7 @@ export async function POST(request: Request) {
   const status = warnings.length > 0 ? "needs_review" : "new";
   const noteLines = [
     "Public Send a Signal submission. Raw sources are evidence trails, not public reports.",
+    locationHint ? `Location hint: ${locationHint}` : null,
     eventTimeHint ? `Event time hint: ${eventTimeHint}` : null,
     contactEmail ? `Contact email provided for internal follow-up: ${contactEmail}` : null,
     warnings.length > 0 ? `Warnings: ${warnings.join(", ")}` : null,
@@ -241,6 +271,10 @@ export async function POST(request: Request) {
 
   const row = {
     category_guess: categoryGuess || null,
+    collected_at: new Date().toISOString(),
+    extracted_event_datetime_text: eventTimeHint || null,
+    has_location_hint: Boolean(locationHint),
+    has_time_hint: Boolean(eventTimeHint),
     location_hint: locationHint || null,
     platform: "user_submission",
     raw_text:
