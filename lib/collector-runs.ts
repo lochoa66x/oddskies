@@ -37,6 +37,7 @@ export type CollectorRunSummary = {
   queries?: unknown[];
   totals?: {
     duplicatesSkipped?: number;
+    exclusionsSkipped?: number;
     fetched?: number;
     inserted?: number;
   };

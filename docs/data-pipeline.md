@@ -154,10 +154,57 @@ Signal Shelf rules:
 - `is_active = true` is required for public display.
 - Public RLS allows SELECT for active rows only.
 - There is no public insert, update, or delete policy.
+- Active public URLs are unique so the shelf does not show duplicate active
+  trail markers.
 - External links should be public, source-aware, and non-private.
 - Curated links do not verify reports, sources, folklore, or claims.
 - Do not store private reviewer notes in `public.curated_links.notes`.
 - Do not copy raw source text into Signal Shelf as a workaround for review.
+- `/admin/curated-links` is the protected management room for creating,
+  editing, featuring, deactivating, and reactivating Signal Shelf links.
+- The admin route uses the same `ODDSKIES_ADMIN_TOKEN` session pattern as raw
+  source review, and all mutations run server-side with the service role key.
+- Hard delete is avoided by default. Set `is_active = false` to hide a link
+  from the public shelf.
+- Raw sources can be converted manually to Signal Shelf when they are useful
+  links but not Field Log reports. Conversion creates `public.curated_links`,
+  sets `raw_sources.status = 'converted_to_signal_shelf'`, stores
+  `raw_sources.curated_link_id`, and does not create a public report.
+- Rejecting a raw source and suppressing future collector matches are separate,
+  intentional actions.
+
+Signal Shelf conversion flow:
+
+```text
+raw_sources
+-> admin review
+-> convert to Signal Shelf
+-> public.curated_links
+-> /signal-shelf
+```
+
+Use "Promote to report" only for actual field reports. Use "Convert to Signal
+Shelf" for useful non-report links such as videos, tools, official pages,
+debunks, archives, culture notes, and rabbit holes.
+
+## Collector Exclusions
+
+`public.collector_exclusions` is private. It stores intentional skip rules for
+future collector pulls. The public site never reads it.
+
+Supported match types:
+
+- `source_post_id`
+- `source_url`
+- `author_handle`
+- `domain`
+- `text_contains`
+- `search_query`
+
+The raw source review UI can create exclusion rows while rejecting a source.
+Exact source/post suppression is narrow. Author, domain, search query, and text
+phrase suppression are broader and should be used carefully. Exclusion rules can
+be deactivated and reactivated from the admin review room.
 
 Example manual insert:
 

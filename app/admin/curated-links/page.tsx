@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminLogin } from "@/components/admin/AdminLogin";
-import { RawSourcesReview } from "@/components/admin/RawSourcesReview";
+import { CuratedLinksAdmin } from "@/components/admin/CuratedLinksAdmin";
 import {
   getAdminTokenMissingMessage,
   hasAdminSession,
@@ -9,7 +9,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function RawSourcesAdminPage() {
+export default async function CuratedLinksAdminPage() {
   const configured = isAdminConfigured();
   const authorized = configured ? await hasAdminSession() : false;
 
@@ -25,22 +25,22 @@ export default async function RawSourcesAdminPage() {
               OddSkies internal
             </Link>
             <h1 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">
-              Raw Source Review
+              Signal Shelf Admin
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base">
-              Collected weirdness waits here before becoming public OddSkies
-              reports. Raw sources are evidence trails, not public reports.
+              Curate useful weird links without turning them into Field Log
+              reports.
             </p>
           </div>
           <div className="flex flex-col gap-2 md:items-end">
             <div className="rounded-lg border border-signal-amber/35 bg-signal-amber/10 px-4 py-3 text-sm text-parchment">
-              Internal only. Promoted reports remain unverified.
+              Curated links are not verification.
             </div>
             <Link
               className="text-sm font-semibold text-signal-teal transition hover:text-parchment"
-              href="/admin/curated-links"
+              href="/admin/raw-sources"
             >
-              Open Signal Shelf Admin
+              Open Raw Source Review
             </Link>
           </div>
         </header>
@@ -53,11 +53,11 @@ export default async function RawSourcesAdminPage() {
             <h2 className="mt-3 text-2xl font-bold">Admin token missing</h2>
             <p className="mt-2 max-w-2xl text-muted">
               {getAdminTokenMissingMessage()} Add it in Vercel and locally before
-              using this internal review room.
+              using this internal shelf room.
             </p>
           </section>
         ) : authorized ? (
-          <RawSourcesReview />
+          <CuratedLinksAdmin />
         ) : (
           <AdminLogin />
         )}

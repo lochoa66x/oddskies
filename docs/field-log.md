@@ -25,6 +25,8 @@ reports stay browsable without crowding the atlas.
 - Signal Shelf (`/signal-shelf`) is a separate curated-link shelf for source
   context and OddSkies navigation. It is not a report archive and does not imply
   verification.
+- Raw sources that are useful links but not reports can be converted to Signal
+  Shelf instead of promoted into the Field Log.
 
 ## Future Improvements
 

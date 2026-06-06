@@ -13,6 +13,7 @@ import {
 export type BlueskyCollectorQuerySummary = {
   duplicatesSkipped: number;
   emptySkipped: number;
+  exclusionsSkipped?: number;
   errors: string[];
   fetched: number;
   inserted: number;
@@ -33,6 +34,7 @@ export type BlueskyCollectorSummary = {
   totals: {
     duplicatesSkipped: number;
     emptySkipped: number;
+    exclusionsSkipped?: number;
     fetched: number;
     inserted: number;
     insertedIds: string[];

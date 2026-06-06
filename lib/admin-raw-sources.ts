@@ -5,6 +5,10 @@ import type { RawSourceCurationScore } from "@/lib/curation/scoreRawSource";
 import { normalizeLocation } from "@/lib/location/normalizeLocation";
 import type { LocationNormalization } from "@/lib/location/normalizeLocation";
 import {
+  createAdminCuratedLink,
+  type CuratedLinkInput,
+} from "@/lib/admin-curated-links";
+import {
   enrichReportDraft,
   pickReportEnrichmentColumns,
 } from "@/lib/reports/enrichReport";
@@ -13,6 +17,7 @@ export const rawSourceStatuses = [
   "new",
   "needs_review",
   "approved",
+  "converted_to_signal_shelf",
   "rejected",
   "duplicate",
   "low_context",
@@ -32,6 +37,7 @@ export type RawSourceRow = {
   curation_label: string | null;
   curation_reasons: string[] | null;
   curation_score: number | null;
+  curated_link_id: string | null;
   event_datetime_guess: string | null;
   extracted_country_guess: string | null;
   extracted_event_datetime_text: string | null;
@@ -128,6 +134,68 @@ export type ReportDraftOverrides = Partial<{
   title: string;
 }>;
 
+export type CuratedLinkDraft = {
+  category: string;
+  description: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  linkType: string;
+  notes: string;
+  region: string;
+  safetyLabel: string;
+  sortOrder: number;
+  sourceName: string;
+  tags: string[];
+  title: string;
+  url: string;
+  warnings: string[];
+};
+
+export type CuratedLinkDraftOverrides = Partial<{
+  category: string;
+  description: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  linkType: string;
+  notes: string;
+  region: string;
+  safetyLabel: string;
+  sortOrder: number;
+  sourceName: string;
+  tags: string[] | string;
+  title: string;
+  url: string;
+}>;
+
+export type CollectorExclusionMatchType =
+  | "author_handle"
+  | "domain"
+  | "search_query"
+  | "source_post_id"
+  | "source_url"
+  | "text_contains";
+
+export type CollectorExclusionRow = {
+  created_at: string;
+  id: string;
+  is_active: boolean;
+  match_type: CollectorExclusionMatchType;
+  match_value: string;
+  platform: string;
+  reason: string;
+  source_raw_source_id: string | null;
+  updated_at: string;
+};
+
+export type CollectorExclusionInput = {
+  isActive?: boolean;
+  matchType: CollectorExclusionMatchType;
+  matchValue: string;
+  platform: string;
+  reason: string;
+  sourceRawSourceId?: string | null;
+};
+
 export type RawSourceFilters = Partial<{
   categoryGuess: string;
   curationLabel: string;
@@ -148,6 +216,8 @@ export type RawSourceFilters = Partial<{
 export type ReviewStatus = Exclude<RawSourceStatus, "new" | "approved">;
 
 const RAW_SOURCE_SELECT = "*";
+const COLLECTOR_EXCLUSION_SELECT =
+  "id,platform,match_type,match_value,reason,source_raw_source_id,is_active,created_at,updated_at";
 
 const REPORT_COLUMNS = [
   "title",
@@ -394,6 +464,249 @@ export async function promoteRawSource(
     rawSourceId: rawSource.id,
     warnings,
   };
+}
+
+export async function dryRunRawSourceSignalShelfConversion(
+  id: string,
+  overrides: CuratedLinkDraftOverrides = {},
+) {
+  const rawSource = await requireRawSource(id);
+  const warnings = getSignalShelfConversionWarnings(rawSource);
+
+  if (rawSource.status === "approved" || rawSource.approved_report_id) {
+    throw new Error("Approved raw sources cannot be converted to Signal Shelf.");
+  }
+
+  if (rawSource.status === "converted_to_signal_shelf" || rawSource.curated_link_id) {
+    throw new Error("This raw source has already been converted to Signal Shelf.");
+  }
+
+  const draft = buildCuratedLinkDraft(rawSource, overrides);
+
+  return {
+    rawSource,
+    curatedLinkDraft: {
+      ...draft,
+      warnings,
+    },
+  };
+}
+
+export async function convertRawSourceToSignalShelf(
+  id: string,
+  overrides: CuratedLinkDraftOverrides = {},
+) {
+  const { rawSource, curatedLinkDraft } =
+    await dryRunRawSourceSignalShelfConversion(id, overrides);
+  const createdLink = await createAdminCuratedLink(
+    curatedDraftToInput(curatedLinkDraft),
+  );
+  const reviewNote = `Converted manually to Signal Shelf at ${new Date().toISOString()}. No public report was created.`;
+
+  await patchRawSource(rawSource.id, {
+    curated_link_id: createdLink.id,
+    rejection_reason:
+      rawSource.rejection_reason ?? "Converted to Signal Shelf; not a Field Log report.",
+    review_notes: rawSource.review_notes
+      ? `${rawSource.review_notes}\n${reviewNote}`
+      : reviewNote,
+    status: "converted_to_signal_shelf",
+  });
+
+  return {
+    curatedLink: createdLink,
+    rawSourceId: rawSource.id,
+    warnings: curatedLinkDraft.warnings,
+  };
+}
+
+export function buildCuratedLinkDraft(
+  rawSource: RawSourceRow,
+  overrides: CuratedLinkDraftOverrides = {},
+): CuratedLinkDraft {
+  const rawText = readString(rawSource.raw_text) ?? "";
+  const sourceUrl =
+    readString(overrides.url) ??
+    readString(rawSource.source_url) ??
+    readString(rawSource.raw_media_url);
+  const linkType = readString(overrides.linkType) ?? guessCuratedLinkType(sourceUrl, rawText);
+  const title =
+    readString(overrides.title) ??
+    readString(rawSource.normalized_title) ??
+    readString(rawSource.raw_title) ??
+    makeTitle(rawText) ??
+    "Untitled signal";
+  const description =
+    readString(overrides.description) ??
+    readString(rawSource.normalized_summary) ??
+    makeSummary(rawText) ??
+    "A public source trail was kept for Signal Shelf context.";
+  const sourceName =
+    readString(overrides.sourceName) ??
+    readString(rawSource.author_handle) ??
+    formatPlatformName(rawSource.platform);
+  const category =
+    readString(overrides.category) ??
+    readString(rawSource.category_guess) ??
+    "Unsorted";
+  const region =
+    readString(overrides.region) ??
+    readString(rawSource.normalized_region) ??
+    readString(rawSource.extracted_region_guess) ??
+    "Global";
+  const tags = normalizeCuratedTags(
+    overrides.tags ?? [
+      rawSource.platform,
+      category,
+      linkType,
+      "from-raw-source",
+    ],
+  );
+
+  if (!sourceUrl) {
+    throw new Error("A source URL or media URL is required for Signal Shelf conversion.");
+  }
+
+  return {
+    category,
+    description: description.slice(0, 320),
+    isActive: overrides.isActive ?? true,
+    isFeatured: overrides.isFeatured ?? false,
+    linkType,
+    notes:
+      readString(overrides.notes) ??
+      "Converted from internal raw source review. Not verification.",
+    region,
+    safetyLabel:
+      readString(overrides.safetyLabel) ??
+      guessCuratedSafetyLabel(linkType, sourceUrl, rawText),
+    sortOrder: readOverrideNumber(overrides.sortOrder) ?? 100,
+    sourceName,
+    tags,
+    title,
+    url: sourceUrl,
+    warnings: [],
+  };
+}
+
+export async function listCollectorExclusions() {
+  const config = getSupabaseAdminConfig();
+  const endpoint = new URL("/rest/v1/collector_exclusions", config.supabaseUrl);
+
+  endpoint.searchParams.set("select", COLLECTOR_EXCLUSION_SELECT);
+  endpoint.searchParams.set("order", "is_active.desc,created_at.desc");
+  endpoint.searchParams.set("limit", "100");
+
+  const response = await supabaseFetch(config, endpoint);
+
+  return response.json() as Promise<CollectorExclusionRow[]>;
+}
+
+export async function createCollectorExclusion(input: CollectorExclusionInput) {
+  const config = getSupabaseAdminConfig();
+  const payload = normalizeCollectorExclusionInput(input);
+  const endpoint = new URL("/rest/v1/collector_exclusions", config.supabaseUrl);
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    Prefer: "return=representation",
+  });
+
+  headers.set("apikey", config.serviceRoleKey);
+  headers.set("Authorization", `Bearer ${config.serviceRoleKey}`);
+
+  const response = await fetch(endpoint, {
+    body: JSON.stringify(payload),
+    headers,
+    method: "POST",
+  });
+
+  if (response.status === 409) {
+    return fetchCollectorExclusionByMatch(
+      config,
+      payload.platform,
+      payload.match_type,
+      payload.match_value,
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `Supabase request failed (${response.status}): ${await readResponseText(response)}`,
+    );
+  }
+
+  const rows = (await response.json()) as CollectorExclusionRow[];
+
+  return rows[0];
+}
+
+export async function updateCollectorExclusion(
+  id: string,
+  input: Partial<CollectorExclusionInput>,
+) {
+  const config = getSupabaseAdminConfig();
+  const endpoint = new URL("/rest/v1/collector_exclusions", config.supabaseUrl);
+  const patch: Record<string, unknown> = {};
+
+  if (typeof input.isActive === "boolean") {
+    patch.is_active = input.isActive;
+  }
+
+  if (input.reason !== undefined) {
+    const reason = readString(input.reason);
+
+    if (!reason) {
+      throw new Error("Exclusion reason is required.");
+    }
+
+    patch.reason = reason;
+  }
+
+  if (Object.keys(patch).length === 0) {
+    throw new Error("No collector exclusion fields were provided.");
+  }
+
+  endpoint.searchParams.set("id", `eq.${id}`);
+
+  const response = await supabaseFetch(config, endpoint, {
+    body: JSON.stringify(patch),
+    headers: {
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    method: "PATCH",
+  });
+  const rows = (await response.json()) as CollectorExclusionRow[];
+
+  if (!rows[0]) {
+    throw new Error("Collector exclusion not found.");
+  }
+
+  return rows[0];
+}
+
+async function fetchCollectorExclusionByMatch(
+  config: SupabaseAdminConfig,
+  platform: string,
+  matchType: string,
+  matchValue: string,
+) {
+  const endpoint = new URL("/rest/v1/collector_exclusions", config.supabaseUrl);
+
+  endpoint.searchParams.set("select", COLLECTOR_EXCLUSION_SELECT);
+  endpoint.searchParams.set("platform", `eq.${platform}`);
+  endpoint.searchParams.set("match_type", `eq.${matchType}`);
+  endpoint.searchParams.set("match_value", `eq.${matchValue}`);
+  endpoint.searchParams.set("limit", "1");
+
+  const response = await supabaseFetch(config, endpoint);
+  const rows = (await response.json()) as CollectorExclusionRow[];
+
+  if (!rows[0]) {
+    throw new Error("Collector exclusion already exists.");
+  }
+
+  return rows[0];
 }
 
 export function buildReportDraft(
@@ -874,6 +1187,188 @@ function makeTitle(text: string) {
   }
 
   return `${compact.slice(0, 69).trim()}...`;
+}
+
+function curatedDraftToInput(draft: CuratedLinkDraft): CuratedLinkInput {
+  return {
+    category: draft.category,
+    description: draft.description,
+    isActive: draft.isActive,
+    isFeatured: draft.isFeatured,
+    linkType: draft.linkType,
+    notes: draft.notes,
+    region: draft.region,
+    safetyLabel: draft.safetyLabel,
+    sortOrder: draft.sortOrder,
+    sourceName: draft.sourceName,
+    tags: draft.tags,
+    title: draft.title,
+    url: draft.url,
+  };
+}
+
+function getSignalShelfConversionWarnings(rawSource: RawSourceRow) {
+  const warnings: string[] = [];
+
+  if (!readString(rawSource.source_url) && !readString(rawSource.raw_media_url)) {
+    warnings.push("No source URL was captured. Conversion needs a public URL.");
+  }
+
+  if (rawSource.possible_private_location) {
+    warnings.push("Private/sensitive warning exists. Confirm the link is safe before making it public.");
+  }
+
+  if (rawSource.possible_duplicate) {
+    warnings.push("Possible duplicate source flagged.");
+  }
+
+  if (rawSource.possible_ai_generated) {
+    warnings.push("Possible AI-generated or edited media language flagged.");
+  }
+
+  warnings.push("Signal Shelf links are browsing aids, not verification.");
+
+  return warnings;
+}
+
+function guessCuratedLinkType(url: string | null, text: string) {
+  const normalizedUrl = (url ?? "").toLowerCase();
+  const normalizedText = text.toLowerCase();
+
+  if (/\b(youtube\.com|youtu\.be|vimeo\.com)\b/.test(normalizedUrl)) {
+    return "video";
+  }
+
+  if (/\b(nasa\.gov|noaa\.gov|cern\.ch|esa\.int|faa\.gov|weather\.gov)\b/.test(normalizedUrl)) {
+    return "official_source";
+  }
+
+  if (/\b(debunk|explainer|explanation|misidentified|hoax)\b/.test(normalizedText)) {
+    return "debunk_or_explanation";
+  }
+
+  if (/\b(bsky\.app|threads\.net|x\.com|twitter\.com)\b/.test(normalizedUrl)) {
+    return "rabbit_hole";
+  }
+
+  return "external_reference";
+}
+
+function guessCuratedSafetyLabel(
+  linkType: string,
+  url: string | null,
+  text: string,
+) {
+  const normalizedUrl = (url ?? "").toLowerCase();
+  const normalizedText = text.toLowerCase();
+
+  if (
+    linkType === "official_source" ||
+    /\b(nasa\.gov|noaa\.gov|cern\.ch|esa\.int|faa\.gov|weather\.gov)\b/.test(
+      normalizedUrl,
+    )
+  ) {
+    return "official_source";
+  }
+
+  if (
+    linkType === "debunk_or_explanation" ||
+    /\b(debunk|explainer|explanation|misidentified|hoax)\b/.test(normalizedText)
+  ) {
+    return "debunk_or_explanation";
+  }
+
+  return "unverified_resource";
+}
+
+function normalizeCuratedTags(value: string[] | string) {
+  const values = Array.isArray(value) ? value : value.split(",");
+
+  return Array.from(
+    new Set(
+      values
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean)
+        .map((item) => item.replace(/\s+/g, "-")),
+    ),
+  );
+}
+
+function readOverrideNumber(value: unknown) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const number = Number(value);
+
+  return Number.isFinite(number) ? Math.trunc(number) : null;
+}
+
+function normalizeCollectorExclusionInput(input: CollectorExclusionInput) {
+  const platform = readString(input.platform);
+  const matchValue = readString(input.matchValue);
+  const reason = readString(input.reason);
+
+  if (!platform) {
+    throw new Error("Exclusion platform is required.");
+  }
+
+  if (!isCollectorExclusionMatchType(input.matchType)) {
+    throw new Error(`Invalid exclusion match type: ${input.matchType}.`);
+  }
+
+  if (!matchValue) {
+    throw new Error("Exclusion match value is required.");
+  }
+
+  if (!reason) {
+    throw new Error("Exclusion reason is required.");
+  }
+
+  return {
+    is_active: input.isActive ?? true,
+    match_type: input.matchType,
+    match_value: normalizeExclusionValue(input.matchType, matchValue),
+    platform,
+    reason,
+    source_raw_source_id: input.sourceRawSourceId ?? null,
+  };
+}
+
+function isCollectorExclusionMatchType(
+  value: unknown,
+): value is CollectorExclusionMatchType {
+  return (
+    value === "author_handle" ||
+    value === "domain" ||
+    value === "search_query" ||
+    value === "source_post_id" ||
+    value === "source_url" ||
+    value === "text_contains"
+  );
+}
+
+function normalizeExclusionValue(
+  matchType: CollectorExclusionMatchType,
+  value: string,
+) {
+  if (matchType === "domain") {
+    return value
+      .replace(/^https?:\/\//i, "")
+      .replace(/^www\./i, "")
+      .split("/")[0]
+      .toLowerCase();
+  }
+
+  if (
+    matchType === "author_handle" ||
+    matchType === "search_query" ||
+    matchType === "text_contains"
+  ) {
+    return value.toLowerCase();
+  }
+
+  return value;
 }
 
 function readString(value: unknown) {

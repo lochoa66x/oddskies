@@ -11,6 +11,7 @@ type RawSource = {
   curation_label: string | null;
   curation_reasons: string[] | null;
   curation_score: number | null;
+  curated_link_id: string | null;
   event_datetime_guess: string | null;
   extracted_country_guess: string | null;
   extracted_event_datetime_text: string | null;
@@ -90,6 +91,55 @@ type PromotionPreview = {
   warnings: string[];
 };
 
+type CuratedLinkDraft = {
+  category: string;
+  description: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  linkType: string;
+  notes: string;
+  region: string;
+  safetyLabel: string;
+  sortOrder: number;
+  sourceName: string;
+  tags: string[];
+  title: string;
+  url: string;
+  warnings: string[];
+};
+
+type ConversionPreview = {
+  curatedLinkDraft: CuratedLinkDraft;
+};
+
+type CuratedLinkOverrides = Partial<{
+  category: string;
+  description: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  linkType: string;
+  notes: string;
+  region: string;
+  safetyLabel: string;
+  sortOrder: number;
+  sourceName: string;
+  tags: string[] | string;
+  title: string;
+  url: string;
+}>;
+
+type CollectorExclusion = {
+  created_at: string;
+  id: string;
+  is_active: boolean;
+  match_type: string;
+  match_value: string;
+  platform: string;
+  reason: string;
+  source_raw_source_id: string | null;
+  updated_at: string;
+};
+
 type RawSourceScoreResult = {
   id: string;
   score: {
@@ -123,6 +173,7 @@ type CollectorSummary = {
   queries: {
     duplicatesSkipped: number;
     emptySkipped: number;
+    exclusionsSkipped?: number;
     errors: string[];
     fetched: number;
     inserted: number;
@@ -135,6 +186,7 @@ type CollectorSummary = {
   totals: {
     duplicatesSkipped: number;
     emptySkipped: number;
+    exclusionsSkipped?: number;
     fetched: number;
     inserted: number;
     insertedIds: string[];
@@ -189,6 +241,7 @@ const statusOptions = [
   ["private_or_sensitive", "Private/sensitive"],
   ["possible_joke", "Possible joke"],
   ["possible_ai_generated", "Possible AI-generated"],
+  ["converted_to_signal_shelf", "Converted to Signal Shelf"],
   ["approved", "Approved"],
 ] as const;
 
@@ -200,6 +253,17 @@ const reviewActions = [
   ["private_or_sensitive", "Private/sensitive"],
   ["possible_joke", "Possible joke"],
   ["possible_ai_generated", "Possible AI-generated"],
+] as const;
+
+const quickReasonOptions = [
+  "Not a report",
+  "Low context",
+  "Duplicate source",
+  "Private/sensitive",
+  "Possible joke/satire",
+  "Possible AI/edited",
+  "Spam/noise",
+  "Useful link, convert instead",
 ] as const;
 
 const categoryOptions = [
@@ -270,6 +334,20 @@ export function RawSourcesReview() {
   const [reasonError, setReasonError] = useState("");
   const [draftOverrides, setDraftOverrides] = useState<DraftOverrides>({});
   const [preview, setPreview] = useState<PromotionPreview | null>(null);
+  const [conversionOverrides, setConversionOverrides] =
+    useState<CuratedLinkOverrides>({});
+  const [conversionPreview, setConversionPreview] =
+    useState<ConversionPreview | null>(null);
+  const [exclusions, setExclusions] = useState<CollectorExclusion[]>([]);
+  const [exclusionsLoading, setExclusionsLoading] = useState(true);
+  const [suppression, setSuppression] = useState({
+    author_handle: false,
+    domain: false,
+    search_query: false,
+    source_post_id: true,
+    source_url: true,
+    text_contains: "",
+  });
   const [collectorDryRun, setCollectorDryRun] = useState(true);
   const [collectorLimit, setCollectorLimit] = useState("3");
   const [collectorLoading, setCollectorLoading] = useState(false);
@@ -390,6 +468,22 @@ export function RawSourcesReview() {
     }
   }, []);
 
+  const loadExclusions = useCallback(async () => {
+    setExclusionsLoading(true);
+
+    try {
+      const body = await adminFetch<{ rows: CollectorExclusion[] }>(
+        "/api/admin/collector-exclusions",
+      );
+
+      setExclusions(body.rows);
+    } catch {
+      setExclusions([]);
+    } finally {
+      setExclusionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     void loadSources();
   }, [loadSources]);
@@ -399,12 +493,32 @@ export function RawSourcesReview() {
   }, [loadCollectorRuns]);
 
   useEffect(() => {
+    void loadExclusions();
+  }, [loadExclusions]);
+
+  useEffect(() => {
     setPreview(null);
+    setConversionPreview(null);
     setReviewNotes(selected?.review_notes ?? "");
     setRejectionReason(selected?.rejection_reason ?? "");
     setReasonError("");
     setDraftOverrides({});
-  }, [selected?.id, selected?.rejection_reason, selected?.review_notes]);
+    setConversionOverrides({});
+    setSuppression({
+      author_handle: false,
+      domain: false,
+      search_query: false,
+      source_post_id: Boolean(selected?.source_post_id),
+      source_url: Boolean(selected?.source_url),
+      text_contains: "",
+    });
+  }, [
+    selected?.id,
+    selected?.rejection_reason,
+    selected?.review_notes,
+    selected?.source_post_id,
+    selected?.source_url,
+  ]);
 
   async function logout() {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -444,12 +558,40 @@ export function RawSourcesReview() {
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });
+      await createSelectedExclusions(nextStatus);
       await loadSources();
+      await loadExclusions();
     } catch (actionError) {
       setError(formatError(actionError));
     } finally {
       setActionLoading("");
     }
+  }
+
+  async function createSelectedExclusions(nextStatus: string) {
+    if (!selected || nextStatus === "needs_review") {
+      return;
+    }
+
+    const targets = buildSuppressionTargets(selected, suppression);
+
+    await Promise.all(
+      targets.map((target) =>
+        adminFetch("/api/admin/collector-exclusions", {
+          body: JSON.stringify({
+            matchType: target.matchType,
+            matchValue: target.matchValue,
+            platform: selected.platform,
+            reason:
+              rejectionReason.trim() ||
+              `Suppressed after ${nextStatus.replace(/_/g, " ")} review.`,
+            sourceRawSourceId: selected.id,
+          }),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        }),
+      ),
+    );
   }
 
   async function dryRunPromotion() {
@@ -508,6 +650,70 @@ export function RawSourcesReview() {
       await loadSources();
     } catch (promotionError) {
       setError(formatError(promotionError));
+    } finally {
+      setActionLoading("");
+    }
+  }
+
+  async function dryRunSignalShelfConversion() {
+    if (!selected) {
+      return;
+    }
+
+    setActionLoading("convert-preview");
+    setError("");
+
+    try {
+      const body = await adminFetch<ConversionPreview>(
+        `/api/admin/raw-sources/${selected.id}/convert-to-shelf`,
+        {
+          body: JSON.stringify({ overrides: cleanedOverrides(conversionOverrides) }),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        },
+      );
+
+      setConversionPreview(body);
+      setConversionOverrides((current) => ({
+        ...current,
+        ...curatedDraftToOverrides(body.curatedLinkDraft),
+      }));
+    } catch (conversionError) {
+      setError(formatError(conversionError));
+    } finally {
+      setActionLoading("");
+    }
+  }
+
+  async function convertToSignalShelf() {
+    if (!selected) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Convert this raw source into a public Signal Shelf link? No Field Log report will be created.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActionLoading("convert");
+    setError("");
+
+    try {
+      await adminFetch(`/api/admin/raw-sources/${selected.id}/convert-to-shelf`, {
+        body: JSON.stringify({
+          confirm: true,
+          overrides: cleanedOverrides(conversionOverrides),
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      setConversionPreview(null);
+      await loadSources();
+    } catch (conversionError) {
+      setError(formatError(conversionError));
     } finally {
       setActionLoading("");
     }
@@ -588,6 +794,24 @@ export function RawSourcesReview() {
       await loadSources();
     } catch (locationError) {
       setError(formatError(locationError));
+    } finally {
+      setActionLoading("");
+    }
+  }
+
+  async function toggleExclusion(exclusion: CollectorExclusion) {
+    setActionLoading(`exclusion-${exclusion.id}`);
+    setError("");
+
+    try {
+      await adminFetch(`/api/admin/collector-exclusions/${exclusion.id}`, {
+        body: JSON.stringify({ isActive: !exclusion.is_active }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      });
+      await loadExclusions();
+    } catch (exclusionError) {
+      setError(formatError(exclusionError));
     } finally {
       setActionLoading("");
     }
@@ -804,6 +1028,13 @@ export function RawSourcesReview() {
         ) : null}
       </div>
 
+      <CollectorExclusionsPanel
+        actionLoading={actionLoading}
+        exclusions={exclusions}
+        loading={exclusionsLoading}
+        onToggle={(exclusion) => void toggleExclusion(exclusion)}
+      />
+
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)]">
         <div className="rounded-lg border border-night-800 bg-night-900">
           <div className="flex items-center justify-between border-b border-night-800 px-4 py-3">
@@ -920,6 +1151,10 @@ export function RawSourcesReview() {
                   label="Approved report"
                   value={selected.approved_report_id}
                 />
+                <DetailItem
+                  label="Signal Shelf link"
+                  value={selected.curated_link_id}
+                />
                 <DetailItem label="Source post id" value={selected.source_post_id} />
               </div>
 
@@ -944,6 +1179,21 @@ export function RawSourcesReview() {
                   value={rejectionReason}
                 />
               </div>
+
+              <QuickReasonChips
+                onPick={(reason) => {
+                  setRejectionReason((current) =>
+                    current.trim() ? current : reason,
+                  );
+                  setReasonError("");
+                }}
+              />
+
+              <SuppressionControls
+                selected={selected}
+                setSuppression={setSuppression}
+                suppression={suppression}
+              />
 
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted">
@@ -985,6 +1235,12 @@ export function RawSourcesReview() {
                 setOverrides={setDraftOverrides}
               />
 
+              <SignalShelfConversionEditor
+                overrides={conversionOverrides}
+                preview={conversionPreview}
+                setOverrides={setConversionOverrides}
+              />
+
               <div className="flex flex-wrap gap-3 border-t border-night-800 pt-4">
                 <button
                   className={secondaryButtonClass}
@@ -1000,6 +1256,24 @@ export function RawSourcesReview() {
                 >
                   {actionLoading === "promote" ? "Promoting..." : "Promote to report"}
                 </button>
+                <button
+                  className={secondaryButtonClass}
+                  disabled={Boolean(actionLoading)}
+                  onClick={() => void dryRunSignalShelfConversion()}
+                >
+                  {actionLoading === "convert-preview"
+                    ? "Previewing..."
+                    : "Preview Signal Shelf"}
+                </button>
+                <button
+                  className="rounded-lg border border-signal-violet/45 bg-signal-violet/15 px-4 py-2 text-sm font-bold text-parchment transition hover:bg-signal-violet hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={Boolean(actionLoading)}
+                  onClick={() => void convertToSignalShelf()}
+                >
+                  {actionLoading === "convert"
+                    ? "Converting..."
+                    : "Convert to Signal Shelf"}
+                </button>
               </div>
             </div>
           ) : (
@@ -1008,6 +1282,231 @@ export function RawSourcesReview() {
         </aside>
       </div>
     </section>
+  );
+}
+
+function QuickReasonChips({
+  onPick,
+}: {
+  onPick: (reason: string) => void;
+}) {
+  return (
+    <div className="rounded-lg border border-night-800 bg-night-950 p-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+        Quick reasons
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {quickReasonOptions.map((reason) => (
+          <button
+            className="rounded-full border border-night-800 px-3 py-1 text-xs text-muted transition hover:border-signal-teal hover:text-signal-teal"
+            key={reason}
+            onClick={() => onPick(reason)}
+            type="button"
+          >
+            {reason}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SuppressionControls({
+  selected,
+  setSuppression,
+  suppression,
+}: {
+  selected: RawSource;
+  setSuppression: Dispatch<
+    SetStateAction<{
+      author_handle: boolean;
+      domain: boolean;
+      search_query: boolean;
+      source_post_id: boolean;
+      source_url: boolean;
+      text_contains: string;
+    }>
+  >;
+  suppression: {
+    author_handle: boolean;
+    domain: boolean;
+    search_query: boolean;
+    source_post_id: boolean;
+    source_url: boolean;
+    text_contains: string;
+  };
+}) {
+  const domain = getDomain(selected.source_url);
+
+  return (
+    <div className="rounded-lg border border-night-800 bg-night-950 p-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+        Also suppress future pulls from
+      </p>
+      <p className="mt-1 text-xs leading-5 text-muted">
+        Suppression is private and reversible. Keep broad author/domain rules
+        intentional.
+      </p>
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
+        <SuppressionCheckbox
+          checked={suppression.source_post_id}
+          disabled={!selected.source_post_id}
+          label="This exact post"
+          onChange={(value) =>
+            setSuppression((current) => ({ ...current, source_post_id: value }))
+          }
+        />
+        <SuppressionCheckbox
+          checked={suppression.source_url}
+          disabled={!selected.source_url}
+          label="This source URL"
+          onChange={(value) =>
+            setSuppression((current) => ({ ...current, source_url: value }))
+          }
+        />
+        <SuppressionCheckbox
+          checked={suppression.author_handle}
+          disabled={!selected.author_handle}
+          label={`This author${selected.author_handle ? `: ${selected.author_handle}` : ""}`}
+          onChange={(value) =>
+            setSuppression((current) => ({ ...current, author_handle: value }))
+          }
+        />
+        <SuppressionCheckbox
+          checked={suppression.domain}
+          disabled={!domain}
+          label={`This domain${domain ? `: ${domain}` : ""}`}
+          onChange={(value) =>
+            setSuppression((current) => ({ ...current, domain: value }))
+          }
+        />
+        <SuppressionCheckbox
+          checked={suppression.search_query}
+          disabled={!selected.search_query}
+          label={`This search query${selected.search_query ? `: ${selected.search_query}` : ""}`}
+          onChange={(value) =>
+            setSuppression((current) => ({ ...current, search_query: value }))
+          }
+        />
+        <label className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+          Text contains
+          <input
+            className="mt-2 w-full rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm normal-case tracking-normal text-parchment outline-none transition focus:border-signal-teal"
+            onChange={(event) =>
+              setSuppression((current) => ({
+                ...current,
+                text_contains: event.target.value,
+              }))
+            }
+            placeholder="Exact phrase to skip later"
+            value={suppression.text_contains}
+          />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function SuppressionCheckbox({
+  checked,
+  disabled,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  disabled: boolean;
+  label: string;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted">
+      <input
+        checked={checked && !disabled}
+        className="size-4 accent-signal-teal"
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.checked)}
+        type="checkbox"
+      />
+      {label}
+    </label>
+  );
+}
+
+function CollectorExclusionsPanel({
+  actionLoading,
+  exclusions,
+  loading,
+  onToggle,
+}: {
+  actionLoading: string;
+  exclusions: CollectorExclusion[];
+  loading: boolean;
+  onToggle: (exclusion: CollectorExclusion) => void;
+}) {
+  return (
+    <div className="rounded-lg border border-night-800 bg-night-900 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-signal-teal">
+            Collector exclusions
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Private skip rules for future collector pulls.
+          </p>
+        </div>
+        <span className="rounded-full border border-night-800 px-3 py-1 text-xs text-muted">
+          {loading ? "Loading..." : `${exclusions.length} rules`}
+        </span>
+      </div>
+      {exclusions.length > 0 ? (
+        <div className="mt-3 grid gap-2 lg:grid-cols-2">
+          {exclusions.slice(0, 6).map((exclusion) => (
+            <div
+              className="rounded-lg border border-night-800 bg-night-950 p-3"
+              key={exclusion.id}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-parchment">
+                    {exclusion.match_type.replace(/_/g, " ")}
+                  </p>
+                  <p className="mt-1 break-words text-xs text-signal-teal">
+                    {exclusion.match_value}
+                  </p>
+                </div>
+                <span
+                  className={
+                    exclusion.is_active
+                      ? "rounded-full border border-signal-teal/35 bg-signal-teal/10 px-2 py-1 text-xs text-signal-teal"
+                      : "rounded-full border border-night-800 px-2 py-1 text-xs text-muted"
+                  }
+                >
+                  {exclusion.is_active ? "active" : "inactive"}
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted">
+                {exclusion.platform} · {exclusion.reason}
+              </p>
+              <button
+                className={`${secondaryButtonClass} mt-3`}
+                disabled={Boolean(actionLoading)}
+                onClick={() => onToggle(exclusion)}
+              >
+                {actionLoading === `exclusion-${exclusion.id}`
+                  ? "Saving..."
+                  : exclusion.is_active
+                    ? "Deactivate rule"
+                    : "Reactivate rule"}
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : !loading ? (
+        <p className="mt-3 rounded-lg border border-night-800 bg-night-950 p-3 text-sm text-muted">
+          No collector exclusions yet.
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -1039,6 +1538,10 @@ function CollectorSummaryPanel({ summary }: { summary: CollectorSummary }) {
         <CollectorStat label="Fetched" value={summary.totals.fetched} />
         <CollectorStat label="Normalized" value={summary.totals.normalized} />
         <CollectorStat label="Inserted" value={summary.totals.inserted} />
+        <CollectorStat
+          label="Excluded"
+          value={summary.totals.exclusionsSkipped ?? 0}
+        />
         <CollectorStat
           label="Duplicates"
           value={summary.totals.duplicatesSkipped}
@@ -1546,6 +2049,157 @@ function DraftEditor({
   );
 }
 
+function SignalShelfConversionEditor({
+  overrides,
+  preview,
+  setOverrides,
+}: {
+  overrides: CuratedLinkOverrides;
+  preview: ConversionPreview | null;
+  setOverrides: Dispatch<SetStateAction<CuratedLinkOverrides>>;
+}) {
+  const draft = preview?.curatedLinkDraft;
+
+  return (
+    <div className="rounded-lg border border-signal-violet/30 bg-signal-violet/5 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-violet">
+            Signal Shelf preview
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            For useful links that are not Field Log reports.
+          </p>
+        </div>
+        <span className="rounded-full border border-night-800 px-3 py-1 text-xs text-muted">
+          {draft ? "Shelf draft ready" : "No shelf preview yet"}
+        </span>
+      </div>
+
+      {draft?.warnings.length ? (
+        <div className="mt-4 rounded-lg border border-signal-amber/35 bg-signal-amber/10 p-3 text-sm text-parchment">
+          {draft.warnings.map((warning) => (
+            <p key={warning}>{warning}</p>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <DraftInput
+          label="Shelf title"
+          name="title"
+          setOverrides={setOverrides}
+          value={overrides.title ?? draft?.title ?? ""}
+        />
+        <DraftInput
+          label="Category"
+          name="category"
+          setOverrides={setOverrides}
+          value={overrides.category ?? draft?.category ?? ""}
+        />
+        <DraftInput
+          label="Source name"
+          name="sourceName"
+          setOverrides={setOverrides}
+          value={overrides.sourceName ?? draft?.sourceName ?? ""}
+        />
+        <DraftInput
+          label="Region"
+          name="region"
+          setOverrides={setOverrides}
+          value={overrides.region ?? draft?.region ?? ""}
+        />
+        <DraftInput
+          label="Link type"
+          name="linkType"
+          setOverrides={setOverrides}
+          value={overrides.linkType ?? draft?.linkType ?? ""}
+        />
+        <DraftInput
+          label="Safety label"
+          name="safetyLabel"
+          setOverrides={setOverrides}
+          value={overrides.safetyLabel ?? draft?.safetyLabel ?? ""}
+        />
+        <div className="md:col-span-2">
+          <DraftInput
+            label="Shelf URL"
+            name="url"
+            setOverrides={setOverrides}
+            value={overrides.url ?? draft?.url ?? ""}
+          />
+        </div>
+        <DraftInput
+          label="Tags"
+          name="tags"
+          setOverrides={setOverrides}
+          value={stringifyTags(overrides.tags ?? draft?.tags ?? [])}
+        />
+        <DraftInput
+          label="Sort order"
+          name="sortOrder"
+          setOverrides={setOverrides}
+          value={String(overrides.sortOrder ?? draft?.sortOrder ?? 100)}
+        />
+        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted md:col-span-2">
+          Description
+          <textarea
+            className="mt-2 min-h-24 w-full rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm normal-case leading-6 tracking-normal text-parchment outline-none transition focus:border-signal-teal"
+            onChange={(event) =>
+              setOverrides((current) => ({
+                ...current,
+                description: event.target.value,
+              }))
+            }
+            value={overrides.description ?? draft?.description ?? ""}
+          />
+        </label>
+        <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted md:col-span-2">
+          Public note
+          <textarea
+            className="mt-2 min-h-20 w-full rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm normal-case leading-6 tracking-normal text-parchment outline-none transition focus:border-signal-teal"
+            onChange={(event) =>
+              setOverrides((current) => ({
+                ...current,
+                notes: event.target.value,
+              }))
+            }
+            value={overrides.notes ?? draft?.notes ?? ""}
+          />
+        </label>
+        <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted">
+          <input
+            checked={overrides.isActive ?? draft?.isActive ?? true}
+            className="size-4 accent-signal-teal"
+            onChange={(event) =>
+              setOverrides((current) => ({
+                ...current,
+                isActive: event.target.checked,
+              }))
+            }
+            type="checkbox"
+          />
+          Active on Signal Shelf
+        </label>
+        <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted">
+          <input
+            checked={overrides.isFeatured ?? draft?.isFeatured ?? false}
+            className="size-4 accent-signal-violet"
+            onChange={(event) =>
+              setOverrides((current) => ({
+                ...current,
+                isFeatured: event.target.checked,
+              }))
+            }
+            type="checkbox"
+          />
+          Featured on homepage
+        </label>
+      </div>
+    </div>
+  );
+}
+
 function DraftEnrichmentPreview({ draft }: { draft: ReportDraft }) {
   const reasons = draft.source_quality_reasons ?? [];
   const notes = draft.enrichment_notes ?? [];
@@ -1607,8 +2261,10 @@ function DraftInput({
   value,
 }: {
   label: string;
-  name: keyof DraftOverrides;
-  setOverrides: Dispatch<SetStateAction<DraftOverrides>>;
+  name: string;
+  // Internal admin helper shared by report and Signal Shelf draft forms.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setOverrides: Dispatch<SetStateAction<any>>;
   value: string;
 }) {
   return (
@@ -1617,7 +2273,7 @@ function DraftInput({
       <input
         className="mt-2 w-full rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm normal-case tracking-normal text-parchment outline-none transition focus:border-signal-teal"
         onChange={(event) =>
-          setOverrides((current) => ({
+          setOverrides((current: Record<string, unknown>) => ({
             ...current,
             [name]: event.target.value,
           }))
@@ -1720,7 +2376,7 @@ function statusClass(status: string) {
     return "border-signal-teal/35 bg-signal-teal/10 text-signal-teal";
   }
 
-  if (status === "approved") {
+  if (status === "approved" || status === "converted_to_signal_shelf") {
     return "border-signal-amber/40 bg-signal-amber/10 text-signal-amber";
   }
 
@@ -1798,6 +2454,99 @@ function draftToOverrides(draft: ReportDraft): DraftOverrides {
     summary: draft.summary,
     title: draft.title,
   };
+}
+
+function curatedDraftToOverrides(draft: CuratedLinkDraft): CuratedLinkOverrides {
+  return {
+    category: draft.category,
+    description: draft.description,
+    isActive: draft.isActive,
+    isFeatured: draft.isFeatured,
+    linkType: draft.linkType,
+    notes: draft.notes,
+    region: draft.region,
+    safetyLabel: draft.safetyLabel,
+    sortOrder: draft.sortOrder,
+    sourceName: draft.sourceName,
+    tags: draft.tags,
+    title: draft.title,
+    url: draft.url,
+  };
+}
+
+function buildSuppressionTargets(
+  source: RawSource,
+  suppression: {
+    author_handle: boolean;
+    domain: boolean;
+    search_query: boolean;
+    source_post_id: boolean;
+    source_url: boolean;
+    text_contains: string;
+  },
+) {
+  const targets: Array<{ matchType: string; matchValue: string }> = [];
+  const domain = getDomain(source.source_url);
+
+  if (suppression.source_post_id && source.source_post_id) {
+    targets.push({
+      matchType: "source_post_id",
+      matchValue: source.source_post_id,
+    });
+  }
+
+  if (suppression.source_url && source.source_url) {
+    targets.push({
+      matchType: "source_url",
+      matchValue: source.source_url,
+    });
+  }
+
+  if (suppression.author_handle && source.author_handle) {
+    targets.push({
+      matchType: "author_handle",
+      matchValue: source.author_handle,
+    });
+  }
+
+  if (suppression.domain && domain) {
+    targets.push({
+      matchType: "domain",
+      matchValue: domain,
+    });
+  }
+
+  if (suppression.search_query && source.search_query) {
+    targets.push({
+      matchType: "search_query",
+      matchValue: source.search_query,
+    });
+  }
+
+  if (suppression.text_contains.trim()) {
+    targets.push({
+      matchType: "text_contains",
+      matchValue: suppression.text_contains.trim(),
+    });
+  }
+
+  return targets;
+}
+
+function getDomain(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    return new URL(value).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function stringifyTags(value: string[] | string) {
+  return Array.isArray(value) ? value.join(", ") : value;
 }
 
 async function adminFetch<T>(url: string, init?: RequestInit): Promise<T> {
