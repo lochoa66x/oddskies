@@ -451,6 +451,76 @@ POST /api/admin/collectors/fediverse
 The protected review UI defaults to dry-run mode and does not expose configured
 instance/tag values. Turning dry-run off inserts only into `public.raw_sources`.
 
+## YouTube Feed Collector
+
+YouTube collector V1 uses public YouTube channel or playlist Atom feeds. It does
+not use the YouTube Data API and does not perform broad search.
+
+```text
+YouTube channel/playlist feed -> raw_sources -> scoring/location hints -> admin review -> manual promotion -> public reports
+```
+
+The collector reads configured feeds, normalizes video title, description,
+watch URL, thumbnail URL, author/channel name, and published date, checks staged
+duplicates, respects active `collector_exclusions` for `platform = 'youtube'`,
+and logs runs in `public.collector_runs`.
+
+It does not:
+
+- publish anything to `public.reports`
+- verify claims
+- search all YouTube
+- require a YouTube API key
+- embed or mirror videos publicly
+- bypass manual review
+
+Configure feeds with a server-only environment variable:
+
+```text
+ODDSKIES_YOUTUBE_FEEDS=Channel name|UCxxxxxxxxxxxxxxxxxxxxxx|UFO / UAP
+```
+
+Playlist ids and direct feed URLs also work:
+
+```text
+Odd playlist|PLxxxxxxxxxxxxxxxxxxxxxx|Paranormal
+Direct feed|https://www.youtube.com/feeds/videos.xml?channel_id=UCxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Multiple feeds can be separated by new lines. JSON is also supported:
+
+```json
+[
+  {
+    "name": "Example Channel",
+    "channelId": "UCxxxxxxxxxxxxxxxxxxxxxx",
+    "category": "UFO / UAP"
+  }
+]
+```
+
+Useful dry run:
+
+```bash
+npm run collect:youtube -- --dry-run --feed "Example Channel|UCxxxxxxxxxxxxxxxxxxxxxx|UFO / UAP" --limit 3
+```
+
+Small live staging pull:
+
+```bash
+npm run collect:youtube -- --feed "Example Channel|UCxxxxxxxxxxxxxxxxxxxxxx|UFO / UAP" --limit 3
+```
+
+Protected admin API:
+
+```text
+POST /api/admin/collectors/youtube
+```
+
+The protected review UI defaults to dry-run mode and does not expose configured
+channel, playlist, or feed values. Turning dry-run off inserts only into
+`public.raw_sources`.
+
 ## Curation Scoring
 
 V1.6 adds deterministic curation hints for `public.raw_sources`.

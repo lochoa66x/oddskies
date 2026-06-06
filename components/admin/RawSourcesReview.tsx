@@ -397,6 +397,11 @@ export function RawSourcesReview() {
     useState(false);
   const [fediverseCollectorSummary, setFediverseCollectorSummary] =
     useState<CollectorSummary | null>(null);
+  const [youtubeCollectorDryRun, setYoutubeCollectorDryRun] = useState(true);
+  const [youtubeCollectorLimit, setYoutubeCollectorLimit] = useState("3");
+  const [youtubeCollectorLoading, setYoutubeCollectorLoading] = useState(false);
+  const [youtubeCollectorSummary, setYoutubeCollectorSummary] =
+    useState<CollectorSummary | null>(null);
   const [collectorRuns, setCollectorRuns] = useState<CollectorRun[]>([]);
   const [collectorRunsLoading, setCollectorRunsLoading] = useState(true);
   const rejectionReasonRef = useRef<HTMLTextAreaElement | null>(null);
@@ -865,6 +870,37 @@ export function RawSourcesReview() {
     }
   }
 
+  async function runYoutubeCollectorTest() {
+    setYoutubeCollectorLoading(true);
+    setYoutubeCollectorSummary(null);
+    setError("");
+
+    try {
+      const body = await adminFetch<CollectorSummary>(
+        "/api/admin/collectors/youtube",
+        {
+          body: JSON.stringify({
+            dryRun: youtubeCollectorDryRun,
+            limit: Number(youtubeCollectorLimit),
+          }),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        },
+      );
+
+      setYoutubeCollectorSummary(body);
+      await loadCollectorRuns();
+
+      if (!body.dryRun && body.totals.inserted > 0) {
+        await loadSources();
+      }
+    } catch (collectorError) {
+      setError(formatError(collectorError));
+    } finally {
+      setYoutubeCollectorLoading(false);
+    }
+  }
+
   async function refreshSelectedScore() {
     if (!selected) {
       return;
@@ -1093,7 +1129,7 @@ export function RawSourcesReview() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-4 xl:grid-cols-3">
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
           <div className="rounded-lg border border-night-800 bg-night-950 p-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-teal">
@@ -1271,6 +1307,67 @@ export function RawSourcesReview() {
 
             {fediverseCollectorSummary ? (
               <CollectorSummaryPanel summary={fediverseCollectorSummary} />
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border border-night-800 bg-night-950 p-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
+                YouTube
+              </p>
+              <h3 className="mt-2 text-lg font-bold text-parchment">
+                Staged video feed pull
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                Reads configured public YouTube channel or playlist feeds and
+                stages video links into raw_sources only.
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted">
+                  Feeds
+                </p>
+                <p className="mt-2 leading-5">
+                  Server-configured channel, playlist, or feed list. No API key
+                  required.
+                </p>
+              </div>
+              <FilterInput
+                label="Limit"
+                onChange={setYoutubeCollectorLimit}
+                value={youtubeCollectorLimit}
+              />
+              <label className="flex items-center gap-3 rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-sm text-muted sm:col-span-2">
+                <input
+                  checked={youtubeCollectorDryRun}
+                  className="size-4 accent-signal-teal"
+                  onChange={(event) =>
+                    setYoutubeCollectorDryRun(event.target.checked)
+                  }
+                  type="checkbox"
+                />
+                Dry run first
+              </label>
+              <button
+                className="rounded-lg border border-muted/40 bg-muted/10 px-4 py-2 text-sm font-bold text-muted transition hover:bg-muted hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+                disabled={youtubeCollectorLoading}
+                onClick={() => void runYoutubeCollectorTest()}
+              >
+                {youtubeCollectorLoading
+                  ? "Reading videos..."
+                  : "Run staged YouTube pull"}
+              </button>
+            </div>
+
+            <p className="mt-3 rounded-lg border border-night-800 bg-night-900 px-3 py-2 text-xs leading-5 text-muted">
+              If no feeds are configured, the dry run will say so. Add
+              ODDSKIES_YOUTUBE_FEEDS in server env before staging real videos.
+            </p>
+
+            {youtubeCollectorSummary ? (
+              <CollectorSummaryPanel summary={youtubeCollectorSummary} />
             ) : null}
           </div>
         </div>

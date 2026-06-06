@@ -6,6 +6,7 @@
     "collect:bluesky": "node scripts/collect-bluesky.mjs",
     "collect:fediverse": "node scripts/collect-fediverse.mjs",
     "collect:rss": "node scripts/collect-rss.mjs",
+    "collect:youtube": "node scripts/collect-youtube.mjs",
     "enrich:reports": "node scripts/enrich-reports.mjs",
     "promote:raw": "node scripts/promote-raw-source.mjs",
     "promote:raw-source": "node scripts/promote-raw-source.mjs",
