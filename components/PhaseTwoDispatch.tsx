@@ -2,22 +2,26 @@ import Link from "next/link";
 
 const phaseTwoSignals = [
   {
-    label: "Live collectors",
-    status: "Warming up",
+    label: "Collectors",
+    status: "Controlled tests",
   },
   {
-    label: "Oracle Alpha",
+    label: "Oracle",
     status: "Awake-ish",
   },
   {
     label: "Global map",
-    status: "Preparing to move",
+    status: "Marker mode",
+  },
+  {
+    label: "Reports",
+    status: "Review first",
   },
 ];
 
 export function PhaseTwoDispatch() {
   return (
-    <section className="bg-night-950 px-5 py-6 md:py-8" id="phase-2">
+    <section className="bg-night-950 px-5 py-6 md:py-8" id="field-dispatch">
       <div className="mx-auto max-w-7xl">
         <div className="field-card relative overflow-hidden rounded-lg border-signal-teal/25 p-4 md:p-5">
           <span
@@ -32,7 +36,7 @@ export function PhaseTwoDispatch() {
           <div className="relative grid gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-amber">
-                Phase 2 Dispatch
+                Field Dispatch
               </p>
               <h2 className="mt-2 max-w-2xl text-3xl font-semibold text-parchment md:text-4xl">
                 The map is about to get weirder.
@@ -48,7 +52,7 @@ export function PhaseTwoDispatch() {
             </div>
 
             <div className="grid gap-3">
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {phaseTwoSignals.map((signal) => (
                   <div
                     className="rounded-md border border-night-800 bg-night-950/70 p-3"

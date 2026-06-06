@@ -65,6 +65,7 @@ export type Report = {
 
 type SupabaseReportRow = Record<string, unknown>;
 type Tone = "teal" | "amber" | "violet" | "ember" | "muted";
+type ReportDisplayType = "culture_note" | "field_report" | "signal_shelf";
 
 export const regionAnchors: Record<
   AtlasRegion,
@@ -380,18 +381,34 @@ export function getFieldLogReports(reports: Report[]): Report[] {
 }
 
 export function getHomepageFieldLogReports(reports: Report[]): Report[] {
-  return getFieldLogReports(reports)
-    .filter((report) => {
-      const status = normalizePublicStatus(report.publicStatus);
+  const candidates = getFieldLogReports(reports)
+    .filter(isHomepageFieldLogReport)
+    .sort(compareHomepageFieldLogReports);
+  const selected = candidates.slice(0, 5);
 
-      return !report.isArchived && status !== "archived";
-    })
-    .slice(0, 5);
+  if (selected.length >= 5) {
+    return selected;
+  }
+
+  const selectedIds = new Set(selected.map((report) => report.id));
+  const fallbackSeeds = getFieldLogReports(demoReports)
+    .filter(isHomepageFieldLogReport)
+    .filter((report) => !selectedIds.has(report.id))
+    .sort(compareHomepageFieldLogReports)
+    .slice(0, 5 - selected.length);
+
+  return [...selected, ...fallbackSeeds];
 }
 
 export function getPublicReportDisplayBadge(report: Report) {
-  if (isCultureNoteReport(report)) {
+  const displayType = getReportDisplayType(report);
+
+  if (displayType === "culture_note") {
     return "Culture note";
+  }
+
+  if (displayType === "signal_shelf") {
+    return "Signal shelf";
   }
 
   if (!report.sourceQualityLabel || isLowContextDisplay(report)) {
@@ -701,6 +718,56 @@ function isHomepageDisplayableReport(report: Report) {
   return true;
 }
 
+function isHomepageFieldLogReport(report: Report) {
+  const status = normalizePublicStatus(report.publicStatus);
+  const displayType = getReportDisplayType(report);
+  const featured = isFeaturedHomepageReport(report);
+
+  if (!isHomepageDisplayableReport(report)) {
+    return false;
+  }
+
+  if (report.isArchived || status === "archived") {
+    return false;
+  }
+
+  if (displayType !== "field_report" && !featured) {
+    return false;
+  }
+
+  if (isWeakHomepageReport(report) && !featured) {
+    return false;
+  }
+
+  return true;
+}
+
+function compareHomepageFieldLogReports(a: Report, b: Report) {
+  const aDisplayType = getReportDisplayType(a);
+  const bDisplayType = getReportDisplayType(b);
+  const aFieldReport = aDisplayType === "field_report";
+  const bFieldReport = bDisplayType === "field_report";
+
+  if (aFieldReport !== bFieldReport) {
+    return aFieldReport ? -1 : 1;
+  }
+
+  const aDemoLike = isDemoLikeReport(a);
+  const bDemoLike = isDemoLikeReport(b);
+
+  if (aDemoLike !== bDemoLike) {
+    return aDemoLike ? 1 : -1;
+  }
+
+  const scoreDelta = getHomepageDisplayScore(b) - getHomepageDisplayScore(a);
+
+  if (scoreDelta !== 0) {
+    return scoreDelta;
+  }
+
+  return getReportTime(b) - getReportTime(a);
+}
+
 function isFieldLogDisplayableReport(report: Report) {
   const status = normalizePublicStatus(report.publicStatus);
 
@@ -840,6 +907,33 @@ function isCultureNoteReport(report: Report) {
       text,
     )
   );
+}
+
+function getReportDisplayType(report: Report): ReportDisplayType {
+  const text = getReportDisplayText(report);
+  const sourceType = report.sourceType.toLowerCase();
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+  const curationLabel = report.curationLabel?.toLowerCase() ?? "";
+  const displayText = `${text} ${sourceType} ${sourceQuality} ${curationLabel}`;
+
+  if (
+    /signal shelf|rabbit hole|link roundup|link collection|resource list|watch list/i.test(
+      displayText,
+    )
+  ) {
+    return "signal_shelf";
+  }
+
+  if (
+    isCultureNoteReport(report) ||
+    /debunk|commentary|explainer|opinion|essay|video drop|new video|podcast|ufo news|weird culture|folklore discussion|mandela effect/i.test(
+      displayText,
+    )
+  ) {
+    return "culture_note";
+  }
+
+  return "field_report";
 }
 
 function hasObviousLocationCategoryMismatch(report: Report) {
