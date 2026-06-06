@@ -15,7 +15,17 @@ import { OracleReportPanel } from "@/components/OracleReportPanel";
 
 const allSourceTypes = "All source types";
 const allSourceQualities = "All source quality";
+const allLocationConfidences = "All location confidence";
 const pageSize = 12;
+
+const fieldLogSortOptions = [
+  "Newest first",
+  "Oldest first",
+  "Source-rich first",
+  "Maybe-weird first",
+] as const;
+
+type FieldLogSort = (typeof fieldLogSortOptions)[number];
 
 export type FieldLogInitialFilters = {
   category?: string;
@@ -23,8 +33,10 @@ export type FieldLogInitialFilters = {
   from?: string;
   query?: string;
   region?: string;
+  locationConfidence?: string;
   sourceQuality?: string;
   sourceType?: string;
+  sort?: string;
   to?: string;
 };
 
@@ -46,6 +58,12 @@ export function FieldLogBrowser({
   );
   const [activeSourceQuality, setActiveSourceQuality] =
     useState(initialFilters.sourceQuality ?? allSourceQualities);
+  const [activeLocationConfidence, setActiveLocationConfidence] = useState(
+    getInitialLocationConfidence(initialFilters.locationConfidence),
+  );
+  const [activeSort, setActiveSort] = useState<FieldLogSort>(
+    getInitialSort(initialFilters.sort),
+  );
   const [fromDate, setFromDate] = useState(
     getInitialDate(initialFilters.from ?? initialFilters.date),
   );
@@ -66,10 +84,17 @@ export function FieldLogBrowser({
     ],
     [reports],
   );
+  const locationConfidences = useMemo(
+    () => [
+      allLocationConfidences,
+      ...getUniqueValues(reports, "locationConfidence").map(toDisplayLabel),
+    ],
+    [reports],
+  );
 
   const filteredReports = useMemo(
-    () =>
-      reports.filter((report) => {
+    () => {
+      const filtered = reports.filter((report) => {
         if (activeRegion !== "All" && report.region !== activeRegion) {
           return false;
         }
@@ -95,15 +120,28 @@ export function FieldLogBrowser({
           return false;
         }
 
+        if (
+          activeLocationConfidence !== allLocationConfidences &&
+          toDisplayLabel(report.locationConfidence ?? "") !==
+            activeLocationConfidence
+        ) {
+          return false;
+        }
+
         if (!isWithinDateRange(report, fromDate, toDate)) {
           return false;
         }
 
         return matchesSearch(report, query);
-      }),
+      });
+
+      return sortFieldLogReports(filtered, activeSort);
+    },
     [
       activeCategory,
+      activeLocationConfidence,
       activeRegion,
+      activeSort,
       activeSourceQuality,
       activeSourceType,
       fromDate,
@@ -127,7 +165,9 @@ export function FieldLogBrowser({
     setVisibleCount(pageSize);
   }, [
     activeCategory,
+    activeLocationConfidence,
     activeRegion,
+    activeSort,
     activeSourceQuality,
     activeSourceType,
     fromDate,
@@ -168,7 +208,7 @@ export function FieldLogBrowser({
             />
           </div>
 
-          <div className="mt-3 grid gap-3 md:grid-cols-4">
+          <div className="mt-3 grid gap-3 md:grid-cols-5">
             <FieldLogSelect
               label="Source type"
               onChange={setActiveSourceType}
@@ -180,6 +220,18 @@ export function FieldLogBrowser({
               onChange={setActiveSourceQuality}
               options={sourceQualities}
               value={activeSourceQuality}
+            />
+            <FieldLogSelect
+              label="Location confidence"
+              onChange={setActiveLocationConfidence}
+              options={locationConfidences}
+              value={activeLocationConfidence}
+            />
+            <FieldLogSelect
+              label="Sort"
+              onChange={(value) => setActiveSort(getInitialSort(value))}
+              options={fieldLogSortOptions}
+              value={activeSort}
             />
             <FieldLogDate
               label="From"
@@ -208,6 +260,8 @@ export function FieldLogBrowser({
               setActiveCategory("All categories");
               setActiveSourceType(allSourceTypes);
               setActiveSourceQuality(allSourceQualities);
+              setActiveLocationConfidence(allLocationConfidences);
+              setActiveSort("Newest first");
               setFromDate("");
               setToDate("");
               setQuery("");
@@ -244,8 +298,31 @@ export function FieldLogBrowser({
             ))}
           </div>
         ) : (
-          <div className="field-card p-5 text-sm leading-6 text-muted">
-            No field notes match those filters yet.
+          <div className="field-card p-5">
+            <p className="text-sm font-semibold text-parchment">
+              No signals found.
+            </p>
+            <p className="mt-2 text-sm leading-6 text-muted">
+              Those filters did not match the public Field Log. Widen the scan
+              and the archive will try again.
+            </p>
+            <button
+              className="mt-4 rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
+              onClick={() => {
+                setActiveRegion("All");
+                setActiveCategory("All categories");
+                setActiveSourceType(allSourceTypes);
+                setActiveSourceQuality(allSourceQualities);
+                setActiveLocationConfidence(allLocationConfidences);
+                setActiveSort("Newest first");
+                setFromDate("");
+                setToDate("");
+                setQuery("");
+              }}
+              type="button"
+            >
+              Clear scan
+            </button>
           </div>
         )}
 
@@ -316,6 +393,11 @@ function FieldLogCard({
         <span className="rounded border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-signal-violet">
           {report.confidenceMood}
         </span>
+        {report.locationConfidence ? (
+          <span className="rounded border border-night-800 bg-night-950/55 px-2 py-1">
+            Location {toDisplayLabel(report.locationConfidence)}
+          </span>
+        ) : null}
       </div>
       <p className="field-log-summary mt-2.5 line-clamp-3 text-sm leading-6 text-muted">
         {report.summary}
@@ -341,6 +423,18 @@ export function FieldLogCaseFile({
 }) {
   const sourceHref = getSourceHref(report.sourceUrl);
   const external = sourceHref.startsWith("http");
+  const locationConfidence = getLocationConfidenceLabel(report);
+  const locationResolution = report.locationResolution
+    ? toDisplayLabel(report.locationResolution)
+    : "";
+  const reportedDateTime =
+    report.reportedDateTime && report.reportedDateTime !== "Date not listed"
+      ? report.reportedDateTime
+      : "";
+  const originalTitle =
+    report.originalTitle && report.originalTitle !== report.title
+      ? report.originalTitle
+      : "";
 
   return (
     <aside
@@ -374,12 +468,22 @@ export function FieldLogCaseFile({
             Report summary
           </p>
           <p className="mt-2 text-sm leading-6 text-muted">{report.summary}</p>
+          {originalTitle ? (
+            <p className="mt-3 rounded border border-night-800 bg-night-950/60 px-2.5 py-2 text-xs leading-5 text-muted">
+              Original title: {originalTitle}
+            </p>
+          ) : null}
         </div>
 
         <dl className="grid gap-3 rounded-md border border-night-800 bg-night-950/55 p-3.5 text-sm sm:grid-cols-2">
           {[
             ["Where", getLocationLabel(report.location)],
             ["When", report.eventDateTime],
+            ...(reportedDateTime ? [["Reported", reportedDateTime]] : []),
+            ...(locationConfidence
+              ? [["Location confidence", locationConfidence]]
+              : []),
+            ...(locationResolution ? [["Location resolution", locationResolution]] : []),
             ["Source", `${report.sourceType} · ${report.sourceName}`],
             ["Quality", report.sourceQualityLabel ?? "Source-light"],
           ].map(([label, value]) => (
@@ -393,6 +497,19 @@ export function FieldLogCaseFile({
             </div>
           ))}
         </dl>
+
+        {report.sourceQualityReasons?.length ? (
+          <div className="rounded-md border border-night-800 bg-night-950/55 p-3.5">
+            <p className="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-muted">
+              Source quality notes
+            </p>
+            <ul className="mt-2 space-y-1 text-xs leading-5 text-muted">
+              {report.sourceQualityReasons.slice(0, 4).map((reason) => (
+                <li key={reason}>- {reason}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="grid gap-2">
           <Link
@@ -490,6 +607,20 @@ function getInitialCategory(value?: string): CategoryFilter {
   return categoryFilters.find((category) => category === value) ?? "All categories";
 }
 
+function getInitialSort(value?: string): FieldLogSort {
+  return (
+    fieldLogSortOptions.find((option) => option === value) ?? "Newest first"
+  );
+}
+
+function getInitialLocationConfidence(value?: string) {
+  if (!value || value === allLocationConfidences) {
+    return allLocationConfidences;
+  }
+
+  return toDisplayLabel(value);
+}
+
 function getInitialDate(value?: string) {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return "";
@@ -547,6 +678,119 @@ function isWithinDateRange(report: Report, fromDate: string, toDate: string) {
   return time >= fromTime && time <= toTime;
 }
 
+function sortFieldLogReports(reports: Report[], sort: FieldLogSort) {
+  return [...reports].sort((a, b) => {
+    if (sort === "Oldest first") {
+      return getReportDate(a).getTime() - getReportDate(b).getTime();
+    }
+
+    if (sort === "Source-rich first") {
+      return (
+        getSourceRichScore(b) - getSourceRichScore(a) ||
+        getReportDate(b).getTime() - getReportDate(a).getTime()
+      );
+    }
+
+    if (sort === "Maybe-weird first") {
+      return (
+        getMaybeWeirdScore(b) - getMaybeWeirdScore(a) ||
+        getSourceRichScore(b) - getSourceRichScore(a) ||
+        getReportDate(b).getTime() - getReportDate(a).getTime()
+      );
+    }
+
+    return getReportDate(b).getTime() - getReportDate(a).getTime();
+  });
+}
+
+function getSourceRichScore(report: Report) {
+  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+  const sourceText = [
+    sourceQuality,
+    report.sourceType,
+    report.sourceName,
+    report.sourceUrl,
+    report.originalTitle,
+    report.originalSummary,
+    ...(report.sourceQualityReasons ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  let score = 0;
+
+  if (report.sourceUrl && report.sourceUrl !== "#source-guidelines") {
+    score += 4;
+  }
+
+  if (sourceQuality.includes("context-rich")) {
+    score += 5;
+  }
+
+  if (sourceQuality.includes("linked trail")) {
+    score += 3;
+  }
+
+  if (report.hasMediaHint) {
+    score += 2;
+  }
+
+  if (report.hasTime) {
+    score += 1;
+  }
+
+  if (report.locationConfidence === "high") {
+    score += 2;
+  } else if (report.locationConfidence === "medium") {
+    score += 1;
+  }
+
+  if (sourceText.includes("source-light") || sourceText.includes("low context")) {
+    score -= 2;
+  }
+
+  return score + Math.min(report.sourceQualityReasons?.length ?? 0, 3);
+}
+
+function getMaybeWeirdScore(report: Report) {
+  const text = [
+    report.title,
+    report.summary,
+    report.confidenceMood,
+    report.curationLabel,
+    report.sourceQualityLabel,
+    ...(report.sourceQualityReasons ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  let score = report.displayPriority ?? 0;
+
+  if (text.includes("suspiciously interesting")) {
+    score += 8;
+  }
+
+  if (text.includes("active watch")) {
+    score += 5;
+  }
+
+  if (text.includes("mildly odd")) {
+    score += 3;
+  }
+
+  if (report.oracleReady) {
+    score += 2;
+  }
+
+  if (text.includes("low context") || text.includes("source-light")) {
+    score -= 2;
+  }
+
+  return score;
+}
+
 function getReportDate(report: Report) {
   const eventDate = new Date(report.eventDateTimeRaw);
 
@@ -557,6 +801,18 @@ function getReportDate(report: Report) {
   const createdDate = new Date(report.createdAtRaw ?? "");
 
   return Number.isFinite(createdDate.getTime()) ? createdDate : new Date(0);
+}
+
+function getLocationConfidenceLabel(report: Report) {
+  if (!report.locationConfidence) {
+    return "";
+  }
+
+  const confidence = toDisplayLabel(report.locationConfidence);
+
+  return report.locationResolution
+    ? `${confidence} / ${toDisplayLabel(report.locationResolution)}`
+    : confidence;
 }
 
 function getLocationLabel(location: string) {
@@ -573,6 +829,14 @@ function getLocationLabel(location: string) {
   }
 
   return location;
+}
+
+function toDisplayLabel(value: string) {
+  return value
+    .trim()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function getSourceModeExplanation(report: Report) {

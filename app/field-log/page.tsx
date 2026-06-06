@@ -7,9 +7,9 @@ import {
 import { getFieldLogReports, getReports } from "@/lib/reports";
 
 export const metadata: Metadata = {
-  title: "Full Field Log | OddSkies",
+  title: "OddSkies Field Log | Unverified Strange Reports Archive",
   description:
-    "Browse public, unverified OddSkies field notes by month, category, region, source, and date.",
+    "Browse the OddSkies Field Log: public, unverified strange reports organized by date, location, category, source quality, and source trail.",
 };
 
 type FieldLogPageProps = {
@@ -25,8 +25,10 @@ export default async function FieldLogPage({ searchParams }: FieldLogPageProps) 
     from: readSearchParam(params.from),
     query: readSearchParam(params.query),
     region: readSearchParam(params.region),
+    locationConfidence: readSearchParam(params.locationConfidence),
     sourceQuality: readSearchParam(params.sourceQuality),
     sourceType: readSearchParam(params.sourceType),
+    sort: readSearchParam(params.sort),
     to: readSearchParam(params.to),
   };
 
