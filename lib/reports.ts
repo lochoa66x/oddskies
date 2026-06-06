@@ -675,8 +675,19 @@ function isFeaturedHomepageReport(report: Report) {
 
 function isDemoLikeReport(report: Report) {
   const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
+  const curationLabel = report.curationLabel?.toLowerCase() ?? "";
+  const reasons = report.sourceQualityReasons?.join(" ").toLowerCase() ?? "";
+  const status = report.publicStatus?.toLowerCase() ?? "";
+  const labels = `${sourceQuality} ${curationLabel} ${reasons} ${status}`;
+  const text = getReportDisplayText(report);
 
-  return report.isDemo || sourceQuality.includes("demo seed");
+  return (
+    report.isDemo ||
+    /demo seed|demo file|demo report|sample report|placeholder report|collector[-\s]?test|test file|staging\/review/.test(
+      labels,
+    ) ||
+    looksLikePlaceholderReportText(text)
+  );
 }
 
 function isPubliclyListedReport(report: Report) {
@@ -733,6 +744,17 @@ function hasPrivateOrSensitiveSignal(report: Report) {
 function looksPromotionalOrOffTopic(value: string) {
   return /amazon\.com|\/dp\/|kindle|buy now|coupon|discount|\.shop\b|survival kit|group chat|teaser|trailer|movie|film|cinematic survival kit|product link|available now/i.test(
     value,
+  );
+}
+
+function looksLikePlaceholderReportText(value: string) {
+  return (
+    /\b(?:demo|sample|placeholder|dummy)\s+(?:report|card|case|seed|row)\b/i.test(
+      value,
+    ) ||
+    /\b(?:wow,\s*)?(?:canada'?s|america'?s|the world'?s)\s+first\s+ufo\s+sighting[!. ]*(?:so cool)?/i.test(
+      value,
+    )
   );
 }
 

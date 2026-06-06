@@ -22,6 +22,8 @@ reports stay browsable without crowding the atlas.
 - Homepage Field Log preview shows the latest approved non-demo field reports.
   Culture/link-style items stay out of the top preview unless intentionally
   featured.
+- Demo, sample, placeholder, and collector-test rows stay out of the public
+  Field Log even if a testing pass accidentally promoted them.
 - Signal Shelf (`/signal-shelf`) is a separate curated-link shelf for source
   context and OddSkies navigation. It is not a report archive and does not imply
   verification.
