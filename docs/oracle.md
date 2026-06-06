@@ -22,6 +22,9 @@ timeline shifts.
 9. If the key is missing, the model fails, or the response is unsafe, OddSkies
    returns a cautious fallback reading.
 
+Cached readings are shown as latest cached reads. They should feel stable, not
+like the Oracle invents a different story on every click.
+
 ## Environment
 
 Required for live AI:
@@ -61,12 +64,15 @@ The Oracle returns:
 - Oracle note
 - safety note
 
-The public UI does not show the numeric score. It uses the verdict label and
-the main field note so the read feels like OddSkies, not a grading rubric.
+The public UI may show the numeric maybe-weird score only as a curiosity meter.
+It must be labeled as not evidence and never presented as verification.
 
 The main field note should be the “Oracle says” moment: complete, playful,
 skeptical, and large enough to feel like the point of the feature. Supporting
 cards stay compact.
+
+The shareable summary is a copy-ready line for sending around, but it must still
+say or imply that the report is unverified.
 
 Every reading must preserve the OddSkies trust posture:
 

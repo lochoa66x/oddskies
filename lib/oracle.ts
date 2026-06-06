@@ -12,6 +12,11 @@ export const ORACLE_VERDICTS = [
 ] as const;
 
 export type OracleVerdict = (typeof ORACLE_VERDICTS)[number];
+export type OracleSourceMode =
+  | "Public report file"
+  | "Low-context public file"
+  | "Collector test file"
+  | "Demo seed file";
 
 export type OracleReading = {
   fieldNote: string;
@@ -37,7 +42,7 @@ export type OracleApiResponse = {
   status: "cached" | "fallback" | "ready" | "sleeping";
 };
 
-export const ORACLE_PROMPT_VERSION = "oracle-alpha-v8";
+export const ORACLE_PROMPT_VERSION = "oracle-polish-v2";
 
 export const ORACLE_SYSTEM_PROMPT = [
   "You are the OddSkies Oracle, a playful field assistant for a public mystery atlas.",
@@ -48,8 +53,12 @@ export const ORACLE_SYSTEM_PROMPT = [
   "Your voice is a night-shift mystery atlas assistant with a flashlight, not a corporate analyst.",
   "Use playful OddSkies phrasing, but keep the source posture clear.",
   "If sourceMode says Demo seed file, explicitly say this is demo seed data.",
-  "If sourceMode says Collector test file or Low-context collector test, explicitly say this is rough collector-test data.",
+  "If sourceMode says Collector test file, explicitly say this is rough collector-test data.",
+  "If sourceMode says Low-context public file, say the read is thin because public context is thin.",
   "If the report appears promotional, cultural, or not a direct sighting, call it a culture note rather than a confirmed event.",
+  "Put ordinary explanations before weird clues. Weird clues are reasons to keep looking, not evidence.",
+  "The shareableSummary should be a compact copy-ready line that includes unverified or not verified.",
+  "The safetyNote must say this is a playful reality check, not confirmation.",
   "Keep the support cards compact: short bullets, no essays.",
   "The fieldNote is the main Oracle read. Make it playful, skeptical, memorable, and complete in 3-5 sentences.",
   "The fieldNote should be the most interesting part of the response, not a tiny summary.",
@@ -176,7 +185,7 @@ export function getFallbackOracleReading(report: Report): OracleReading {
   const verdict = getFallbackVerdict(report);
 
   return {
-    fieldNote: `${getOracleSourceModeNote(report)} The Oracle caught static on the line, so this local read keeps the odd meter playful and cautious. There may be something interesting in the report trail, but the boring explanations still get the first chair at the table.`,
+    fieldNote: `${getOracleSourceModeNote(report)} The Oracle caught static on the line, so this local read keeps the odd meter playful and cautious. There may be something interesting in the report trail, but the normal explanations still get the first chair at the table.`,
     headline: "Static in the oracle channel",
     maybeWeirdScore: getFallbackScore(report),
     missingContext: getMissingContext(report),
@@ -184,7 +193,7 @@ export function getFallbackOracleReading(report: Report): OracleReading {
       "Open the source, look for time and witness context, then compare nearby reports.",
     normalExplanations: getNormalExplanations(report),
     oracleNote: getOracleNote(report),
-    safetyNote: `${getOracleSourceMode(report)}. OddSkies cannot verify this report. It may be mistaken, staged, satire, a joke, or ordinary.`,
+    safetyNote: `${getOracleSourceMode(report)}. OddSkies cannot verify this report. This is a playful reality check, not confirmation.`,
     shareableSummary: getShareableSummary(report, verdict),
     sourceCheck: getSourceCheck(report),
     verdict,
@@ -240,8 +249,8 @@ export function sanitizeOracleReading(
     return getFallbackOracleReading(report);
   }
 
-  if (!/cannot verify|does not verify|unverified/i.test(reading.safetyNote)) {
-    reading.safetyNote = `${reading.safetyNote} OddSkies cannot verify this report.`;
+  if (!hasRequiredSafetyLanguage(reading.safetyNote)) {
+    reading.safetyNote = `${reading.safetyNote} OddSkies cannot verify this report. This is not confirmation.`;
   }
 
   if (shouldNameOracleSourceMode(report)) {
@@ -262,9 +271,9 @@ export function sanitizeOracleReading(
     );
   }
 
-  if (!/cannot verify|does not verify|unverified/i.test(reading.safetyNote)) {
+  if (!hasRequiredSafetyLanguage(reading.safetyNote)) {
     reading.safetyNote = cleanOracleText(
-      `OddSkies cannot verify this report. ${reading.safetyNote}`,
+      `OddSkies cannot verify this report. This is a playful reality check, not confirmation. ${reading.safetyNote}`,
       180,
     );
   }
@@ -272,7 +281,7 @@ export function sanitizeOracleReading(
   return reading;
 }
 
-export function getOracleSourceMode(report: Report) {
+export function getOracleSourceMode(report: Report): OracleSourceMode {
   const sourceText = [
     report.sourceQualityLabel,
     report.sourceType,
@@ -289,19 +298,19 @@ export function getOracleSourceMode(report: Report) {
   }
 
   if (
-    sourceText.includes("low context") ||
-    sourceText.includes("low-context") ||
-    sourceText.includes("unscored")
-  ) {
-    return "Low-context collector test";
-  }
-
-  if (
     sourceText.includes("collector test") ||
     sourceText.includes("collector-test") ||
     sourceText.includes("staged")
   ) {
     return "Collector test file";
+  }
+
+  if (
+    sourceText.includes("low context") ||
+    sourceText.includes("low-context") ||
+    sourceText.includes("unscored")
+  ) {
+    return "Low-context public file";
   }
 
   return "Public report file";
@@ -314,8 +323,8 @@ export function getOracleSourceModeNote(report: Report) {
     return "Demo seed file: useful for testing the map, not a live confirmed event.";
   }
 
-  if (sourceMode === "Low-context collector test") {
-    return "Rough collector-test file: the map is squinting at this one.";
+  if (sourceMode === "Low-context public file") {
+    return "Low-context public file: the source trail is thin, so the read stays thin too.";
   }
 
   if (sourceMode === "Collector test file") {
@@ -334,7 +343,7 @@ function ensureOracleSourceMode(
   sourceModeText: string,
   maxLength: number,
 ) {
-  const modePattern = /demo seed|collector[-\s]test|low-context collector/i;
+  const modePattern = /demo seed|collector[-\s]test|low-context public/i;
 
   if (modePattern.test(value)) {
     return cleanOracleText(value, maxLength);
@@ -350,8 +359,8 @@ function getOracleNote(report: Report) {
     return "Demo seed files help test the atlas. Useful? Yes. Proof? Absolutely not.";
   }
 
-  if (sourceMode === "Low-context collector test") {
-    return "This collector-test file is thin on context, so the Oracle keeps one eyebrow raised.";
+  if (sourceMode === "Low-context public file") {
+    return "This public file is thin on context, so the Oracle keeps one eyebrow raised.";
   }
 
   if (sourceMode === "Collector test file") {
@@ -381,10 +390,16 @@ function getSourceCheck(report: Report) {
   parts.push(report.sourceUrl ? "Source link captured" : "No source link captured");
   parts.push(report.sourceName ? `Source: ${report.sourceName}` : "Source name missing");
 
-  if (report.isDemo) {
+  const sourceMode = getOracleSourceMode(report);
+
+  if (sourceMode === "Demo seed file") {
     parts.push("demo seed");
-  } else {
+  } else if (sourceMode === "Collector test file") {
     parts.push("collector-test data");
+  } else if (sourceMode === "Low-context public file") {
+    parts.push("thin public context");
+  } else {
+    parts.push("public field report");
   }
 
   return `${parts.join(" · ")}. OddSkies has not verified the claim.`;
@@ -396,6 +411,10 @@ function getFallbackVerdict(report: Report): OracleVerdict {
 
   if (sourceQuality.includes("culture")) {
     return "Culture Note";
+  }
+
+  if (getOracleSourceMode(report) === "Low-context public file") {
+    return "Source Trail Is Thin";
   }
 
   if (mood.includes("low") || report.category === "Unknown") {
@@ -415,6 +434,7 @@ function getFallbackVerdict(report: Report): OracleVerdict {
 
 function getFallbackScore(report: Report) {
   let score = 42;
+  const sourceMode = getOracleSourceMode(report);
 
   if (report.hasSourceLink || report.sourceUrl) {
     score += 9;
@@ -430,6 +450,14 @@ function getFallbackScore(report: Report) {
 
   if (report.category === "Unknown") {
     score -= 10;
+  }
+
+  if (sourceMode === "Demo seed file" || sourceMode === "Collector test file") {
+    score -= 14;
+  }
+
+  if (sourceMode === "Low-context public file") {
+    score -= 8;
   }
 
   return Math.min(Math.max(score, 18), 78);
@@ -552,6 +580,13 @@ function containsUnsafeCertainty(reading: OracleReading) {
 
   return /verified event|proof of|definitely alien|real ghost|100% real|invasion confirmed|portal confirmed|confirmed alien|confirmed ghost|confirmed portal/.test(
     text,
+  );
+}
+
+function hasRequiredSafetyLanguage(value: string) {
+  return (
+    /cannot verify|does not verify|unverified/i.test(value) &&
+    /not confirmation|not verified|not proof|reality check/i.test(value)
   );
 }
 

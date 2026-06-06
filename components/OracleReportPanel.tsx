@@ -12,13 +12,16 @@ type OracleState =
 
 export function OracleReportPanel({ report }: { report: Report }) {
   const [state, setState] = useState<OracleState>({ status: "idle" });
+  const [copyStatus, setCopyStatus] = useState<"copied" | "idle">("idle");
 
   useEffect(() => {
     setState({ status: "idle" });
+    setCopyStatus("idle");
   }, [report.id]);
 
   async function askOracle() {
     setState({ status: "loading" });
+    setCopyStatus("idle");
 
     try {
       const response = await fetch("/api/oracle/report", {
@@ -44,6 +47,20 @@ export function OracleReportPanel({ report }: { report: Report }) {
         message: "The Oracle lost the signal. Try again after the static clears.",
         status: "error",
       });
+    }
+  }
+
+  async function copySummary() {
+    if (!reading?.shareableSummary) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(reading.shareableSummary);
+      setCopyStatus("copied");
+      window.setTimeout(() => setCopyStatus("idle"), 1800);
+    } catch {
+      setCopyStatus("idle");
     }
   }
 
@@ -109,6 +126,35 @@ export function OracleReportPanel({ report }: { report: Report }) {
 
       {reading ? (
         <div className="mt-4 space-y-3">
+          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_11rem]">
+            <div className="rounded-md border border-night-800 bg-night-900/55 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                  Pocket summary
+                </p>
+                <button
+                  className="rounded-md border border-signal-violet/30 bg-signal-violet/10 px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-signal-violet transition hover:border-signal-violet/60 hover:bg-signal-violet/20"
+                  onClick={copySummary}
+                  type="button"
+                >
+                  {copyStatus === "copied" ? "Copied" : "Copy"}
+                </button>
+              </div>
+              <p className="mt-2 text-[0.8rem] leading-5 text-parchment">
+                {reading.shareableSummary}
+              </p>
+            </div>
+            <MaybeWeirdMeter score={reading.maybeWeirdScore} />
+          </div>
+
+          {response?.cachedAt ? (
+            <p className="rounded-md border border-night-800 bg-night-900/40 px-3 py-2 text-[0.72rem] leading-5 text-muted">
+              Showing latest cached Oracle read from{" "}
+              {formatOracleDate(response.cachedAt)}. Same report, same prompt,
+              same little lantern.
+            </p>
+          ) : null}
+
           <div className="relative overflow-hidden rounded-lg border border-signal-violet/40 bg-[radial-gradient(circle_at_18%_0%,rgba(139,92,246,0.22),transparent_34%),linear-gradient(135deg,rgba(16,21,34,0.98),rgba(8,11,20,0.98))] p-4 shadow-[0_0_42px_rgba(139,92,246,0.16)]">
             <div className="pointer-events-none absolute -right-12 -top-16 size-44 rounded-full bg-signal-violet/10 blur-3xl" />
             <div className="relative flex flex-wrap items-start justify-between gap-3">
@@ -124,7 +170,7 @@ export function OracleReportPanel({ report }: { report: Report }) {
                 {getOracleVerdictLabel(reading.verdict)}
               </span>
             </div>
-            <p className="relative mt-4 border-l-2 border-signal-violet/60 pl-4 text-base font-semibold leading-7 text-parchment md:text-lg md:leading-8 lg:text-xl lg:leading-9">
+            <p className="relative mt-4 border-l-2 border-signal-violet/60 pl-4 text-base font-semibold leading-7 text-parchment md:text-lg md:leading-8">
               {reading.fieldNote}
             </p>
             <p className="relative mt-4 text-xs leading-5 text-muted">
@@ -152,10 +198,6 @@ export function OracleReportPanel({ report }: { report: Report }) {
             />
             <OracleTextCard text={reading.sourceCheck} title="Source check" />
             <OracleTextCard text={reading.nextStep} title="Next step" />
-            <OracleTextCard
-              text={reading.shareableSummary}
-              title="Pocket summary"
-            />
           </div>
 
           <p className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
@@ -181,7 +223,7 @@ function getOracleStatusLabel(status: OracleApiResponse["status"]) {
   }
 
   if (status === "cached") {
-    return "Cached read";
+    return "Latest cached read";
   }
 
   if (status === "fallback") {
@@ -236,4 +278,50 @@ function OracleList({ items, title }: { items: string[]; title: string }) {
       </ul>
     </div>
   );
+}
+
+function MaybeWeirdMeter({ score }: { score: number }) {
+  const safeScore = Math.min(Math.max(Math.round(score), 0), 100);
+
+  return (
+    <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-signal-amber">
+          Maybe-weird
+        </p>
+        <span className="text-sm font-black text-signal-amber">
+          {safeScore}
+        </span>
+      </div>
+      <div
+        aria-label={`Maybe-weird meter ${safeScore} out of 100`}
+        className="mt-3 h-2 overflow-hidden rounded-full border border-signal-amber/25 bg-night-950"
+        role="meter"
+        aria-valuemax={100}
+        aria-valuemin={0}
+        aria-valuenow={safeScore}
+      >
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-signal-teal via-signal-amber to-signal-ember"
+          style={{ width: `${safeScore}%` }}
+        />
+      </div>
+      <p className="mt-2 text-[0.7rem] leading-4 text-muted">
+        Curiosity meter, not evidence.
+      </p>
+    </div>
+  );
+}
+
+function formatOracleDate(value: string) {
+  const date = new Date(value);
+
+  if (!Number.isFinite(date.getTime())) {
+    return "an earlier visit";
+  }
+
+  return date.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
