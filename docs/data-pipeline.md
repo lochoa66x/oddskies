@@ -321,6 +321,69 @@ Admin collector safety:
 - Nothing is inserted into `public.reports`.
 - Nothing is shown publicly until manual review and promotion.
 
+## RSS / News / Blog Collector
+
+RSS collector V1 adds a second collector lane for public RSS or Atom feeds.
+It follows the same rule as Bluesky:
+
+```text
+RSS feed -> raw_sources -> scoring/location hints -> admin review -> manual promotion -> public reports
+```
+
+The collector reads only configured feeds, normalizes feed items into
+`public.raw_sources`, checks existing staged rows, respects active
+`collector_exclusions` for `platform = 'rss'`, and logs runs in
+`public.collector_runs`.
+
+It does not:
+
+- publish anything to `public.reports`
+- verify claims
+- crawl a whole website
+- expose raw feed items publicly
+- bypass review decisions
+
+Configure feeds with a server-only environment variable:
+
+```text
+ODDSKIES_RSS_FEEDS=Feed name|https://example.com/feed.xml|Optional Category
+```
+
+Multiple feeds can be separated by new lines. JSON is also supported:
+
+```json
+[
+  {
+    "name": "Example Weird News",
+    "url": "https://example.com/feed.xml",
+    "category": "Strange Lights"
+  }
+]
+```
+
+Useful dry run:
+
+```bash
+npm run collect:rss -- --dry-run --feed "Example Feed|https://example.com/feed.xml" --limit 3
+```
+
+Small live staging pull:
+
+```bash
+npm run collect:rss -- --feed "Example Feed|https://example.com/feed.xml" --limit 3
+```
+
+Protected admin API:
+
+```text
+POST /api/admin/collectors/rss
+```
+
+The admin route defaults to dry-run mode. Turning dry-run off inserts only into
+`public.raw_sources`. Step 2 can add a visible RSS control to the existing
+protected review page; step 1 keeps the collector backend/API/documentation
+isolated.
+
 ## Curation Scoring
 
 V1.6 adds deterministic curation hints for `public.raw_sources`.

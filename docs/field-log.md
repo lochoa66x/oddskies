@@ -19,6 +19,8 @@ reports stay browsable without crowding the atlas.
   when available while keeping the report clearly unverified.
 - Report pages improve browsing and SEO, but they do not imply verification.
 - Raw sources stay private and must not be exposed publicly.
+- Collector source type does not matter: Bluesky, RSS, manual inserts, and
+  future collectors all have to pass review before becoming public reports.
 - Homepage Field Log preview shows the latest approved non-demo field reports.
   Culture/link-style items stay out of the top preview unless intentionally
   featured.
