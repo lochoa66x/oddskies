@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { getOracleSourceMode, type OracleApiResponse } from "@/lib/oracle";
 import type { Report } from "@/lib/reports";
 
@@ -55,8 +55,14 @@ export function OracleReportPanel({ report }: { report: Report }) {
       return;
     }
 
+    const caseUrl =
+      typeof window === "undefined" ? "" : window.location.href.split("#")[0];
+    const summary = caseUrl
+      ? `${reading.shareableSummary}\n${caseUrl}`
+      : reading.shareableSummary;
+
     try {
-      await navigator.clipboard.writeText(reading.shareableSummary);
+      await navigator.clipboard.writeText(summary);
       setCopyStatus("copied");
       window.setTimeout(() => setCopyStatus("idle"), 1800);
     } catch {
@@ -91,11 +97,16 @@ export function OracleReportPanel({ report }: { report: Report }) {
         </div>
       </div>
 
-      <p className="mt-2 text-xs leading-5 text-muted">
-        Think it&apos;s real? Ask our little bro for possible normal
-        explanations, weird clues, and a maybe-weird verdict. It cannot verify
-        anything.
-      </p>
+      <div className="mt-2 rounded-md border border-night-800 bg-night-900/45 px-3 py-2">
+        <p className="text-xs leading-5 text-muted">
+          Think it&apos;s real? Ask our little bro for normal explanations,
+          weird clues, missing pieces, and a maybe-weird read.
+        </p>
+        <p className="mt-1 text-[0.7rem] leading-4 text-signal-amber">
+          OddSkies has not verified this report. The Oracle is a playful
+          reality check, not confirmation.
+        </p>
+      </div>
       {sourceMode === "Public report file" ? (
         <p className="mt-1 text-[0.7rem] leading-4 text-muted/80">
           Still unverified. The Oracle is a reality check, not a truth machine.
@@ -126,11 +137,13 @@ export function OracleReportPanel({ report }: { report: Report }) {
 
       {reading ? (
         <div className="mt-4 space-y-3">
+          <OracleReadState response={response} />
+
           <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_11rem]">
             <div className="rounded-md border border-night-800 bg-night-900/55 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                  Pocket summary
+                  Copy-ready summary
                 </p>
                 <button
                   className="rounded-md border border-signal-violet/30 bg-signal-violet/10 px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-signal-violet transition hover:border-signal-violet/60 hover:bg-signal-violet/20"
@@ -143,17 +156,12 @@ export function OracleReportPanel({ report }: { report: Report }) {
               <p className="mt-2 text-[0.8rem] leading-5 text-parchment">
                 {reading.shareableSummary}
               </p>
+              <p className="mt-2 text-[0.68rem] leading-4 text-muted">
+                Copy includes this case URL when your browser allows it.
+              </p>
             </div>
             <MaybeWeirdMeter score={reading.maybeWeirdScore} />
           </div>
-
-          {response?.cachedAt ? (
-            <p className="rounded-md border border-night-800 bg-night-900/40 px-3 py-2 text-[0.72rem] leading-5 text-muted">
-              Showing latest cached Oracle read from{" "}
-              {formatOracleDate(response.cachedAt)}. Same report, same prompt,
-              same little lantern.
-            </p>
-          ) : null}
 
           <div className="relative overflow-hidden rounded-lg border border-signal-violet/40 bg-[radial-gradient(circle_at_18%_0%,rgba(139,92,246,0.22),transparent_34%),linear-gradient(135deg,rgba(16,21,34,0.98),rgba(8,11,20,0.98))] p-4 shadow-[0_0_42px_rgba(139,92,246,0.16)]">
             <div className="pointer-events-none absolute -right-12 -top-16 size-44 rounded-full bg-signal-violet/10 blur-3xl" />
@@ -186,25 +194,75 @@ export function OracleReportPanel({ report }: { report: Report }) {
             <span className="h-px flex-1 bg-night-800" />
           </div>
 
-          <div className="grid gap-2 md:grid-cols-2">
-            <OracleList
-              items={reading.normalExplanations}
-              title="Possible boring"
-            />
-            <OracleList items={reading.weirdClues} title="Weird little clues" />
-            <OracleList
-              items={reading.missingContext}
-              title="Missing pieces"
-            />
-            <OracleTextCard text={reading.sourceCheck} title="Source check" />
-            <OracleTextCard text={reading.nextStep} title="Next step" />
+          <div className="grid gap-3 lg:grid-cols-2">
+            <OracleSupportGroup
+              eyebrow="Normal lanes first"
+              note="Ordinary explanations stay at the front of the line."
+            >
+              <OracleList
+                items={reading.normalExplanations}
+                title="Possible boring explanations"
+              />
+              <OracleTextCard text={reading.sourceCheck} title="Source check" />
+            </OracleSupportGroup>
+            <OracleSupportGroup
+              eyebrow="Still worth checking"
+              note="Clues are inspection hooks, not evidence."
+            >
+              <OracleList
+                items={reading.weirdClues}
+                title="Weird little clues"
+              />
+              <OracleList
+                items={reading.missingContext}
+                title="Missing pieces"
+              />
+              <OracleTextCard text={reading.nextStep} title="Next step" />
+            </OracleSupportGroup>
           </div>
 
-          <p className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-            {reading.safetyNote}
-          </p>
+          <OracleSafetyNote note={reading.safetyNote} />
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function OracleSafetyNote({ note }: { note: string }) {
+  const required =
+    "OddSkies has not verified this report. This Oracle read is a playful reality check, not confirmation.";
+  const extra = note
+    .replace(/OddSkies cannot verify this report\.?/i, "")
+    .replace(/OddSkies has not verified this report\.?/i, "")
+    .replace(/This (?:Oracle read|is) (?:a )?playful reality check,? not confirmation\.?/i, "")
+    .trim();
+
+  return (
+    <p className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
+      {required}
+      {extra ? ` ${extra}` : ""}
+    </p>
+  );
+}
+
+function OracleReadState({ response }: { response: OracleApiResponse | null }) {
+  if (!response) {
+    return null;
+  }
+
+  const text = getOracleReadStateText(response);
+
+  return (
+    <div className="rounded-md border border-night-800 bg-night-900/40 px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
+          Read state
+        </p>
+        <span className="rounded-md border border-night-800 bg-night-950 px-2 py-1 text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-muted">
+          {getOracleStatusLabel(response.status)}
+        </span>
+      </div>
+      <p className="mt-2 text-[0.72rem] leading-5 text-muted">{text}</p>
     </div>
   );
 }
@@ -233,6 +291,26 @@ function getOracleStatusLabel(status: OracleApiResponse["status"]) {
   return "Oracle read";
 }
 
+function getOracleReadStateText(response: OracleApiResponse) {
+  if (response.status === "cached") {
+    return response.cachedAt
+      ? `Showing the latest cached Oracle read from ${formatOracleDate(
+          response.cachedAt,
+        )}. Same report, same prompt, same little lantern.`
+      : "Showing the latest cached Oracle read for this report.";
+  }
+
+  if (response.status === "fallback") {
+    return "The live Oracle caught static, so this is a local fallback read. Useful, cautious, and not pretending to be fresh magic.";
+  }
+
+  if (response.status === "sleeping") {
+    return "The Oracle is asleep, so OddSkies is showing a careful local read until the fog clears.";
+  }
+
+  return "Fresh Oracle read for this public case file.";
+}
+
 function getOracleVerdictLabel(verdict: OracleApiResponse["reading"]["verdict"]) {
   const labels: Record<OracleApiResponse["reading"]["verdict"], string> = {
     "Culture Note": "Culture note",
@@ -246,6 +324,28 @@ function getOracleVerdictLabel(verdict: OracleApiResponse["reading"]["verdict"])
   };
 
   return labels[verdict];
+}
+
+function OracleSupportGroup({
+  children,
+  eyebrow,
+  note,
+}: {
+  children: ReactNode;
+  eyebrow: string;
+  note: string;
+}) {
+  return (
+    <div className="space-y-2 rounded-lg border border-night-800 bg-night-950/35 p-2.5">
+      <div className="px-1">
+        <p className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-signal-teal">
+          {eyebrow}
+        </p>
+        <p className="mt-1 text-[0.72rem] leading-5 text-muted">{note}</p>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 function OracleTextCard({ text, title }: { text: string; title: string }) {

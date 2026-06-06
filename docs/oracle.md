@@ -24,6 +24,8 @@ timeline shifts.
 
 Cached readings are shown as latest cached reads. They should feel stable, not
 like the Oracle invents a different story on every click.
+Fallback and sleeping reads are labeled as local/cautious states so they do not
+look like fresh generated readings.
 
 ## Environment
 
@@ -73,6 +75,12 @@ cards stay compact.
 
 The shareable summary is a copy-ready line for sending around, but it must still
 say or imply that the report is unverified.
+When available, the copy action includes the current case-file URL after the
+summary.
+
+Every displayed read should include:
+
+> OddSkies has not verified this report. This Oracle read is a playful reality check, not confirmation.
 
 Every reading must preserve the OddSkies trust posture:
 
