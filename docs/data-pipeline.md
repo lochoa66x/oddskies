@@ -914,13 +914,19 @@ Manual review flow:
 3. Filter pending sources.
 4. Review source text, URL, metadata, notes, and reason fields.
 5. Refresh curation score and normalize approximate location when useful.
-6. Reject unsafe, junk, private, sensitive, harassing, doxxing, exact personal-location, duplicate, joke-like, AI-generated, or low-context items.
-7. Ignore/archive reviewed material that is simply not useful.
-8. Add future collector suppression only when the match should be skipped again.
-9. Dry-run promotion and inspect the public report draft.
-10. Promote only good candidates.
-11. Confirm the promoted item appears in `public.reports`.
-12. The public site displays it as unverified report data.
+6. Choose the destination deliberately:
+   - Field Log for report-like public claims.
+   - Signal Shelf for useful context, videos, archives, articles, and resources.
+   - Private close-out for unsafe, junk, private, sensitive, duplicate,
+     joke-like, AI-generated, or low-context items.
+   - Discard as error for collection mistakes.
+7. Add future collector suppression only when the match should be skipped again.
+   Exact source/post rules are narrow. Author, domain, query, and text rules
+   are broad and should be used carefully.
+8. Dry-run promotion and inspect the public report draft before promoting.
+9. Promote only good candidates.
+10. Confirm the promoted item appears in `public.reports`.
+11. The public site displays it as unverified report data.
 
 Protection model:
 

@@ -711,7 +711,7 @@ export function RawSourcesReview() {
     }
 
     const confirmed = window.confirm(
-      "Promote this raw source into public.reports? It will remain Unverified.",
+      "Promote this raw source to the public Field Log? It will remain unverified.",
     );
 
     if (!confirmed) {
@@ -1565,61 +1565,27 @@ export function RawSourcesReview() {
                 }}
               />
 
-              <SuppressionControls
-                selected={selected}
-                setSuppression={setSuppression}
-                suppression={suppression}
-              />
-
-              <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted">
-                  Review actions
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className={secondaryButtonClass}
-                    disabled={Boolean(actionLoading)}
-                    onClick={() => void refreshSelectedScore()}
-                  >
-                    {actionLoading === "score" ? "Scoring..." : "Refresh score"}
-                  </button>
-                  <button
-                    className={secondaryButtonClass}
-                    disabled={Boolean(actionLoading)}
-                    onClick={() => void normalizeSelectedLocation()}
-                  >
-                    {actionLoading === "normalize-location"
-                      ? "Normalizing..."
-                      : "Normalize location"}
-                  </button>
-                  {reviewActions.map(([value, label]) => (
-                    <button
-                      className={secondaryButtonClass}
-                      disabled={Boolean(actionLoading)}
-                      key={value}
-                      onClick={() => void markStatus(value)}
-                    >
-                      {actionLoading === value ? "Saving..." : label}
-                    </button>
-                  ))}
-                  <button
-                    className="rounded-lg border border-signal-ember/40 bg-signal-ember/10 px-4 py-2 text-sm font-semibold text-signal-ember transition hover:bg-signal-ember hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={Boolean(actionLoading)}
-                    onClick={() =>
-                      void markStatus("ignored", {
-                        forceExactSourceExclusion: true,
-                        reason: discardErrorReason,
-                      })
-                    }
-                  >
-                    {actionLoading === "ignored" ? "Saving..." : "Discard as error"}
-                  </button>
-                </div>
-                <p className="mt-2 text-xs text-muted">
-                  Discard as error keeps the row private and skips the exact
-                  source URL/post id in future collector pulls.
-                </p>
-              </div>
+              <ReviewActionGroup
+                description="Clean up the staging hint before deciding where this item belongs."
+                title="Prep"
+              >
+                <button
+                  className={secondaryButtonClass}
+                  disabled={Boolean(actionLoading)}
+                  onClick={() => void refreshSelectedScore()}
+                >
+                  {actionLoading === "score" ? "Scoring..." : "Refresh score"}
+                </button>
+                <button
+                  className={secondaryButtonClass}
+                  disabled={Boolean(actionLoading)}
+                  onClick={() => void normalizeSelectedLocation()}
+                >
+                  {actionLoading === "normalize-location"
+                    ? "Normalizing..."
+                    : "Normalize location"}
+                </button>
+              </ReviewActionGroup>
 
               <DraftEditor
                 overrides={draftOverrides}
@@ -1633,20 +1599,28 @@ export function RawSourcesReview() {
                 setOverrides={setConversionOverrides}
               />
 
-              <div className="flex flex-wrap gap-3 border-t border-night-800 pt-4">
+              <ReviewActionGroup
+                description="Field Log is for report-like claims. Signal Shelf is for useful context, videos, archives, and resource links."
+                title="Public destination"
+                tone="public"
+              >
                 <button
                   className={secondaryButtonClass}
                   disabled={Boolean(actionLoading)}
                   onClick={() => void dryRunPromotion()}
                 >
-                  {actionLoading === "dry-run" ? "Previewing..." : "Dry run promote"}
+                  {actionLoading === "dry-run"
+                    ? "Previewing..."
+                    : "Preview Field Log report"}
                 </button>
                 <button
                   className="rounded-lg bg-signal-amber px-4 py-2 text-sm font-bold text-night-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={Boolean(actionLoading)}
                   onClick={() => void promote()}
                 >
-                  {actionLoading === "promote" ? "Promoting..." : "Promote to report"}
+                  {actionLoading === "promote"
+                    ? "Promoting..."
+                    : "Promote to Field Log"}
                 </button>
                 <button
                   className={secondaryButtonClass}
@@ -1666,7 +1640,47 @@ export function RawSourcesReview() {
                     ? "Converting..."
                     : "Convert to Signal Shelf"}
                 </button>
-              </div>
+              </ReviewActionGroup>
+
+              <ReviewActionGroup
+                description="Keep the item private when it should not become a public report or resource."
+                title="Private close-out"
+                tone="private"
+              >
+                {reviewActions.map(([value, label]) => (
+                  <button
+                    className={secondaryButtonClass}
+                    disabled={Boolean(actionLoading)}
+                    key={value}
+                    onClick={() => void markStatus(value)}
+                  >
+                    {actionLoading === value ? "Saving..." : label}
+                  </button>
+                ))}
+                <button
+                  className="rounded-lg border border-signal-ember/40 bg-signal-ember/10 px-4 py-2 text-sm font-semibold text-signal-ember transition hover:bg-signal-ember hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={Boolean(actionLoading)}
+                  onClick={() =>
+                    void markStatus("ignored", {
+                      forceExactSourceExclusion: true,
+                      reason: discardErrorReason,
+                    })
+                  }
+                >
+                  {actionLoading === "ignored" ? "Saving..." : "Discard as error"}
+                </button>
+              </ReviewActionGroup>
+
+              <ReviewActionGroup
+                description="These are private skip rules for future collector pulls. Exact source rules are narrow; author, domain, query, and text rules are broad."
+                title="Future skip rules"
+              >
+                <SuppressionControls
+                  selected={selected}
+                  setSuppression={setSuppression}
+                  suppression={suppression}
+                />
+              </ReviewActionGroup>
             </div>
           ) : (
             <p className="p-5 text-sm text-muted">Select a raw source to review.</p>
@@ -1706,25 +1720,40 @@ function ReviewDecisionPanel({
         </span>
       </div>
 
-      <div className="mt-3 grid gap-2 md:grid-cols-3">
+      <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+        <DecisionMiniCard
+          label="Current status"
+          value={source.status.replace(/_/g, " ")}
+        />
         <DecisionMiniCard
           label="Public destination"
           value={getPublicDestinationLabel(source)}
         />
         <DecisionMiniCard
           label="Suppression"
-          value={
-            activeExclusions.length > 0
-              ? `${activeExclusions.length} active private rule${
-                  activeExclusions.length === 1 ? "" : "s"
-                }`
-              : "No future skip rules"
-          }
+          value={getSuppressionSummary(activeExclusions)}
         />
         <DecisionMiniCard
           label="Reason"
           value={source.rejection_reason || "No reason saved yet"}
         />
+      </div>
+
+      <div className="mt-3 grid gap-2 text-xs leading-5 text-muted md:grid-cols-2">
+        <p className="rounded-lg border border-night-800 bg-night-900 p-3">
+          Field Log is for report-like public claims. Reports remain unverified.
+        </p>
+        <p className="rounded-lg border border-night-800 bg-night-900 p-3">
+          Signal Shelf is for useful context, videos, archives, articles, and
+          resource links.
+        </p>
+        <p className="rounded-lg border border-night-800 bg-night-900 p-3">
+          Reject, classify, or ignore anything that should stay private.
+        </p>
+        <p className="rounded-lg border border-night-800 bg-night-900 p-3">
+          Discard as error is for collection mistakes and skips the exact source
+          when possible.
+        </p>
       </div>
 
       {source.approved_report_id || source.curated_link_id ? (
@@ -1761,6 +1790,39 @@ function DecisionMiniCard({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-2 text-sm leading-5 text-parchment">{value}</p>
     </div>
+  );
+}
+
+function ReviewActionGroup({
+  children,
+  description,
+  title,
+  tone = "default",
+}: {
+  children: ReactNode;
+  description: string;
+  title: string;
+  tone?: "default" | "private" | "public";
+}) {
+  const titleClass =
+    tone === "public"
+      ? "text-signal-amber"
+      : tone === "private"
+        ? "text-signal-ember"
+        : "text-muted";
+
+  return (
+    <section className="border-t border-night-800 pt-4">
+      <div className="mb-3">
+        <p
+          className={`text-xs font-semibold uppercase tracking-[0.22em] ${titleClass}`}
+        >
+          {title}
+        </p>
+        <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">{children}</div>
+    </section>
   );
 }
 
@@ -1819,13 +1881,14 @@ function SuppressionControls({
   const suppressionCount = buildSuppressionTargets(selected, suppression).length;
 
   return (
-    <div className="rounded-lg border border-night-800 bg-night-950 p-3">
+    <div className="w-full rounded-lg border border-night-800 bg-night-950 p-3">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
         Optional future suppression
       </p>
       <p className="mt-1 text-xs leading-5 text-muted">
-        Unchecked means this review decision only. Checked rules are private,
-        reversible, and skip future collector matches.
+        Unchecked means this review decision only. Exact post and source URL are
+        narrow rules. Author, domain, search query, and text phrase are broad
+        rules, so use those carefully.
       </p>
       <p className="mt-2 rounded-md border border-night-800 bg-night-900 px-3 py-2 text-xs leading-5 text-muted">
         {suppressionCount > 0
@@ -2953,6 +3016,30 @@ function getPublicDestinationLabel(source: RawSource) {
   }
 
   return "None";
+}
+
+function getSuppressionSummary(exclusions: CollectorExclusion[]) {
+  if (exclusions.length === 0) {
+    return "No future skip rules";
+  }
+
+  const exactCount = exclusions.filter((exclusion) =>
+    ["source_post_id", "source_url"].includes(exclusion.match_type),
+  ).length;
+  const broadCount = exclusions.length - exactCount;
+  const parts = [];
+
+  if (exactCount > 0) {
+    parts.push(`${exactCount} exact`);
+  }
+
+  if (broadCount > 0) {
+    parts.push(`${broadCount} broad`);
+  }
+
+  return `${parts.join(" / ")} private skip rule${
+    exclusions.length === 1 ? "" : "s"
+  }`;
 }
 
 function curationClass(label: string) {
