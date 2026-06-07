@@ -288,6 +288,7 @@ const quickReasonOptions = [
   "Not a report",
   "Low context",
   "Duplicate source",
+  "Collected in error",
   "Private/sensitive",
   "Possible joke/satire",
   "Possible AI/edited",
@@ -295,6 +296,9 @@ const quickReasonOptions = [
   "Reviewed, not useful",
   "Useful link, convert instead",
 ] as const;
+
+const discardErrorReason =
+  "Collected in error. Keep private and skip the exact source in future pulls.";
 
 const categoryOptions = [
   "",
@@ -580,14 +584,22 @@ export function RawSourcesReview() {
     window.location.reload();
   }
 
-  async function markStatus(nextStatus: string) {
+  async function markStatus(
+    nextStatus: string,
+    options: {
+      forceExactSourceExclusion?: boolean;
+      reason?: string;
+    } = {},
+  ) {
     if (!selected) {
       return;
     }
 
     const requiresReason = nextStatus !== "needs_review";
+    const effectiveReason =
+      rejectionReason.trim() || options.reason?.trim() || "";
 
-    if (requiresReason && !rejectionReason.trim()) {
+    if (requiresReason && !effectiveReason) {
       const message = "Add a rejection/review reason before changing this status.";
       setError(message);
       setReasonError(message);
@@ -606,14 +618,16 @@ export function RawSourcesReview() {
     try {
       await adminFetch(`/api/admin/raw-sources/${selected.id}/review`, {
         body: JSON.stringify({
-          rejectionReason,
+          rejectionReason: effectiveReason,
           reviewNotes,
           status: nextStatus,
         }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });
-      await createSelectedExclusions(nextStatus);
+      await createSelectedExclusions(nextStatus, effectiveReason, {
+        forceExactSourceExclusion: options.forceExactSourceExclusion,
+      });
       await loadSources();
       await loadExclusions();
     } catch (actionError) {
@@ -623,12 +637,24 @@ export function RawSourcesReview() {
     }
   }
 
-  async function createSelectedExclusions(nextStatus: string) {
+  async function createSelectedExclusions(
+    nextStatus: string,
+    reason: string,
+    options: {
+      forceExactSourceExclusion?: boolean;
+    } = {},
+  ) {
     if (!selected || nextStatus === "needs_review") {
       return;
     }
 
-    const targets = buildSuppressionTargets(selected, suppression);
+    const targets = buildSuppressionTargets(selected, {
+      ...suppression,
+      source_post_id:
+        suppression.source_post_id || Boolean(options.forceExactSourceExclusion),
+      source_url:
+        suppression.source_url || Boolean(options.forceExactSourceExclusion),
+    });
 
     await Promise.all(
       targets.map((target) =>
@@ -638,7 +664,7 @@ export function RawSourcesReview() {
             matchValue: target.matchValue,
             platform: selected.platform,
             reason:
-              rejectionReason.trim() ||
+              reason.trim() ||
               `Suppressed after ${nextStatus.replace(/_/g, " ")} review.`,
             sourceRawSourceId: selected.id,
           }),
@@ -1576,7 +1602,23 @@ export function RawSourcesReview() {
                       {actionLoading === value ? "Saving..." : label}
                     </button>
                   ))}
+                  <button
+                    className="rounded-lg border border-signal-ember/40 bg-signal-ember/10 px-4 py-2 text-sm font-semibold text-signal-ember transition hover:bg-signal-ember hover:text-night-950 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={Boolean(actionLoading)}
+                    onClick={() =>
+                      void markStatus("ignored", {
+                        forceExactSourceExclusion: true,
+                        reason: discardErrorReason,
+                      })
+                    }
+                  >
+                    {actionLoading === "ignored" ? "Saving..." : "Discard as error"}
+                  </button>
                 </div>
+                <p className="mt-2 text-xs text-muted">
+                  Discard as error keeps the row private and skips the exact
+                  source URL/post id in future collector pulls.
+                </p>
               </div>
 
               <DraftEditor

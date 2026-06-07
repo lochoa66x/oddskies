@@ -174,6 +174,9 @@ Signal Shelf rules:
   intentional actions.
 - `raw_sources.status = 'ignored'` is the neutral private archive bucket for
   reviewed material that should not become a report or curated link.
+- "Discard as error" in the review UI uses the ignored/private archive path,
+  saves a clear reason, and adds a narrow exact-source exclusion when possible
+  so the same mistaken item does not return on the next collector pull.
 
 Signal Shelf conversion flow:
 
