@@ -27,6 +27,7 @@ export type OracleReading = {
   normalExplanations: string[];
   oracleNote: string;
   safetyNote: string;
+  shareQuote: string;
   shareableSummary: string;
   sourceCheck: string;
   verdict: OracleVerdict;
@@ -42,7 +43,7 @@ export type OracleApiResponse = {
   status: "cached" | "fallback" | "ready" | "sleeping";
 };
 
-export const ORACLE_PROMPT_VERSION = "oracle-polish-v2";
+export const ORACLE_PROMPT_VERSION = "oracle-share-v3";
 
 export const ORACLE_SYSTEM_PROMPT = [
   "You are the OddSkies Oracle, a playful field assistant for a public mystery atlas.",
@@ -58,6 +59,7 @@ export const ORACLE_SYSTEM_PROMPT = [
   "If the report appears promotional, cultural, or not a direct sighting, call it a culture note rather than a confirmed event.",
   "Put ordinary explanations before weird clues. Weird clues are reasons to keep looking, not evidence.",
   "The shareableSummary should be a compact copy-ready line that includes unverified or not verified.",
+  "The shareQuote should be one short, memorable Oracle line for a share card. It can be funny, but it must stay cautious.",
   "The safetyNote must say this is a playful reality check, not confirmation.",
   "Keep the support cards compact: short bullets, no essays.",
   "The fieldNote is the main Oracle read. Make it playful, skeptical, memorable, and complete in 3-5 sentences.",
@@ -93,6 +95,7 @@ export const ORACLE_JSON_SCHEMA = {
     },
     oracleNote: { maxLength: 180, minLength: 24, type: "string" },
     safetyNote: { maxLength: 180, minLength: 24, type: "string" },
+    shareQuote: { maxLength: 150, minLength: 24, type: "string" },
     shareableSummary: { maxLength: 220, minLength: 24, type: "string" },
     sourceCheck: { maxLength: 220, minLength: 24, type: "string" },
     verdict: {
@@ -115,6 +118,7 @@ export const ORACLE_JSON_SCHEMA = {
     "normalExplanations",
     "oracleNote",
     "safetyNote",
+    "shareQuote",
     "shareableSummary",
     "sourceCheck",
     "verdict",
@@ -174,6 +178,7 @@ export function getSleepingOracleReading(report: Report): OracleReading {
     normalExplanations: getNormalExplanations(report),
     oracleNote: getOracleNote(report),
     safetyNote: `${getOracleSourceMode(report)}. OddSkies cannot verify this report. Treat it as unverified context, not confirmation.`,
+    shareQuote: getShareQuote(report, verdict),
     shareableSummary: getShareableSummary(report, verdict),
     sourceCheck: getSourceCheck(report),
     verdict,
@@ -194,6 +199,7 @@ export function getFallbackOracleReading(report: Report): OracleReading {
     normalExplanations: getNormalExplanations(report),
     oracleNote: getOracleNote(report),
     safetyNote: `${getOracleSourceMode(report)}. OddSkies cannot verify this report. This is a playful reality check, not confirmation.`,
+    shareQuote: getShareQuote(report, verdict),
     shareableSummary: getShareableSummary(report, verdict),
     sourceCheck: getSourceCheck(report),
     verdict,
@@ -209,6 +215,9 @@ export function sanitizeOracleReading(
     return getFallbackOracleReading(report);
   }
 
+  const verdict = isOracleVerdict(value.verdict)
+    ? value.verdict
+    : getFallbackVerdict(report);
   const reading: OracleReading = {
     fieldNote: cleanOracleText(value.fieldNote, 1100),
     headline: cleanOracleText(value.headline, 110),
@@ -219,17 +228,14 @@ export function sanitizeOracleReading(
     oracleNote:
       cleanOracleText(value.oracleNote, 180) || getOracleNote(report),
     safetyNote: cleanOracleText(value.safetyNote, 180),
+    shareQuote:
+      cleanOracleText(value.shareQuote, 150) || getShareQuote(report, verdict),
     shareableSummary:
       cleanOracleText(value.shareableSummary, 220) ||
-      getShareableSummary(
-        report,
-        isOracleVerdict(value.verdict) ? value.verdict : getFallbackVerdict(report),
-      ),
+      getShareableSummary(report, verdict),
     sourceCheck:
       cleanOracleText(value.sourceCheck, 220) || getSourceCheck(report),
-    verdict: isOracleVerdict(value.verdict)
-      ? value.verdict
-      : getFallbackVerdict(report),
+    verdict,
     weirdClues: cleanOracleList(value.weirdClues, 4),
   };
 
@@ -239,6 +245,7 @@ export function sanitizeOracleReading(
     !reading.nextStep ||
     !reading.oracleNote ||
     !reading.safetyNote ||
+    !reading.shareQuote ||
     !reading.shareableSummary ||
     !reading.sourceCheck ||
     reading.missingContext.length < 2 ||
@@ -382,6 +389,26 @@ function getShareableSummary(report: Report, verdict: OracleVerdict) {
   }
 
   return `${title}: ${verdict.toLowerCase()} and still unverified. Read the source before feeding the mystery machine.`;
+}
+
+function getShareQuote(report: Report, verdict: OracleVerdict) {
+  if (verdict === "Probably Normal" || verdict === "Reality Mostly Intact") {
+    return "The Oracle sees a mystery with its shoes still on the ground.";
+  }
+
+  if (verdict === "Culture Note") {
+    return "This one belongs on the weird shelf, not in the proof cabinet.";
+  }
+
+  if (verdict === "Source Trail Is Thin") {
+    return "Interesting signal, thin trail: the Oracle keeps the lantern low.";
+  }
+
+  if (report.category === "Strange Lights") {
+    return "The sky is being dramatic; the evidence still has to do the work.";
+  }
+
+  return "The Oracle says maybe, but keeps the mystery on a short leash.";
 }
 
 function getSourceCheck(report: Report) {
@@ -568,6 +595,7 @@ function containsUnsafeCertainty(reading: OracleReading) {
     reading.nextStep,
     reading.oracleNote,
     reading.safetyNote,
+    reading.shareQuote,
     reading.shareableSummary,
     reading.sourceCheck,
     reading.verdict,

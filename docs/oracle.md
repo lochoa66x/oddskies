@@ -62,6 +62,7 @@ The Oracle returns:
 - missing context
 - source check
 - next step
+- share quote
 - shareable summary
 - Oracle note
 - safety note
@@ -77,6 +78,26 @@ The shareable summary is a copy-ready line for sending around, but it must still
 say or imply that the report is unverified.
 When available, the copy action includes the current case-file URL after the
 summary.
+
+The share quote is a short pull line for captions and share cards. It should
+sound like the Oracle without becoming a verdict machine: funny is fine,
+certainty is not.
+
+## Share Surface
+
+The public Oracle panel exposes a `Share Oracle Perspective` area after a read
+exists. It should support:
+
+- copy summary
+- copy full Oracle read
+- copy social caption
+- copy Oracle link
+- native share when the browser supports it
+- download a visual Oracle card
+
+The visual card can show the headline, verdict label, maybe-weird meter, share
+quote, and the safety footer. It must keep the trust posture visible:
+curiosity meter, not evidence; reality check, not truth machine.
 
 Every displayed read should include:
 
