@@ -1,17 +1,19 @@
 import Link from "next/link";
 import { AdminLogin } from "@/components/admin/AdminLogin";
-import { RawSourcesReview } from "@/components/admin/RawSourcesReview";
+import { AdminMetricsDashboard } from "@/components/admin/AdminMetricsDashboard";
 import {
   getAdminTokenMissingMessage,
   hasAdminSession,
   isAdminConfigured,
 } from "@/lib/admin-auth";
+import { getAdminMetrics } from "@/lib/admin-metrics";
 
 export const dynamic = "force-dynamic";
 
-export default async function RawSourcesAdminPage() {
+export default async function AdminMetricsPage() {
   const configured = isAdminConfigured();
   const authorized = configured ? await hasAdminSession() : false;
+  const metrics = authorized ? await getAdminMetrics() : null;
 
   return (
     <main className="min-h-screen bg-night-950 px-4 py-6 text-parchment sm:px-6 lg:px-8">
@@ -25,29 +27,30 @@ export default async function RawSourcesAdminPage() {
               OddSkies internal
             </Link>
             <h1 className="mt-3 text-3xl font-black tracking-tight md:text-5xl">
-              Raw Source Review
+              Signal Room
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted md:text-base">
-              Collected weirdness waits here before becoming public OddSkies
-              reports. Raw sources are evidence trails, not public reports.
+              Private dashboard for collector health, community uploads, review
+              queues, Oracle cache, and future visitor signals. Counts guide
+              cleanup; they do not verify reports.
             </p>
           </div>
           <div className="flex flex-col gap-2 md:items-end">
             <div className="rounded-lg border border-signal-amber/35 bg-signal-amber/10 px-4 py-3 text-sm text-parchment">
-              Internal only. Promoted reports remain unverified.
+              Internal only. Operational signals, not public proof.
             </div>
             <div className="flex flex-wrap gap-3 md:justify-end">
               <Link
                 className="text-sm font-semibold text-signal-teal transition hover:text-parchment"
-                href="/admin/metrics"
+                href="/admin/raw-sources"
               >
-                Open Signal Room
+                Raw Source Review
               </Link>
               <Link
                 className="text-sm font-semibold text-signal-teal transition hover:text-parchment"
                 href="/admin/curated-links"
               >
-                Open Signal Shelf Admin
+                Signal Shelf Admin
               </Link>
             </div>
           </div>
@@ -61,11 +64,11 @@ export default async function RawSourcesAdminPage() {
             <h2 className="mt-3 text-2xl font-bold">Admin token missing</h2>
             <p className="mt-2 max-w-2xl text-muted">
               {getAdminTokenMissingMessage()} Add it in Vercel and locally before
-              using this internal review room.
+              using this internal signal room.
             </p>
           </section>
-        ) : authorized ? (
-          <RawSourcesReview />
+        ) : authorized && metrics ? (
+          <AdminMetricsDashboard metrics={metrics} />
         ) : (
           <AdminLogin />
         )}

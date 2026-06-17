@@ -36,12 +36,20 @@ export default async function CuratedLinksAdminPage() {
             <div className="rounded-lg border border-signal-amber/35 bg-signal-amber/10 px-4 py-3 text-sm text-parchment">
               Curated links are not verification.
             </div>
-            <Link
-              className="text-sm font-semibold text-signal-teal transition hover:text-parchment"
-              href="/admin/raw-sources"
-            >
-              Open Raw Source Review
-            </Link>
+            <div className="flex flex-wrap gap-3 md:justify-end">
+              <Link
+                className="text-sm font-semibold text-signal-teal transition hover:text-parchment"
+                href="/admin/metrics"
+              >
+                Open Signal Room
+              </Link>
+              <Link
+                className="text-sm font-semibold text-signal-teal transition hover:text-parchment"
+                href="/admin/raw-sources"
+              >
+                Open Raw Source Review
+              </Link>
+            </div>
           </div>
         </header>
 
