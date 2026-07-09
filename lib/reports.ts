@@ -319,11 +319,11 @@ export async function getReports(): Promise<Report[]> {
     endpoint.searchParams.set("limit", "160");
 
     const response = await fetch(endpoint.toString(), {
+      cache: "no-store",
       headers: {
         apikey: anonKey,
         Authorization: `Bearer ${anonKey}`,
       },
-      next: { revalidate: 300 },
     });
 
     if (!response.ok) {
@@ -1057,63 +1057,123 @@ function normalizeCategoryFilter(category: string): CategoryFilter {
   return "Unknown";
 }
 
+function includesAny(value: string, terms: string[]) {
+  return terms.some((term) => value.includes(term));
+}
+
 function normalizeRegion(
   region: string | undefined,
   latitude: number | null,
   longitude: number | null,
 ): AtlasRegion {
-  const normalized = region?.toLowerCase() ?? "";
+  const normalized = region?.toLowerCase().trim() ?? "";
 
   if (
-    normalized.includes("uk") ||
-    normalized.includes("ireland") ||
-    normalized.includes("scotland") ||
-    normalized.includes("england") ||
-    normalized.includes("wales")
+    !normalized ||
+    includesAny(normalized, [
+      "unknown",
+      "not available",
+      "not specified",
+      "location under review",
+      "location pending",
+      "loc: reviewing",
+      "loc reviewing",
+    ])
+  ) {
+    return regionFromCoordinates(latitude, longitude);
+  }
+
+  if (
+    includesAny(normalized, [
+      "uk",
+      "ireland",
+      "scotland",
+      "england",
+      "wales",
+      "dublin",
+      "edinburgh",
+    ])
   ) {
     return "UK & Ireland";
   }
 
   if (
-    normalized.includes("latin") ||
-    normalized.includes("mexico") ||
-    normalized.includes("brazil") ||
-    normalized.includes("south america")
+    includesAny(normalized, [
+      "latin",
+      "mexico",
+      "brazil",
+      "south america",
+      "central mexico",
+      "southeast brazil",
+      "puebla",
+      "rio",
+      "sao paulo",
+      "são paulo",
+    ])
   ) {
     return "Latin America";
   }
 
   if (
-    normalized.includes("europe") ||
-    normalized.includes("germany") ||
-    normalized.includes("france") ||
-    normalized.includes("romania") ||
-    normalized.includes("spain")
+    includesAny(normalized, [
+      "western europe",
+      "europe",
+      "germany",
+      "france",
+      "romania",
+      "spain",
+      "czech",
+      "prague",
+      "transylvania",
+    ])
   ) {
     return "Western Europe";
   }
 
   if (
-    normalized.includes("asia") ||
-    normalized.includes("japan") ||
-    normalized.includes("tokyo")
+    includesAny(normalized, ["east asia", "asia", "japan", "tokyo", "kyoto"])
   ) {
     return "East Asia";
   }
 
   if (
-    normalized.includes("oceania") ||
-    normalized.includes("australia") ||
-    normalized.includes("zealand")
+    includesAny(normalized, [
+      "oceania",
+      "australia",
+      "zealand",
+      "outback",
+      "south island",
+      "northern territory",
+    ])
   ) {
     return "Oceania";
   }
 
   if (
-    normalized.includes("north america") ||
-    normalized.includes("canada") ||
-    normalized.includes("united states") ||
-    normalized.includes("usa")
+    includesAny(normalized, [
+      "north america",
+      "canada",
+      "united states",
+      "usa",
+      "southwest",
+      "midwest",
+      "great lakes",
+      "quebec",
+      "northeast",
+      "cape cod",
+      "arizona",
+      "indiana",
+      "ohio",
+      "michigan",
+      "massachusetts",
+      "montreal",
+      "phoenix",
+      "kokomo",
+      "anoka",
+      "sedona",
+      "lake erie",
+      "nevada",
+    ])
   ) {
     return "North America";
   }
