@@ -315,7 +315,8 @@ export async function getReports(): Promise<Report[]> {
   try {
     const endpoint = new URL("/rest/v1/reports", supabaseUrl);
     endpoint.searchParams.set("select", "*");
-    endpoint.searchParams.set("order", "event_datetime.desc");
+    endpoint.searchParams.set("order", "created_at.desc");
+    endpoint.searchParams.set("limit", "160");
 
     const response = await fetch(endpoint.toString(), {
       headers: {

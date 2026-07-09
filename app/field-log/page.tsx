@@ -110,9 +110,9 @@ export default async function FieldLogPage({ searchParams }: FieldLogPageProps) 
               Browse the living record of weird.
             </h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">
-              Public, unverified field notes grouped into monthly sweeps.
+              Public, unverified field notes grouped by when they joined OddSkies.
               Search by title, source, location, region, category, quality, and
-              date without cluttering the front map.
+              filed date without cluttering the front map.
             </p>
           </div>
 
@@ -126,8 +126,8 @@ export default async function FieldLogPage({ searchParams }: FieldLogPageProps) 
               check.
             </p>
             <p className="mt-3 rounded-md border border-night-800 bg-night-950/60 px-3 py-2 text-xs leading-5 text-muted">
-              Monthly Sweeps keep older weirdness organized without turning the
-              homepage into a filing cabinet.
+              Monthly Sweeps keep the Field Log moving: fresh July files stay
+              visible even when the weird thing happened earlier.
             </p>
           </aside>
         </section>

@@ -250,8 +250,8 @@ export function FieldLogBrowser({
             </p>
             <p className="mt-1 text-sm text-muted">
               Showing {visibleReports.length} of {filteredReports.length} field
-              notes. Older reports stay here instead of disappearing from the
-              map preview.
+              notes. Sweeps are grouped by when reports joined OddSkies, while
+              event dates stay inside each case file.
             </p>
           </div>
           <button
@@ -305,7 +305,7 @@ export function FieldLogBrowser({
             </p>
             <p className="mt-2 text-sm leading-6 text-muted">
               Those filters did not match the public Field Log. Widen the scan
-              and the archive will try again.
+              and the Field Log will try again.
             </p>
             <button
               className="mt-4 rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
@@ -660,11 +660,11 @@ function groupReportsByMonth(reports: Report[]) {
   const groups = new Map<string, { label: string; reports: Report[] }>();
 
   for (const report of reports) {
-    const date = getReportDate(report);
+    const date = getReportFiledDate(report);
     const key = `${date.getUTCFullYear()}-${String(
       date.getUTCMonth() + 1,
     ).padStart(2, "0")}`;
-    const label = monthFormatter.format(date);
+    const label = `Filed ${monthFormatter.format(date)}`;
     const group = groups.get(key) ?? { label, reports: [] };
 
     group.reports.push(report);
@@ -696,7 +696,7 @@ function matchesSearch(report: Report, query: string) {
 }
 
 function isWithinDateRange(report: Report, fromDate: string, toDate: string) {
-  const time = getReportDate(report).getTime();
+  const time = getReportFiledDate(report).getTime();
   const fromTime = fromDate ? new Date(`${fromDate}T00:00:00.000Z`).getTime() : 0;
   const toTime = toDate
     ? new Date(`${toDate}T23:59:59.999Z`).getTime()
@@ -708,13 +708,13 @@ function isWithinDateRange(report: Report, fromDate: string, toDate: string) {
 function sortFieldLogReports(reports: Report[], sort: FieldLogSort) {
   return [...reports].sort((a, b) => {
     if (sort === "Oldest first") {
-      return getReportDate(a).getTime() - getReportDate(b).getTime();
+      return getReportFiledDate(a).getTime() - getReportFiledDate(b).getTime();
     }
 
     if (sort === "Source-rich first") {
       return (
         getSourceRichScore(b) - getSourceRichScore(a) ||
-        getReportDate(b).getTime() - getReportDate(a).getTime()
+        getReportFiledDate(b).getTime() - getReportFiledDate(a).getTime()
       );
     }
 
@@ -722,11 +722,11 @@ function sortFieldLogReports(reports: Report[], sort: FieldLogSort) {
       return (
         getMaybeWeirdScore(b) - getMaybeWeirdScore(a) ||
         getSourceRichScore(b) - getSourceRichScore(a) ||
-        getReportDate(b).getTime() - getReportDate(a).getTime()
+        getReportFiledDate(b).getTime() - getReportFiledDate(a).getTime()
       );
     }
 
-    return getReportDate(b).getTime() - getReportDate(a).getTime();
+    return getReportFiledDate(b).getTime() - getReportFiledDate(a).getTime();
   });
 }
 
@@ -828,6 +828,16 @@ function getReportDate(report: Report) {
   const createdDate = new Date(report.createdAtRaw ?? "");
 
   return Number.isFinite(createdDate.getTime()) ? createdDate : new Date(0);
+}
+
+function getReportFiledDate(report: Report) {
+  const createdDate = new Date(report.createdAtRaw ?? "");
+
+  if (Number.isFinite(createdDate.getTime())) {
+    return createdDate;
+  }
+
+  return getReportDate(report);
 }
 
 function getLocationConfidenceLabel(report: Report) {
