@@ -602,7 +602,9 @@ function isHomepageDisplayableReport(report: Report) {
     return false;
   }
 
-  if (isDemoLikeReport(report)) {
+  // Keep the homepage feeling current while we build: reviewed collector tests and
+  // curated seed reports can appear, but obvious placeholders still stay out.
+  if (looksLikePlaceholderReportText(getReportDisplayText(report))) {
     return false;
   }
 
@@ -634,7 +636,7 @@ function isHomepageFieldLogReport(report: Report) {
     return false;
   }
 
-  if (displayType !== "field_report" && !featured) {
+  if (displayType === "signal_shelf" && !featured) {
     return false;
   }
 
@@ -644,7 +646,7 @@ function isHomepageFieldLogReport(report: Report) {
 function isFieldLogDisplayableReport(report: Report) {
   const status = normalizePublicStatus(report.publicStatus);
 
-  if (isDemoLikeReport(report)) {
+  if (looksLikePlaceholderReportText(getReportDisplayText(report))) {
     return false;
   }
 
@@ -671,23 +673,6 @@ function isFieldLogDisplayableReport(report: Report) {
 
 function isFeaturedHomepageReport(report: Report) {
   return report.isFeatured || report.publicStatus === "featured";
-}
-
-function isDemoLikeReport(report: Report) {
-  const sourceQuality = report.sourceQualityLabel?.toLowerCase() ?? "";
-  const curationLabel = report.curationLabel?.toLowerCase() ?? "";
-  const reasons = report.sourceQualityReasons?.join(" ").toLowerCase() ?? "";
-  const status = report.publicStatus?.toLowerCase() ?? "";
-  const labels = `${sourceQuality} ${curationLabel} ${reasons} ${status} ${report.sourceName} ${report.sourceType} ${report.verificationStatus}`.toLowerCase();
-  const text = getReportDisplayText(report);
-
-  return (
-    report.isDemo ||
-    /demo seed|demo file|demo report|sample report|placeholder report|test row|test file|collector[-\s]?test|staging\/review|review helper/.test(
-      labels,
-    ) ||
-    looksLikePlaceholderReportText(text)
-  );
 }
 
 function isPubliclyListedReport(report: Report) {
