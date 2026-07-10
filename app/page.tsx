@@ -11,7 +11,6 @@ import { getCuratedLinks } from "@/lib/curated-links";
 import {
   getFieldLogReports,
   getHomepageDisplayReports,
-  getHomepageFieldLogReports,
   getReports,
 } from "@/lib/reports";
 
@@ -56,7 +55,6 @@ export default async function Home() {
   const reports = await getReports();
   const displayReports = getHomepageDisplayReports(reports);
   const fieldLogReports = getFieldLogReports(reports);
-  const latestFieldLogReports = getHomepageFieldLogReports(reports);
   const curatedLinks = await getCuratedLinks();
 
   return (
@@ -77,7 +75,7 @@ export default async function Home() {
       <Hero reports={displayReports} />
       <CategoryStrip />
       <LatestReports
-        reports={latestFieldLogReports}
+        reports={fieldLogReports}
         totalCount={fieldLogReports.length}
       />
       <SignalsWeirdness reports={fieldLogReports} />

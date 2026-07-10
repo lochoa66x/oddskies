@@ -16,6 +16,9 @@ import {
 } from "@/lib/reports";
 import { OracleReportPanel } from "@/components/OracleReportPanel";
 
+const ALL_CATEGORIES_PREVIEW_LIMIT = 5;
+const CATEGORY_PREVIEW_LIMIT = 3;
+
 export function LatestReports({
   reports,
   totalCount,
@@ -35,11 +38,22 @@ export function LatestReports({
       ),
     [activeCategory, activeRegion, reports],
   );
-  const visibleReports = filteredReports.slice(0, 5);
+  const previewLimit =
+    activeCategory === "All categories"
+      ? ALL_CATEGORIES_PREVIEW_LIMIT
+      : CATEGORY_PREVIEW_LIMIT;
+  const visibleReports = filteredReports.slice(0, previewLimit);
+  const matchingCount = filteredReports.length;
+  const visibleCount = Math.min(previewLimit, matchingCount);
+  const countLabel =
+    activeCategory === "All categories" && activeRegion === "All"
+      ? `Showing latest ${visibleCount} of ${
+          totalCount ?? reports.length
+        } approved reports.`
+      : `Showing latest ${visibleCount} of ${matchingCount} matching reports.`;
   const selected =
     filteredReports.find((report) => report.id === selectedId) ??
-    filteredReports[0] ??
-    reports[0];
+    filteredReports[0];
 
   function changeRegion(region: RegionFilter) {
     const nextReports = filterReportsByCategory(
@@ -48,7 +62,7 @@ export function LatestReports({
     );
 
     setActiveRegion(region);
-    setSelectedId(nextReports[0]?.id ?? reports[0]?.id ?? "");
+    setSelectedId(nextReports[0]?.id ?? "");
   }
 
   function changeCategory(category: CategoryFilter) {
@@ -58,7 +72,7 @@ export function LatestReports({
     );
 
     setActiveCategory(category);
-    setSelectedId(nextReports[0]?.id ?? reports[0]?.id ?? "");
+    setSelectedId(nextReports[0]?.id ?? "");
   }
 
   useEffect(() => {
@@ -76,7 +90,7 @@ export function LatestReports({
       );
 
       setActiveCategory(category);
-      setSelectedId(nextReports[0]?.id ?? reports[0]?.id ?? "");
+      setSelectedId(nextReports[0]?.id ?? "");
     }
 
     window.addEventListener("oddskies:category-filter", handleCategoryFilter);
@@ -113,12 +127,7 @@ export function LatestReports({
               Showing the latest approved field notes. Older reports live in the
               Full Field Log, grouped into monthly sweeps.
             </p>
-            {totalCount ? (
-              <p className="mt-1 text-xs leading-5 text-muted">
-                Showing latest {Math.min(reports.length, totalCount)} of{" "}
-                {totalCount} approved reports.
-              </p>
-            ) : null}
+            <p className="mt-1 text-xs leading-5 text-muted">{countLabel}</p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Link
                 className="inline-flex min-h-11 items-center justify-center rounded-md border border-signal-teal/40 bg-signal-teal/15 px-4 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
