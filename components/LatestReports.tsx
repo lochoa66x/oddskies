@@ -4,22 +4,17 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   categoryFilters,
-  coordinateToAtlasPosition,
   filterReportsByCategory,
   filterReportsByRegion,
   getReportCasePath,
   getPublicReportDisplayBadge,
   isCategoryFilter,
-  regionAnchors,
   regionFilters,
   type CategoryFilter,
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
-import { AtlasMotionGuard } from "@/components/AtlasMotionGuard";
-import { OddSkiesOracle } from "@/components/OddSkiesOracle";
 import { OracleReportPanel } from "@/components/OracleReportPanel";
-import { WorldMapBase } from "@/components/WorldMapBase";
 
 export function LatestReports({
   reports,
@@ -303,7 +298,7 @@ export function LatestReports({
           </div>
 
           {selected ? (
-            <ReportDetail reports={filteredReports} selected={selected} />
+            <ReportDetail selected={selected} />
           ) : null}
         </div>
       </div>
@@ -312,13 +307,10 @@ export function LatestReports({
 }
 
 function ReportDetail({
-  reports,
   selected,
 }: {
-  reports: Report[];
   selected: Report;
 }) {
-  const selectedPosition = getReportPosition(selected);
   const sourceHref = getSourceHref(selected.sourceUrl);
   const external = isExternalSource(selected.sourceUrl);
   const metaLine = getLocationMetaLine(selected);
@@ -326,10 +318,8 @@ function ReportDetail({
   const caseBadges = getCaseBadges(selected);
 
   return (
-    <div className="space-y-4">
-      <OddSkiesOracle />
-      <aside className="field-card field-file-card overflow-hidden rounded-lg">
-        <div className="border-b border-night-800 bg-night-850 px-4 py-4 md:px-5">
+    <aside className="field-card field-file-card overflow-hidden rounded-lg">
+      <div className="border-b border-night-800 bg-night-850 px-4 py-4 md:px-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
@@ -351,78 +341,9 @@ function ReportDetail({
         {metaLine ? <p className="mt-1 text-sm text-muted">{metaLine}</p> : null}
       </div>
 
-      <AtlasMotionGuard className="atlas-grid detail-atlas relative min-h-[360px] overflow-hidden md:min-h-[430px] xl:min-h-[460px]">
-        <WorldMapBase className="absolute inset-x-4 top-5 h-[82%] w-[calc(100%-2rem)] md:inset-x-5 md:h-[83%] md:w-[calc(100%-2.5rem)]" />
-        <svg
-          aria-hidden="true"
-          className="atlas-route-lines absolute inset-x-7 top-8 h-[74%] w-[calc(100%-3.5rem)] md:inset-x-8 md:w-[calc(100%-4rem)]"
-          viewBox="0 0 1000 430"
-        >
-          <path d="M190 184c122-72 235-63 338 27 105 91 218 97 339 21" />
-          <path d="M632 214c71-13 142 7 213 60" />
-        </svg>
-
-        <span
-          className="radar-ring absolute size-28"
-          style={{
-            left: `${selectedPosition.left}%`,
-            top: `${selectedPosition.top}%`,
-          }}
-        />
-        <span
-          aria-hidden="true"
-          className="selected-atlas-focus absolute size-20"
-          style={{
-            left: `${selectedPosition.left}%`,
-            top: `${selectedPosition.top}%`,
-          }}
-        />
-        <span
-          className="selected-atlas-callout absolute"
-          style={{
-            left: `${selectedPosition.left}%`,
-            top: `${selectedPosition.top}%`,
-          }}
-        >
-          {selected.shortLabel}
-        </span>
-        {reports.slice(0, 12).map((report, index) => {
-          const position = getReportPosition(report);
-          const active = report.id === selected.id;
-
-          return (
-            <span
-              aria-label={report.shortLabel}
-              className={`atlas-pin absolute rounded-full ${
-                active ? "selected-atlas-pin size-5" : "size-2"
-              }`}
-              key={report.id}
-              style={{
-                animationDelay: `${index * 0.3}s`,
-                left: `${position.left}%`,
-                top: `${position.top}%`,
-              }}
-            />
-          );
-        })}
-
-        <div className="absolute bottom-4 left-4 z-10 max-w-[min(24rem,calc(100%-2rem))] rounded-md border border-night-800 bg-night-950/88 px-3 py-2.5 shadow-[0_18px_44px_rgba(0,0,0,0.38)] md:left-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`size-2.5 rounded-full ${selected.marker}`} />
-            <span className="text-sm font-semibold text-parchment">
-              {selected.shortLabel}
-            </span>
-            <span className="rounded border border-signal-amber/30 px-2 py-0.5 text-xs text-signal-amber">
-              Unverified
-            </span>
-          </div>
-          <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted">
-            Selected marker
-          </p>
-        </div>
-      </AtlasMotionGuard>
-
       <div className="space-y-3 p-4 md:p-5">
+        <OracleReportPanel report={selected} />
+
         <div className="rounded-md border border-night-800 bg-night-950/55 p-3.5">
           <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted">
             Report summary
@@ -490,21 +411,9 @@ function ReportDetail({
             </a>
           </div>
         </div>
-        <OracleReportPanel report={selected} />
       </div>
-      </aside>
-    </div>
+    </aside>
   );
-}
-
-function getReportPosition(report: Report) {
-  if (report.latitude !== null && report.longitude !== null) {
-    return coordinateToAtlasPosition(report.latitude, report.longitude);
-  }
-
-  const anchor = regionAnchors[report.region];
-
-  return coordinateToAtlasPosition(anchor.latitude, anchor.longitude);
 }
 
 function getLocationConfidenceLabel(report: Report) {
