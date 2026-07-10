@@ -2,85 +2,57 @@ import Link from "next/link";
 
 export function OddSkiesOracle() {
   return (
-    <section className="bg-night-950 px-5 py-10 md:py-14" id="oracle">
-      <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[0.88fr_1.12fr] lg:items-center">
+    <aside
+      className="oracle-card max-w-md rounded-lg border border-signal-violet/40 p-3.5"
+      id="oracle"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-night-800 pb-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-violet">
-            Oracle Alpha / First Read
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-signal-violet">
+            Oracle Alpha
           </p>
-          <h2 className="mt-2 max-w-2xl text-4xl font-semibold leading-tight text-parchment md:text-5xl">
-            The Oracle gets the first chair.
-          </h2>
-          <p className="mt-3 max-w-xl text-base font-semibold leading-7 text-parchment md:text-lg">
-            Think it&apos;s real? Ask our little bro, the OddSkies Oracle.
-          </p>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-            He gives playful, report-based reality checks for selected case
-            files: possible normal explanations, weird clues, source posture,
-            and a maybe-weird verdict. He cannot verify whether something is
-            real.
-          </p>
-          <p className="mt-3 max-w-xl rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-            The Oracle cannot verify whether something is real, AI-generated,
-            mistaken, staged, satire, or a joke.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Link
-              className="inline-flex min-h-12 items-center justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/25"
-              href="/field-log"
-            >
-              Open Oracle Case Files
-            </Link>
-            <span className="rounded-md border border-night-800 bg-night-900 px-3 py-2 text-xs font-semibold text-muted">
-              Report-based alpha, not confirmation
-            </span>
-          </div>
+          <h3 className="mt-2 text-xl font-semibold leading-7 text-parchment">
+            Ask the Oracle beside the field notes.
+          </h3>
         </div>
-
-        <div
-          aria-label="OddSkies Oracle sample report read"
-          className="oracle-card rounded-lg border border-night-800 p-4"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-night-800 pb-3.5">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-[0.22em] text-signal-teal">
-                Oracle Console / Sample Read
-              </p>
-              <p className="mt-2 text-lg font-semibold text-parchment">
-                Report: amber lights over low cloud cover
-              </p>
-            </div>
-            <span className="rounded-md border border-signal-amber/40 bg-signal-amber/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-signal-amber">
-              Oracle mood: Suspiciously Interesting
-            </span>
-          </div>
-
-          <div className="mt-3 rounded-md border border-night-800 bg-night-950 p-3.5 font-mono text-sm leading-6 text-muted">
-            <p className="text-signal-teal">oddskies-oracle://preview</p>
-            <p className="mt-3 text-parchment">
-              Could be drones, aircraft, reflection, edited media... or maybe
-              the sky is just being dramatic tonight.
-            </p>
-            <p className="mt-3 text-xs text-muted">
-              Alpha mode. Confidence: playful. Verification: none. Open a case
-              file for a live report-based read.
-            </p>
-          </div>
-
-          <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
-            {["Normal explanations", "Weird clues", "Maybe-weird verdict"].map(
-              (item) => (
-                <span
-                  className="rounded-md border border-night-800 bg-night-950/60 px-3 py-2 text-xs font-semibold text-parchment"
-                  key={item}
-                >
-                  {item}
-                </span>
-              ),
-            )}
-          </div>
-        </div>
+        <span className="rounded-md border border-signal-amber/40 bg-signal-amber/10 px-2.5 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-signal-amber">
+          Alpha
+        </span>
       </div>
-    </section>
+
+      <p className="mt-3 text-sm leading-6 text-muted">
+        The Oracle gives playful, report-based reality checks for selected case
+        files: normal explanations, weird clues, and a maybe-weird verdict.
+        Nothing here verifies the report.
+      </p>
+
+      <div className="mt-3 rounded-md border border-night-800 bg-night-950/70 p-3 font-mono text-xs leading-5 text-muted">
+        <p className="uppercase tracking-[0.18em] text-signal-teal">
+          Sample read
+        </p>
+        <p className="mt-2 font-semibold text-parchment">
+          Could be drones, aircraft, reflection, edited media... or the sky
+          being dramatic tonight.
+        </p>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {["Normal first", "Weird clues", "No fake certainty"].map((item) => (
+          <span
+            className="rounded-full border border-night-800 bg-night-950 px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted"
+            key={item}
+          >
+            {item}
+          </span>
+        ))}
+      </div>
+
+      <Link
+        className="mt-3 inline-flex w-full justify-center rounded-md border border-signal-violet/45 bg-signal-violet/[0.16] px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/25"
+        href="/field-log"
+      >
+        Open Oracle Case Files
+      </Link>
+    </aside>
   );
 }

@@ -4,7 +4,6 @@ import { CategoryStrip } from "@/components/CategoryStrip";
 import { FieldDispatch } from "@/components/FieldDispatch";
 import { Hero } from "@/components/Hero";
 import { LatestReports } from "@/components/LatestReports";
-import { OddSkiesOracle } from "@/components/OddSkiesOracle";
 import { SignalShelfPreview } from "@/components/SignalShelfPreview";
 import { SignalsWeirdness } from "@/components/SignalsWeirdness";
 import { WeirdShelf } from "@/components/WeirdShelf";
@@ -77,7 +76,6 @@ export default async function Home() {
       />
       <Hero reports={displayReports} />
       <CategoryStrip />
-      <OddSkiesOracle />
       <LatestReports
         reports={latestFieldLogReports}
         totalCount={fieldLogReports.length}

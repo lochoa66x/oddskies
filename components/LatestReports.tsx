@@ -17,6 +17,7 @@ import {
   type Report,
 } from "@/lib/reports";
 import { AtlasMotionGuard } from "@/components/AtlasMotionGuard";
+import { OddSkiesOracle } from "@/components/OddSkiesOracle";
 import { OracleReportPanel } from "@/components/OracleReportPanel";
 import { WorldMapBase } from "@/components/WorldMapBase";
 
@@ -135,37 +136,7 @@ export function LatestReports({
               </span>
             </div>
           </div>
-          <div className="field-card max-w-md border-signal-teal/25 bg-night-950/65 p-3.5">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-signal-teal">
-              Add spice to the skies?
-            </p>
-            <p className="mt-2 text-sm leading-6 text-parchment">
-              Found a strange public report? Send a source link or field note
-              into the OddSkies review queue.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {["Reviewed first", "Unverified", "Links welcome"].map(
-                (label) => (
-                  <span
-                    className="rounded-full border border-night-800 bg-night-950 px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted"
-                    key={label}
-                  >
-                    {label}
-                  </span>
-                ),
-              )}
-            </div>
-            <p className="mt-3 rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-              Submitted links wait for review before joining the public Field
-              Log. Everything remains unverified.
-            </p>
-            <Link
-              className="mt-3 inline-flex w-full justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
-              href="/send-signal"
-            >
-              Send a Signal
-            </Link>
-          </div>
+          <OddSkiesOracle />
         </div>
 
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
