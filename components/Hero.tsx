@@ -18,9 +18,9 @@ import { WorldMapBase } from "@/components/WorldMapBase";
 
 const heroTags = ["UFO / UAP", "Strange Lights", "Haunted Places", "Unknown"];
 const navItems = [
-  { href: "#oracle", label: "Oracle" },
   { href: "#map", label: "Map" },
   { href: "/field-log", label: "Field Log" },
+  { href: "#oracle", label: "Oracle" },
   { href: "/about", label: "About" },
 ];
 
@@ -99,110 +99,51 @@ export function Hero({ reports }: { reports: Report[] }) {
         </nav>
       </header>
 
-      <div className="relative z-10 mx-auto grid max-w-[88rem] gap-6 px-5 pb-9 pt-2 md:pt-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-8 lg:pb-10 lg:pt-5 xl:pt-6">
+      <div className="relative z-10 mx-auto grid max-w-[88rem] gap-6 px-5 pb-9 pt-2 md:pt-4 lg:grid-cols-[0.62fr_1.38fr] lg:items-start lg:gap-8 lg:pb-10 lg:pt-5 xl:pt-6">
         <div className="lg:pt-8 xl:pt-12">
           <p className="inline-flex rounded-md border border-signal-amber/30 bg-signal-amber/10 px-3 py-2 text-sm font-semibold text-signal-amber">
-            Oracle Alpha / Main Signal
+            Mystery Atlas / Phase 1 Preview
           </p>
           <h1 className="mt-4 max-w-3xl text-5xl font-semibold leading-[0.95] text-parchment sm:text-6xl lg:text-6xl xl:text-7xl">
-            Ask the OddSkies Oracle.
+            Explore the weird side of the map.
           </h1>
-          <p className="mt-4 max-w-2xl text-lg font-semibold leading-8 text-parchment md:text-xl">
-            He reads strange public reports with one eyebrow raised, one
-            lantern lit, and zero fake certainty.
-          </p>
           <p className="mt-4 max-w-2xl text-base leading-8 text-muted md:text-lg">
-            OddSkies is the field log. The Oracle is the host: playful
-            reality checks, normal explanations first, weird clues marked
-            clearly, and every case still treated as unverified.
+            OddSkies organizes strange, unverified public reports — from UFOs
+            and strange lights to haunted places and local legends — by time,
+            place, category, and source.
           </p>
           <p className="mt-4 max-w-xl rounded-md border border-night-800 bg-night-900/80 px-4 py-3 text-sm font-semibold text-parchment">
             Verified? No. Interesting? Maybe. Source-linked? Always.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link
-              className="hero-cta hero-cta-primary inline-flex min-h-14 items-center justify-center gap-3 rounded-md bg-signal-teal px-5 py-3 text-sm font-bold text-night-950 shadow-glow transition hover:bg-parchment"
-              href="/field-log"
-            >
-              <span aria-hidden="true" className="cta-glyph cta-glyph-oracle" />
-              Ask the Oracle
-            </Link>
             <a
-              className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-teal/40 bg-signal-teal/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/70 hover:bg-signal-teal/20"
+              className="hero-cta hero-cta-primary inline-flex min-h-14 items-center justify-center gap-3 rounded-md bg-signal-teal px-5 py-3 text-sm font-bold text-night-950 shadow-glow transition hover:bg-parchment"
               href="#map"
             >
               <span aria-hidden="true" className="cta-glyph cta-glyph-map" />
-              Check the Evidence Board
+              Explore the Map
             </a>
             <Link
-              className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-violet/40 bg-signal-violet/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/60 hover:bg-signal-teal/10"
-              href="/send-signal"
+              className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-teal/40 bg-signal-teal/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/70 hover:bg-signal-teal/20"
+              href="/field-log"
             >
-              Send a Signal
+              Browse the Field Log
             </Link>
+            <a
+              className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-violet/40 bg-signal-violet/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/60 hover:bg-signal-teal/10"
+              href="#oracle"
+            >
+              <span aria-hidden="true" className="cta-glyph cta-glyph-oracle" />
+              Ask the Oracle
+            </a>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div
-            aria-label="OddSkies Oracle hero preview"
-            className="oracle-hero-card relative overflow-hidden rounded-lg border border-signal-violet/40 p-4 sm:p-5"
-          >
-            <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="font-mono text-xs uppercase tracking-[0.22em] text-signal-teal">
-                  OddSkies Oracle
-                </p>
-                <p className="mt-2 text-2xl font-semibold leading-tight text-parchment md:text-3xl">
-                  Suspiciously Interesting
-                </p>
-              </div>
-              <span className="rounded-md border border-signal-amber/40 bg-signal-amber/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-signal-amber">
-                Alpha awake
-              </span>
-            </div>
-
-            <div className="relative z-10 mt-5 grid gap-4 md:grid-cols-[auto_1fr] md:items-center">
-              <div className="oracle-eye mx-auto" aria-hidden="true">
-                <span />
-              </div>
-              <div className="rounded-md border border-night-800 bg-night-950/80 p-4 font-mono text-sm leading-6 text-muted">
-                <p className="text-signal-teal">oddskies-oracle://hero-read</p>
-                <p className="mt-3 text-base font-semibold leading-7 text-parchment">
-                  Could be drones, aircraft, reflection, edited media... or the
-                  sky doing theatre with a fog machine.
-                </p>
-                <p className="mt-3 text-xs text-muted">
-                  The Oracle jokes. The source trail decides how far the joke
-                  gets to walk.
-                </p>
-              </div>
-            </div>
-
-            <div className="relative z-10 mt-4 grid gap-2.5 sm:grid-cols-3">
-              {[
-                "Normal first",
-                "Weird clues marked",
-                "No fake certainty",
-              ].map((item) => (
-                <span
-                  className="rounded-md border border-night-800 bg-night-950/60 px-3 py-2 text-xs font-semibold text-parchment"
-                  key={item}
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div
-            className="field-card atlas-hero-card relative overflow-hidden rounded-lg"
-            id="map"
-          >
+        <div className="field-card atlas-hero-card relative overflow-hidden rounded-lg" id="map">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-night-800 bg-night-850 px-5 py-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
-                Oracle Evidence Board
+                Live Atlas Preview
               </p>
               <p className="mt-1 text-sm text-muted">
                 Public report activity, not verified events.
@@ -213,7 +154,7 @@ export function Hero({ reports }: { reports: Report[] }) {
                 Global field layer
               </span>
               <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
-                {plottedCount} source trails plotted
+                Global preview / {plottedCount} plotted
               </span>
             </div>
           </div>
@@ -245,10 +186,10 @@ export function Hero({ reports }: { reports: Report[] }) {
             </p>
           </div>
 
-          <AtlasMotionGuard className="atlas-grid relative min-h-[320px] overflow-hidden lg:min-h-[365px] xl:min-h-[390px]">
+          <AtlasMotionGuard className="atlas-grid relative min-h-[350px] overflow-hidden lg:min-h-[455px] xl:min-h-[500px]">
             <div className="atlas-map-texture absolute inset-0" />
             <div className="scan-line absolute left-0 top-20 h-px w-full" />
-            <WorldMapBase className="absolute inset-x-4 top-7 h-[70%] w-[calc(100%-2rem)]" />
+            <WorldMapBase className="absolute inset-x-4 top-8 h-[72%] w-[calc(100%-2rem)]" />
             <svg
               aria-hidden="true"
               className="atlas-route-lines absolute inset-x-8 top-12 h-[61%] w-[calc(100%-4rem)]"
@@ -367,7 +308,6 @@ export function Hero({ reports }: { reports: Report[] }) {
               </div>
             </div>
           </AtlasMotionGuard>
-          </div>
         </div>
       </div>
     </AtlasMotionGuard>

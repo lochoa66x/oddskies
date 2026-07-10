@@ -687,103 +687,6 @@ a {
     #101522;
 }
 
-.oracle-hero-card {
-  background:
-    radial-gradient(circle at 15% 22%, rgba(72, 224, 194, 0.2), transparent 16rem),
-    radial-gradient(circle at 78% 8%, rgba(139, 92, 246, 0.24), transparent 18rem),
-    linear-gradient(145deg, rgba(21, 27, 43, 0.98), rgba(10, 13, 24, 0.94)),
-    #101522;
-  box-shadow:
-    0 28px 90px rgba(0, 0, 0, 0.42),
-    0 0 0 1px rgba(139, 92, 246, 0.14),
-    0 0 62px rgba(139, 92, 246, 0.18),
-    inset 0 1px 0 rgba(243, 240, 232, 0.08);
-}
-
-.oracle-hero-card::before,
-.oracle-hero-card::after {
-  position: absolute;
-  pointer-events: none;
-  content: "";
-}
-
-.oracle-hero-card::before {
-  inset: -24% auto auto -8%;
-  width: 20rem;
-  height: 20rem;
-  border: 1px solid rgba(72, 224, 194, 0.12);
-  border-radius: 999px;
-  background:
-    radial-gradient(circle, rgba(72, 224, 194, 0.11), transparent 62%),
-    repeating-radial-gradient(circle, rgba(72, 224, 194, 0.14) 0 1px, transparent 1px 22px);
-  opacity: 0.72;
-}
-
-.oracle-hero-card::after {
-  inset: auto -12% -32% auto;
-  width: 25rem;
-  height: 25rem;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle, rgba(246, 180, 75, 0.12), transparent 44%),
-    radial-gradient(circle, rgba(139, 92, 246, 0.16), transparent 68%);
-  opacity: 0.9;
-}
-
-.oracle-eye {
-  position: relative;
-  width: 7.25rem;
-  height: 7.25rem;
-  border: 1px solid rgba(72, 224, 194, 0.24);
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(243, 240, 232, 0.88) 0 0.36rem, transparent 0.38rem),
-    radial-gradient(circle at 50% 50%, rgba(72, 224, 194, 0.32) 0 1.16rem, transparent 1.2rem),
-    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.2) 0 2.7rem, transparent 2.78rem),
-    rgba(7, 10, 18, 0.76);
-  box-shadow:
-    inset 0 0 32px rgba(72, 224, 194, 0.13),
-    0 0 44px rgba(72, 224, 194, 0.22),
-    0 0 78px rgba(139, 92, 246, 0.15);
-}
-
-.oracle-eye::before,
-.oracle-eye::after,
-.oracle-eye span {
-  position: absolute;
-  content: "";
-}
-
-.oracle-eye::before {
-  inset: 1.35rem 0.8rem;
-  border: 1.5px solid rgba(72, 224, 194, 0.78);
-  border-radius: 52% 48% 52% 48% / 45% 45% 55% 55%;
-  box-shadow:
-    0 0 22px rgba(72, 224, 194, 0.28),
-    inset 0 0 20px rgba(139, 92, 246, 0.13);
-  transform: rotate(-10deg);
-}
-
-.oracle-eye::after {
-  inset: 0.65rem;
-  border: 1px dashed rgba(246, 180, 75, 0.24);
-  border-radius: 999px;
-  animation: oracle-eye-pulse 4.4s ease-in-out infinite;
-}
-
-.oracle-eye span {
-  left: 50%;
-  top: 50%;
-  width: 0.62rem;
-  height: 0.62rem;
-  border-radius: 999px;
-  background: #f3f0e8;
-  box-shadow:
-    0 0 18px rgba(243, 240, 232, 0.8),
-    0 0 38px rgba(72, 224, 194, 0.54);
-  transform: translate(-50%, -50%);
-}
-
 .oracle-card {
   background:
     linear-gradient(135deg, rgba(72, 224, 194, 0.1), transparent 34%),
@@ -1202,19 +1105,6 @@ a {
   }
 }
 
-@keyframes oracle-eye-pulse {
-  0%,
-  100% {
-    opacity: 0.42;
-    transform: scale(0.9);
-  }
-
-  50% {
-    opacity: 0.9;
-    transform: scale(1.06);
-  }
-}
-
 @media (max-width: 760px) {
   .atlas-point-label {
     display: none;
@@ -1246,8 +1136,7 @@ a {
   .atlas-region-glow,
   .heat-cluster,
   .atlas-pin,
-  .scan-line,
-  .oracle-eye::after {
+  .scan-line {
     animation: none;
   }
 
@@ -1268,8 +1157,7 @@ a {
   .atlas-region-glow,
   .heat-cluster,
   .atlas-pin,
-  .scan-line,
-  .oracle-eye::after {
+  .scan-line {
     animation: none !important;
   }
 
