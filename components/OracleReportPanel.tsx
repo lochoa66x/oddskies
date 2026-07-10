@@ -235,6 +235,29 @@ export function OracleReportPanel({ report }: { report: Report }) {
 
       {reading ? (
         <div className="mt-4 space-y-3">
+          <div className="relative overflow-hidden rounded-lg border border-signal-violet/50 bg-[radial-gradient(circle_at_18%_0%,rgba(139,92,246,0.26),transparent_34%),linear-gradient(135deg,rgba(16,21,34,0.98),rgba(8,11,20,0.98))] p-5 shadow-[0_0_52px_rgba(139,92,246,0.2)]">
+            <div className="pointer-events-none absolute -right-12 -top-16 size-44 rounded-full bg-signal-violet/10 blur-3xl" />
+            <div className="relative flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-signal-violet">
+                  The Oracle says
+                </p>
+                <p className="mt-2 text-xl font-semibold leading-7 text-parchment md:text-2xl md:leading-8">
+                  {reading.headline}
+                </p>
+              </div>
+              <span className="rounded-md border border-signal-amber/30 bg-signal-amber/10 px-2 py-1 text-xs font-bold text-signal-amber">
+                {getOracleVerdictLabel(reading.verdict)}
+              </span>
+            </div>
+            <p className="relative mt-5 border-l-2 border-signal-violet/60 pl-4 text-lg font-semibold leading-8 text-parchment md:text-xl md:leading-9">
+              {reading.fieldNote}
+            </p>
+            <p className="relative mt-4 text-xs leading-5 text-muted">
+              {reading.oracleNote}
+            </p>
+          </div>
+
           <OracleReadState response={response} />
 
           <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_11rem]">
@@ -295,28 +318,6 @@ export function OracleReportPanel({ report }: { report: Report }) {
 
           <OracleShareCard reading={reading} report={report} />
 
-          <div className="relative overflow-hidden rounded-lg border border-signal-violet/40 bg-[radial-gradient(circle_at_18%_0%,rgba(139,92,246,0.22),transparent_34%),linear-gradient(135deg,rgba(16,21,34,0.98),rgba(8,11,20,0.98))] p-4 shadow-[0_0_42px_rgba(139,92,246,0.16)]">
-            <div className="pointer-events-none absolute -right-12 -top-16 size-44 rounded-full bg-signal-violet/10 blur-3xl" />
-            <div className="relative flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-signal-violet">
-                  The Oracle says
-                </p>
-                <p className="mt-1 text-base font-semibold leading-6 text-parchment">
-                  {reading.headline}
-                </p>
-              </div>
-              <span className="rounded-md border border-signal-amber/30 bg-signal-amber/10 px-2 py-1 text-xs font-bold text-signal-amber">
-                {getOracleVerdictLabel(reading.verdict)}
-              </span>
-            </div>
-            <p className="relative mt-4 border-l-2 border-signal-violet/60 pl-4 text-base font-semibold leading-7 text-parchment md:text-lg md:leading-8">
-              {reading.fieldNote}
-            </p>
-            <p className="relative mt-4 text-xs leading-5 text-muted">
-              {reading.oracleNote}
-            </p>
-          </div>
 
           <div className="flex items-center gap-2">
             <span className="h-px flex-1 bg-night-800" />
