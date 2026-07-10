@@ -17,9 +17,9 @@ import {
 } from "@/lib/reports";
 
 const homeTitle =
-  "OddSkies -- Strange Reports, UFO / UAP Reports & Paranormal Field Log";
+  "OddSkies Oracle -- Strange Reports, UFO / UAP Reports & Paranormal Field Log";
 const homeDescription =
-  "OddSkies maps unverified UFO / UAP, strange light, haunted place, paranormal, local legend, and weird public reports by source, place, and time. Verified? No. Interesting? Maybe. Source-linked? Always.";
+  "Ask the OddSkies Oracle for playful, source-linked reality checks on unverified UFO / UAP, strange light, haunted place, paranormal, local legend, and weird public reports.";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -77,11 +77,11 @@ export default async function Home() {
       />
       <Hero reports={displayReports} />
       <CategoryStrip />
+      <OddSkiesOracle />
       <LatestReports
         reports={latestFieldLogReports}
         totalCount={fieldLogReports.length}
       />
-      <OddSkiesOracle />
       <SignalsWeirdness reports={fieldLogReports} />
       <WeirdShelf />
       <SignalShelfPreview links={curatedLinks} />
