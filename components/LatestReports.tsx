@@ -100,7 +100,7 @@ export function LatestReports({
       id="reports"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
               Field Log
@@ -136,7 +136,6 @@ export function LatestReports({
               </span>
             </div>
           </div>
-          <OddSkiesOracle />
         </div>
 
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
@@ -327,8 +326,10 @@ function ReportDetail({
   const caseBadges = getCaseBadges(selected);
 
   return (
-    <aside className="field-card field-file-card overflow-hidden rounded-lg">
-      <div className="border-b border-night-800 bg-night-850 px-4 py-4 md:px-5">
+    <div className="space-y-4">
+      <OddSkiesOracle />
+      <aside className="field-card field-file-card overflow-hidden rounded-lg">
+        <div className="border-b border-night-800 bg-night-850 px-4 py-4 md:px-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
@@ -491,7 +492,8 @@ function ReportDetail({
         </div>
         <OracleReportPanel report={selected} />
       </div>
-    </aside>
+      </aside>
+    </div>
   );
 }
 

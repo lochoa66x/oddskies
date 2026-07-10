@@ -3,7 +3,7 @@ import Link from "next/link";
 export function OddSkiesOracle() {
   return (
     <aside
-      className="oracle-card max-w-md rounded-lg border border-signal-violet/40 p-3.5"
+      className="oracle-card w-full rounded-lg border border-signal-violet/40 p-3.5"
       id="oracle"
     >
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-night-800 pb-3">
@@ -12,7 +12,7 @@ export function OddSkiesOracle() {
             Oracle Alpha
           </p>
           <h3 className="mt-2 text-xl font-semibold leading-7 text-parchment">
-            Ask the Oracle beside the field notes.
+            Ask the Oracle before the map.
           </h3>
         </div>
         <span className="rounded-md border border-signal-amber/40 bg-signal-amber/10 px-2.5 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-signal-amber">
