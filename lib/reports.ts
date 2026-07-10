@@ -304,12 +304,143 @@ const demoReports: Report[] = [
   },
 ];
 
+const curatedReports: Report[] = [
+  {
+    category: "UFO / UAP",
+    confidenceMood: "Suspiciously Interesting",
+    country: "Yellow Sea",
+    createdAtRaw: "2026-07-10T18:20:00.000Z",
+    curationLabel: "Context-rich",
+    displayPriority: 12,
+    eventDateTime: "2025 / Time not listed",
+    eventDateTimeRaw: "2025-01-01T12:00:00.000Z",
+    hasLocation: true,
+    hasMediaHint: true,
+    hasSourceLink: true,
+    hasTime: false,
+    id: "curated-yellow-sea-six-pointed-object",
+    latitude: 35.9,
+    location: "Yellow Sea",
+    locationConfidence: "medium",
+    locationResolution: "regional",
+    longitude: 123.5,
+    marker: "bg-signal-teal",
+    oracleReady: true,
+    originalTitle:
+      "Haunting video of six-pointed object in latest Trump UFO file dump",
+    publicStatus: "published",
+    region: "East Asia",
+    reportedDateTime: "Jul 10, 2026 / 11:47 AM",
+    shortLabel: "Yellow Sea Six-Point",
+    slug: "yellow-sea-six-pointed-object",
+    sourceName: "New York Post",
+    sourceQualityLabel: "Linked trail",
+    sourceQualityReasons: [
+      "Public news report",
+      "UAP file release context",
+      "No confirmed anomalous origin",
+    ],
+    sourceType: "News article",
+    sourceUrl:
+      "https://nypost.com/2026/07/10/us-news/haunting-video-of-six-pointed-object-in-latest-trump-ufo-file-dump-as-proof-of-alien-life-remains-elusive/",
+    summary:
+      "A new UFO file release includes an 18-second military-tracked clip described as a six-pointed object over the Yellow Sea. The report offers no proof of alien life and leaves ordinary explanations open.",
+    title: "Six-pointed object tracked over the Yellow Sea",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Unknown",
+    confidenceMood: "Probably Rocket Junk",
+    country: "Australia",
+    createdAtRaw: "2026-07-10T18:15:00.000Z",
+    curationLabel: "Context-rich",
+    displayPriority: 11,
+    eventDateTime: "Jul 3-5, 2026 / Time varies",
+    eventDateTimeRaw: "2026-07-03T04:25:00.000Z",
+    hasLocation: true,
+    hasMediaHint: true,
+    hasSourceLink: true,
+    hasTime: false,
+    id: "curated-queensland-space-balls",
+    latitude: -18.71,
+    location: "Forrest Beach, Queensland",
+    locationConfidence: "high",
+    locationResolution: "locality",
+    longitude: 146.29,
+    marker: "bg-muted",
+    oracleReady: true,
+    originalTitle:
+      "Australian Space Agency reveals likely origin of mysterious space balls found on Queensland beaches",
+    publicStatus: "published",
+    region: "Oceania",
+    reportedDateTime: "Jul 6, 2026 / 1:42 AM",
+    shortLabel: "Queensland Space Balls",
+    slug: "queensland-space-balls",
+    sourceName: "The Guardian",
+    sourceQualityLabel: "Context-rich",
+    sourceQualityReasons: [
+      "Public news report",
+      "Agency context included",
+      "Likely space debris, not confirmed event",
+    ],
+    sourceType: "News article",
+    sourceUrl:
+      "https://www.theguardian.com/australia-news/2026/jul/06/mysterious-space-balls-queensland-beaches-origin-source-australia",
+    summary:
+      "Six metal spheres washed ashore near Forrest Beach. The Australian Space Agency says the objects appear consistent with pressure vessels from a foreign rocket body that recently re-entered the atmosphere.",
+    title: "Queensland beach space balls tied to rocket debris",
+    verificationStatus: "Unverified",
+  },
+  {
+    category: "Strange Lights",
+    confidenceMood: "Mostly Explained",
+    country: "United States",
+    createdAtRaw: "2026-07-10T18:10:00.000Z",
+    curationLabel: "Context-rich",
+    displayPriority: 10,
+    eventDateTime: "May 30, 2026 / 2:06 PM",
+    eventDateTimeRaw: "2026-05-30T18:06:00.000Z",
+    hasLocation: true,
+    hasMediaHint: true,
+    hasSourceLink: true,
+    hasTime: true,
+    id: "curated-new-england-daytime-fireball",
+    latitude: 42.9,
+    location: "Massachusetts-New Hampshire border",
+    locationConfidence: "medium",
+    locationResolution: "regional",
+    longitude: -71.3,
+    marker: "bg-signal-amber",
+    oracleReady: true,
+    originalTitle: "Meteor over Massachusetts prompts reports of booms across US and Canada",
+    publicStatus: "published",
+    region: "North America",
+    reportedDateTime: "Jun 1, 2026 / 9:04 AM",
+    shortLabel: "New England Fireball",
+    slug: "new-england-daytime-fireball",
+    sourceName: "The Guardian",
+    sourceQualityLabel: "Context-rich",
+    sourceQualityReasons: [
+      "Public news report",
+      "NASA and American Meteor Society context",
+      "Natural meteor explanation reported",
+    ],
+    sourceType: "News article",
+    sourceUrl:
+      "https://www.theguardian.com/science/2026/jun/01/meteor-massachusetts-sonic-boom",
+    summary:
+      "A daytime meteor near the Massachusetts-New Hampshire border triggered boom reports and sightings from Delaware to Montreal. NASA described it as natural material that likely fragmented high above the ground.",
+    title: "Daytime meteor boom rattles New England",
+    verificationStatus: "Unverified",
+  },
+];
+
 export async function getReports(): Promise<Report[]> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !anonKey) {
-    return demoReports;
+    return mergeCuratedReports(demoReports);
   }
 
   try {
@@ -327,18 +458,59 @@ export async function getReports(): Promise<Report[]> {
     });
 
     if (!response.ok) {
-      return demoReports;
+      return mergeCuratedReports(demoReports);
     }
 
     const rows = (await response.json()) as SupabaseReportRow[];
 
     if (!Array.isArray(rows) || rows.length === 0) {
-      return demoReports;
+      return mergeCuratedReports(demoReports);
     }
 
-    return rows.map(normalizeReport).filter(Boolean);
+    return mergeCuratedReports(rows.map(normalizeReport).filter(Boolean));
   } catch {
-    return demoReports;
+    return mergeCuratedReports(demoReports);
+  }
+}
+
+function mergeCuratedReports(reports: Report[]): Report[] {
+  const existingIds = new Set(reports.map((report) => report.id));
+  const existingSourceUrls = new Set(
+    reports
+      .map((report) => normalizeSourceUrlForMerge(report.sourceUrl))
+      .filter(Boolean),
+  );
+  const missingCuratedReports = curatedReports.filter((report) => {
+    if (existingIds.has(report.id)) {
+      return false;
+    }
+
+    const sourceUrl = normalizeSourceUrlForMerge(report.sourceUrl);
+
+    return !sourceUrl || !existingSourceUrls.has(sourceUrl);
+  });
+
+  return [...missingCuratedReports, ...reports];
+}
+
+function normalizeSourceUrlForMerge(value?: string) {
+  const cleaned = value?.trim();
+
+  if (!cleaned) {
+    return "";
+  }
+
+  try {
+    const url = new URL(cleaned);
+    url.hash = "";
+    url.search = "";
+
+    return `${url.hostname.replace(/^www\./, "")}${url.pathname.replace(
+      /\/$/,
+      "",
+    )}`.toLowerCase();
+  } catch {
+    return cleaned.toLowerCase();
   }
 }
 
