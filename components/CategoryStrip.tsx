@@ -1,5 +1,7 @@
 "use client";
 
+import { categoryLabel, type Locale } from "@/lib/i18n";
+
 const categories = [
   { icon: "ufo", label: "UFO / UAP", marker: "bg-signal-teal" },
   { icon: "lights", label: "Strange Lights", marker: "bg-signal-amber" },
@@ -9,7 +11,7 @@ const categories = [
   { icon: "unknown", label: "Unknown", marker: "bg-muted" },
 ];
 
-export function CategoryStrip() {
+export function CategoryStrip({ locale = "en" }: { locale?: Locale }) {
   function selectCategory(category: string) {
     window.dispatchEvent(
       new CustomEvent("oddskies:category-filter", {
@@ -37,7 +39,7 @@ export function CategoryStrip() {
               className={`category-symbol category-symbol-${category.icon}`}
             />
             <span className={`size-2 rounded-full ${category.marker}`} />
-            {category.label}
+            {categoryLabel(category.label, locale)}
           </button>
         ))}
       </div>

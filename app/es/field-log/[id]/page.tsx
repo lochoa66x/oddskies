@@ -3,11 +3,15 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { FieldLogCaseFile } from "@/components/FieldLogBrowser";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { localizedReportCasePath } from "@/lib/i18n";
+import {
+  categoryLabel,
+  localizedReportCasePath,
+  regionLabel,
+  uiLabel,
+} from "@/lib/i18n";
 import {
   findReportBySlugOrId,
   getFieldLogReports,
-  getReportCasePath,
   getReportSlug,
   getReports,
   type Report,
@@ -25,20 +29,19 @@ export async function generateMetadata({
 
   if (!report) {
     return {
-      title: "Case File Not Found | OddSkies",
+      title: "Expediente no encontrado | OddSkies",
     };
   }
 
   const description = getMetadataDescription(report);
-  const url = getReportCasePath(report);
-  const spanishUrl = localizedReportCasePath(report, "es");
+  const url = localizedReportCasePath(report, "es");
 
   return {
     alternates: {
       canonical: url,
       languages: {
-        en: url,
-        es: spanishUrl,
+        en: localizedReportCasePath(report, "en"),
+        es: url,
       },
     },
     description,
@@ -46,28 +49,30 @@ export async function generateMetadata({
       description,
       images: [
         {
-          alt: "A strange twilight sky above a distant horizon.",
+          alt: "Un cielo extraño al atardecer sobre un horizonte lejano.",
           height: 916,
           url: "/images/oddskies-hero.png",
           width: 1718,
         },
       ],
       siteName: "OddSkies",
-      title: `${report.title} | OddSkies Field Log`,
+      title: `${report.title} | Registro de Campo OddSkies`,
       type: "article",
       url,
     },
-    title: `${report.title} | OddSkies Field Log`,
+    title: `${report.title} | Registro de Campo OddSkies`,
     twitter: {
       card: "summary_large_image",
       description,
       images: ["/images/oddskies-hero.png"],
-      title: `${report.title} | OddSkies Field Log`,
+      title: `${report.title} | Registro de Campo OddSkies`,
     },
   };
 }
 
-export default async function CaseFilePage({ params }: CaseFilePageProps) {
+export default async function SpanishCaseFilePage({
+  params,
+}: CaseFilePageProps) {
   const { id } = await params;
   const reports = getFieldLogReports(await getReports());
   const report = findReportBySlugOrId(reports, id);
@@ -80,10 +85,10 @@ export default async function CaseFilePage({ params }: CaseFilePageProps) {
   const canonicalSlug = getReportSlug(report);
 
   if (requested === report.id && requested !== canonicalSlug) {
-    redirect(getReportCasePath(report));
+    redirect(localizedReportCasePath(report, "es"));
   }
 
-  const enHref = getReportCasePath(report);
+  const enHref = localizedReportCasePath(report, "en");
   const esHref = localizedReportCasePath(report, "es");
   const relatedReports = getRelatedReports(reports, report);
 
@@ -97,7 +102,7 @@ export default async function CaseFilePage({ params }: CaseFilePageProps) {
       />
       <div className="mx-auto max-w-5xl">
         <header className="flex flex-col gap-4 border-b border-night-800 pb-5 md:flex-row md:items-center md:justify-between">
-          <Link className="flex items-center gap-3" href="/">
+          <Link className="flex items-center gap-3" href="/es">
             <span className="grid size-11 place-items-center rounded-md border border-signal-teal/40 bg-signal-teal/10 text-sm font-black text-signal-teal">
               OS
             </span>
@@ -110,48 +115,51 @@ export default async function CaseFilePage({ params }: CaseFilePageProps) {
           </Link>
           <div className="flex flex-wrap items-center gap-3 md:justify-end">
             <nav className="flex flex-wrap gap-3 text-sm text-muted">
-              <Link className="transition hover:text-signal-teal" href="/field-log">
-                Full Field Log
+              <Link
+                className="transition hover:text-signal-teal"
+                href="/es/field-log"
+              >
+                Registro completo
               </Link>
-              <Link className="transition hover:text-signal-teal" href="/#map">
-                Map
+              <Link className="transition hover:text-signal-teal" href="/es#map">
+                Mapa
               </Link>
-              <Link className="transition hover:text-signal-teal" href="/#oracle">
-                Oracle
+              <Link className="transition hover:text-signal-teal" href="/es#oracle">
+                Oráculo
               </Link>
             </nav>
-            <LanguageSwitcher enHref={enHref} esHref={esHref} locale="en" />
+            <LanguageSwitcher enHref={enHref} esHref={esHref} locale="es" />
           </div>
         </header>
 
         <section className="py-8">
           <p className="text-sm font-semibold uppercase tracking-[0.32em] text-signal-teal">
-            Shareable Case File
+            Expediente compartible
           </p>
           <h1 className="mt-4 max-w-4xl text-4xl font-black leading-tight md:text-6xl">
             {report.title}
           </h1>
           <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">
-            Open Case File. A direct Field Log read for one public, unverified
-            report.
+            Expediente abierto. Una lectura directa del Registro de Campo para
+            un reporte público y sin verificar.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               className="inline-flex min-h-11 items-center justify-center rounded-md border border-night-800 bg-night-900 px-4 py-2 text-sm font-semibold text-muted transition hover:border-signal-teal/40 hover:text-parchment"
-              href="/field-log"
+              href="/es/field-log"
             >
-              Back to Field Log
+              Volver al Registro
             </Link>
             <Link
               className="inline-flex min-h-11 items-center justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-4 py-2 text-sm font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
               href="/send-signal"
             >
-              Send a Signal
+              Enviar una señal
             </Link>
           </div>
         </section>
 
-        <FieldLogCaseFile report={report} />
+        <FieldLogCaseFile locale="es" report={report} />
         <RelatedFieldNotes reports={relatedReports} />
       </div>
     </main>
@@ -174,40 +182,40 @@ function RelatedFieldNotes({ reports }: { reports: Report[] }) {
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-signal-teal">
-            Related field notes
+            Notas relacionadas
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-parchment">
-            Nearby weirdness
+            Rarezas cercanas
           </h2>
         </div>
         <Link
           className="text-sm font-semibold text-muted transition hover:text-signal-teal"
-          href="/field-log"
+          href="/es/field-log"
         >
-          View Full Field Log
+          Ver Registro completo
         </Link>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         {reports.map((report) => (
           <Link
             className="field-card block p-3 transition hover:border-signal-teal/40"
-            href={getReportCasePath(report)}
+            href={localizedReportCasePath(report, "es")}
             key={report.id}
           >
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className={`size-2.5 rounded-full ${report.marker}`} />
               <span className="font-semibold uppercase tracking-[0.14em] text-parchment">
-                {report.category}
+                {categoryLabel(report.category, "es")}
               </span>
               <span className="rounded border border-signal-amber/30 px-2 py-0.5 text-signal-amber">
-                Unverified
+                {uiLabel("Unverified", "es")}
               </span>
             </div>
             <h3 className="mt-3 line-clamp-2 text-base font-semibold leading-6 text-parchment">
               {report.title}
             </h3>
             <p className="mt-2 text-xs leading-5 text-muted">
-              {[report.location, report.region]
+              {[report.location, regionLabel(report.region, "es")]
                 .filter((value) => value && value !== "Unknown")
                 .join(" · ")}
             </p>
@@ -265,14 +273,14 @@ function getMetadataDescription(report: Report) {
   const summary = truncateDescription(report.summary);
 
   if (location) {
-    return `Unverified OddSkies report in ${location}: ${summary}. Source-linked when available. Not confirmed.`;
+    return `Reporte sin verificar de OddSkies en ${location}: ${summary}. Con fuente cuando existe. No confirmado.`;
   }
 
-  return `Unverified OddSkies report: ${summary}. Source-linked when available. Not confirmed.`;
+  return `Reporte sin verificar de OddSkies: ${summary}. Con fuente cuando existe. No confirmado.`;
 }
 
 function getMetadataLocation(report: Report) {
-  return [report.location, report.country, report.region]
+  return [report.location, report.country, regionLabel(report.region, "es")]
     .filter((value) => value && value !== "Unknown")
     .join(", ");
 }
@@ -288,8 +296,9 @@ function truncateDescription(value: string) {
 }
 
 function getReportJsonLd(report: Report) {
-  const url = `https://oddskies.com${getReportCasePath(report)}`;
-  const datePublished = getJsonDate(report.eventDateTimeRaw) ?? getJsonDate(report.createdAtRaw);
+  const url = `https://oddskies.com${localizedReportCasePath(report, "es")}`;
+  const datePublished =
+    getJsonDate(report.eventDateTimeRaw) ?? getJsonDate(report.createdAtRaw);
   const dateModified = getJsonDate(report.createdAtRaw) ?? datePublished;
 
   return {

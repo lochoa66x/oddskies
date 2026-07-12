@@ -4,6 +4,12 @@ import {
   type Report,
 } from "@/lib/reports";
 import Link from "next/link";
+import {
+  categoryLabel,
+  localizedPath,
+  regionLabel,
+  type Locale,
+} from "@/lib/i18n";
 
 type CountItem = {
   count: number;
@@ -79,7 +85,14 @@ const regionMoods: Record<Exclude<RegionFilter, "All">, string> = {
   "Western Europe": "Old stones, odd signals",
 };
 
-export function SignalsWeirdness({ reports }: { reports: Report[] }) {
+export function SignalsWeirdness({
+  locale = "en",
+  reports,
+}: {
+  locale?: Locale;
+  reports: Report[];
+}) {
+  const copy = getSignalsCopy(locale);
   const datedReports = reports
     .map((report) => ({ report, eventDate: parseReportDate(report) }))
     .filter(
@@ -107,26 +120,27 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
         <div className="mb-3.5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
-              Signal Strip
+              {copy.kicker}
               <span className="ml-2 text-xs normal-case tracking-[0.16em] sm:hidden">
-                swipe -&gt;
+                {copy.swipe}
               </span>
             </p>
             <h2 className="mt-2 text-3xl font-semibold text-parchment md:text-4xl">
-              Signals & Weirdness
+              {copy.title}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              Tiny patterns from unverified reports. Not science. Still fun.
+              {copy.description}
             </p>
           </div>
           <p className="max-w-sm rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-            These stats are based on unverified public reports. They are for
-            curiosity and entertainment, not confirmation.
+            {copy.disclaimer}
           </p>
         </div>
 
         <SignalStrip
+          copy={copy}
           latestSevenDays={latestSevenDays}
+          locale={locale}
           mostActiveRegion={mostActiveRegion}
           oddCon={oddCon}
           peakWindow={peakWindow}
@@ -137,7 +151,12 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
         />
 
         <div className="mt-3">
-          <WeirdnessGrid cells={heatmapCells} totalReports={reports.length} />
+          <WeirdnessGrid
+            cells={heatmapCells}
+            copy={copy}
+            locale={locale}
+            totalReports={reports.length}
+          />
         </div>
       </div>
     </section>
@@ -145,7 +164,9 @@ export function SignalsWeirdness({ reports }: { reports: Report[] }) {
 }
 
 function SignalStrip({
+  copy,
   latestSevenDays,
+  locale,
   mostActiveRegion,
   oddCon,
   peakWindow,
@@ -154,7 +175,9 @@ function SignalStrip({
   topCategoryCount,
   topRegion,
 }: {
+  copy: ReturnType<typeof getSignalsCopy>;
   latestSevenDays: number;
+  locale: Locale;
   mostActiveRegion: string;
   oddCon: OddConLevel;
   peakWindow: string;
@@ -168,36 +191,41 @@ function SignalStrip({
       accent: "text-signal-amber",
       label: "OddCon",
       meter: oddCon.level === 3 ? 3 : Math.max(1, 6 - oddCon.level),
-      note: `${latestSevenDays} latest-window reports`,
-      value: `${oddCon.level} — ${oddCon.name}`,
+      note: copy.latestWindowReports(latestSevenDays),
+      value: `${oddCon.level} — ${getOddConName(oddCon.name, locale)}`,
     },
     {
       accent: "text-signal-teal",
-      label: "Category Pulse",
+      label: copy.categoryPulse,
       meter: Math.min(4, Math.max(1, topCategoryCount)),
-      note: categoryMoods[topCategory] ?? "Signal unclear",
-      value: `${topCategoryCount} ${topCategory}`,
+      note: getCategoryMood(topCategory, locale),
+      value: `${topCategoryCount} ${categoryLabel(topCategory, locale)}`,
     },
     {
       accent: "text-signal-violet",
-      label: "Region Pulse",
+      label: copy.regionPulse,
       meter: Math.min(4, Math.max(1, topRegion?.count ?? 0)),
-      note: topRegion?.topCategory ?? "No signal yet",
-      value: `${topRegion?.count ?? 0} ${topRegion?.label ?? mostActiveRegion}`,
+      note: topRegion?.topCategory
+        ? categoryLabel(topRegion.topCategory, locale)
+        : copy.noSignalYet,
+      value: `${topRegion?.count ?? 0} ${regionLabel(
+        topRegion?.label ?? mostActiveRegion,
+        locale,
+      )}`,
     },
     {
       accent: "text-signal-ember",
-      label: "Peak Window",
+      label: copy.peakWindow,
       meter: 2,
-      note: "When reports get louder",
+      note: copy.whenReportsGetLouder,
       value: peakWindow,
     },
     {
       accent: "text-muted",
-      label: "Indexed",
+      label: copy.indexed,
       meter: Math.min(4, Math.max(1, Math.ceil(reportsCount / 8))),
-      note: "Approved public activity",
-      value: `${reportsCount} reports`,
+      note: copy.approvedPublicActivity,
+      value: copy.reportsIndexed(reportsCount),
     },
   ];
 
@@ -250,9 +278,13 @@ function SignalStrip({
 
 function WeirdnessGrid({
   cells,
+  copy,
+  locale,
   totalReports,
 }: {
   cells: GridCell[];
+  copy: ReturnType<typeof getSignalsCopy>;
+  locale: Locale;
   totalReports: number;
 }) {
   const activeDays = cells.filter((cell) => cell.count > 0);
@@ -264,25 +296,24 @@ function WeirdnessGrid({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
-            Weirdness Activity
+            {copy.activityKicker}
           </p>
           <h3 className="mt-2 text-xl font-semibold text-parchment md:text-2xl">
-            Recent signal tape.
+            {copy.activityTitle}
           </h3>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-            Active days from unverified reports. Quiet days stay tucked away
-            until the map gets more snacks.
+            {copy.activityDescription}
           </p>
         </div>
         <div className="flex w-fit flex-wrap gap-2">
           <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
-            {recentActivityWeeks} weeks scanned
+            {copy.weeksScanned(recentActivityWeeks)}
           </span>
           <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
-            {activeDays.length} active days
+            {copy.activeDays(activeDays.length)}
           </span>
           <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs font-semibold text-muted">
-            {totalReports} reports indexed
+            {copy.reportsIndexed(totalReports)}
           </span>
         </div>
       </div>
@@ -293,16 +324,16 @@ function WeirdnessGrid({
             displayedDays.map((cell) => (
               <Link
                 className="rounded-md border border-night-800 bg-night-950/80 p-2.5"
-                href={`/field-log?date=${toDateKey(cell.date)}`}
+                href={localizedPath(locale, `/field-log?date=${toDateKey(cell.date)}`)}
                 key={toDateKey(cell.date)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted">
-                      {formatActivityDate(cell.date)}
+                      {formatActivityDate(cell.date, locale)}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-parchment">
-                      {cell.count} {cell.count === 1 ? "report" : "reports"}
+                      {copy.reportsIndexed(cell.count)}
                     </p>
                   </div>
                   <span
@@ -324,24 +355,23 @@ function WeirdnessGrid({
                   ))}
                 </div>
                 <p className="mt-2.5 text-xs leading-5 text-muted">
-                  {getActivityMood(cell.count)}
+                  {getActivityMood(cell.count, locale)}
                 </p>
               </Link>
             ))
           ) : (
             <div className="rounded-md border border-night-800 bg-night-950/80 p-4 text-sm leading-6 text-muted sm:col-span-2 xl:col-span-4">
-              No active days in the recent scan. Quiet skies, at least for the
-              public log.
+              {copy.noActiveDays}
             </div>
           )}
         </div>
 
         <aside className="rounded-md border border-night-800 bg-night-950/70 p-3 text-xs leading-5 text-muted">
           <p className="font-semibold uppercase tracking-[0.16em] text-parchment">
-            Signal key
+            {copy.signalKey}
           </p>
           <div className="mt-3 flex items-center gap-2">
-            <span>Quiet</span>
+            <span>{copy.quiet}</span>
             {[0, 1, 2, 3, 4].map((intensity) => (
               <span
                 className={`size-3 rounded-[0.18rem] border ${getHeatCellClass(
@@ -350,19 +380,132 @@ function WeirdnessGrid({
                 key={intensity}
               />
             ))}
-            <span>Spicy</span>
+            <span>{copy.spicy}</span>
           </div>
           <p className="mt-3">
-            {quietDays} quiet days hidden from the recent scan. Based on event
-            dates when available.
+            {copy.quietDays(quietDays)}
           </p>
           <p className="mt-2 text-signal-amber">
-            Counts are real. Conclusions are not.
+            {copy.countsDisclaimer}
           </p>
         </aside>
       </div>
     </article>
   );
+}
+
+function getSignalsCopy(locale: Locale) {
+  if (locale === "es") {
+    return {
+      activeDays: (count: number) =>
+        count === 1 ? "1 día activo" : `${count} días activos`,
+      activityDescription:
+        "Días activos de reportes sin verificar. Los días tranquilos se esconden hasta que el mapa tenga más señales.",
+      activityKicker: "Actividad rara",
+      activityTitle: "Cinta reciente de señales.",
+      approvedPublicActivity: "Actividad pública aprobada",
+      categoryPulse: "Pulso de categoría",
+      countsDisclaimer: "Los conteos son reales. Las conclusiones no.",
+      description:
+        "Patrones pequeños de reportes sin verificar. No es ciencia. Sigue siendo útil.",
+      disclaimer:
+        "Estas estadísticas se basan en reportes públicos sin verificar. Son para curiosidad y entretenimiento, no confirmación.",
+      indexed: "Indexado",
+      kicker: "Tira de señales",
+      latestWindowReports: (count: number) =>
+        count === 1
+          ? "1 reporte en la ventana reciente"
+          : `${count} reportes en la ventana reciente`,
+      noActiveDays:
+        "No hay días activos en el escaneo reciente. Cielos tranquilos, al menos para el registro público.",
+      noSignalYet: "Sin señal todavía",
+      peakWindow: "Ventana pico",
+      quiet: "Tranquilo",
+      quietDays: (count: number) =>
+        `${count} días tranquilos ocultos del escaneo reciente. Basado en fechas de evento cuando existen.`,
+      regionPulse: "Pulso regional",
+      reportsIndexed: (count: number) =>
+        count === 1 ? "1 reporte" : `${count} reportes`,
+      signalKey: "Clave de señal",
+      spicy: "Intenso",
+      swipe: "desliza ->",
+      title: "Señales y rarezas",
+      weeksScanned: (count: number) =>
+        count === 1 ? "1 semana escaneada" : `${count} semanas escaneadas`,
+      whenReportsGetLouder: "Cuando los reportes suben de volumen",
+    };
+  }
+
+  return {
+    activeDays: (count: number) =>
+      count === 1 ? "1 active day" : `${count} active days`,
+    activityDescription:
+      "Active days from unverified reports. Quiet days stay tucked away until the map gets more snacks.",
+    activityKicker: "Weirdness Activity",
+    activityTitle: "Recent signal tape.",
+    approvedPublicActivity: "Approved public activity",
+    categoryPulse: "Category Pulse",
+    countsDisclaimer: "Counts are real. Conclusions are not.",
+    description:
+      "Tiny patterns from unverified reports. Not science. Still fun.",
+    disclaimer:
+      "These stats are based on unverified public reports. They are for curiosity and entertainment, not confirmation.",
+    indexed: "Indexed",
+    kicker: "Signal Strip",
+    latestWindowReports: (count: number) =>
+      `${count} latest-window ${count === 1 ? "report" : "reports"}`,
+    noActiveDays:
+      "No active days in the recent scan. Quiet skies, at least for the public log.",
+    noSignalYet: "No signal yet",
+    peakWindow: "Peak Window",
+    quiet: "Quiet",
+    quietDays: (count: number) =>
+      `${count} quiet days hidden from the recent scan. Based on event dates when available.`,
+    regionPulse: "Region Pulse",
+    reportsIndexed: (count: number) =>
+      count === 1 ? "1 report" : `${count} reports`,
+    signalKey: "Signal key",
+    spicy: "Spicy",
+    swipe: "swipe ->",
+    title: "Signals & Weirdness",
+    weeksScanned: (count: number) =>
+      count === 1 ? "1 week scanned" : `${count} weeks scanned`,
+    whenReportsGetLouder: "When reports get louder",
+  };
+}
+
+function getOddConName(name: string, locale: Locale) {
+  if (locale !== "es") {
+    return name;
+  }
+
+  const labels: Record<string, string> = {
+    "Definitely Not an Invasion": "Definitivamente no es una invasión",
+    "Mildly Weird": "Medianamente raro",
+    "Quiet Skies": "Cielos tranquilos",
+    "Sky Is Spicy": "El cielo está intenso",
+    "Suspiciously Interesting": "Sospechosamente interesante",
+  };
+
+  return labels[name] ?? name;
+}
+
+function getCategoryMood(category: string, locale: Locale) {
+  if (locale !== "es") {
+    return categoryMoods[category] ?? "Signal unclear";
+  }
+
+  const labels: Record<string, string> = {
+    "Haunted Places": "Tranquilamente embrujado",
+    "Local Legends": "Folclore calentando",
+    Paranormal: "Más o menos explicable",
+    "Strange Lights": "Brillando con sospecha",
+    UFO: "El cielo parpadea",
+    "UFO / UAP": "El cielo parpadea",
+    Unknown: "Hacen falta más ojos",
+  };
+
+  return labels[category] ?? "Señal poco clara";
 }
 
 function parseReportDate(report: Report) {
@@ -591,14 +734,30 @@ function toDateKey(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-function formatActivityDate(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
+function formatActivityDate(date: Date, locale: Locale) {
+  return new Intl.DateTimeFormat(locale === "es" ? "es" : "en-US", {
     day: "numeric",
     month: "short",
   }).format(date);
 }
 
-function getActivityMood(count: number) {
+function getActivityMood(count: number, locale: Locale) {
+  if (locale === "es") {
+    if (count >= 4) {
+      return "El cielo anda intenso.";
+    }
+
+    if (count >= 3) {
+      return "El mapa tuvo señales.";
+    }
+
+    if (count >= 2) {
+      return "Pequeño grupo raro.";
+    }
+
+    return "Un solo ping extraño.";
+  }
+
   if (count >= 4) {
     return "Sky is spicy.";
   }

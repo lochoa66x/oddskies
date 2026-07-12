@@ -13,37 +13,37 @@ export const revalidate = 0;
 
 export const metadata: Metadata = {
   alternates: {
-    canonical: "/field-log",
+    canonical: "/es/field-log",
     languages: {
       en: "/field-log",
       es: "/es/field-log",
     },
   },
   description:
-    "Browse the OddSkies Field Log: unverified UFO / UAP, strange light, haunted place, paranormal, local legend, and weird public reports organized by source, place, and time.",
+    "Explora el Registro de Campo de OddSkies: reportes sin verificar de OVNI / FANI, luces extrañas, lugares embrujados, paranormal, leyendas locales y rarezas organizados por fuente, lugar y fecha.",
   openGraph: {
     description:
-      "Browse the OddSkies Field Log: unverified UFO / UAP, strange light, haunted place, paranormal, local legend, and weird public reports organized by source, place, and time.",
+      "Explora el Registro de Campo de OddSkies: reportes sin verificar de OVNI / FANI, luces extrañas, lugares embrujados, paranormal, leyendas locales y rarezas organizados por fuente, lugar y fecha.",
     images: [
       {
-        alt: "A strange twilight sky above a distant horizon.",
+        alt: "Un cielo extraño al atardecer sobre un horizonte lejano.",
         height: 916,
         url: "/images/oddskies-hero.png",
         width: 1718,
       },
     ],
     siteName: "OddSkies",
-    title: "OddSkies Field Log -- Unverified UFO, Paranormal & Strange Reports",
+    title: "Registro de Campo OddSkies -- OVNI, paranormal y rarezas",
     type: "website",
-    url: "/field-log",
+    url: "/es/field-log",
   },
-  title: "OddSkies Field Log -- Unverified UFO, Paranormal & Strange Reports",
+  title: "Registro de Campo OddSkies -- OVNI, paranormal y rarezas",
   twitter: {
     card: "summary_large_image",
     description:
-      "Browse the OddSkies Field Log: unverified UFO / UAP, strange light, haunted place, paranormal, local legend, and weird public reports organized by source, place, and time.",
+      "Explora el Registro de Campo de OddSkies: reportes sin verificar de OVNI / FANI, luces extrañas, lugares embrujados, paranormal, leyendas locales y rarezas organizados por fuente, lugar y fecha.",
     images: ["/images/oddskies-hero.png"],
-    title: "OddSkies Field Log -- Unverified UFO, Paranormal & Strange Reports",
+    title: "Registro de Campo OddSkies -- OVNI, paranormal y rarezas",
   },
 };
 
@@ -51,19 +51,21 @@ type FieldLogPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function FieldLogPage({ searchParams }: FieldLogPageProps) {
+export default async function SpanishFieldLogPage({
+  searchParams,
+}: FieldLogPageProps) {
   const params = (await searchParams) ?? {};
   const reports = getFieldLogReports(await getReports());
   const initialFilters: FieldLogInitialFilters = {
     category: readSearchParam(params.category),
     date: readSearchParam(params.date),
     from: readSearchParam(params.from),
+    locationConfidence: readSearchParam(params.locationConfidence),
     query: readSearchParam(params.query),
     region: readSearchParam(params.region),
-    locationConfidence: readSearchParam(params.locationConfidence),
+    sort: readSearchParam(params.sort),
     sourceQuality: readSearchParam(params.sourceQuality),
     sourceType: readSearchParam(params.sourceType),
-    sort: readSearchParam(params.sort),
     to: readSearchParam(params.to),
   };
   const enHref = pathWithSearchParams("/field-log", params);
@@ -73,7 +75,7 @@ export default async function FieldLogPage({ searchParams }: FieldLogPageProps) 
     <main className="min-h-screen bg-night-950 bg-star-field px-5 py-6 text-parchment">
       <div className="mx-auto max-w-7xl">
         <header className="flex flex-col gap-4 border-b border-night-800 pb-5 md:flex-row md:items-center md:justify-between">
-          <Link className="flex items-center gap-3" href="/">
+          <Link className="flex items-center gap-3" href="/es">
             <span className="grid size-11 place-items-center rounded-md border border-signal-teal/40 bg-signal-teal/10 text-sm font-black text-signal-teal">
               OS
             </span>
@@ -86,69 +88,76 @@ export default async function FieldLogPage({ searchParams }: FieldLogPageProps) 
           </Link>
           <div className="flex flex-wrap items-center gap-3 md:justify-end">
             <nav className="flex flex-wrap gap-3 text-sm text-muted">
-              <Link className="transition hover:text-signal-teal" href="/#map">
-                Map
+              <Link className="transition hover:text-signal-teal" href="/es#map">
+                Mapa
               </Link>
-              <Link className="transition hover:text-signal-teal" href="/#reports">
-                Homepage Preview
+              <Link
+                className="transition hover:text-signal-teal"
+                href="/es#reports"
+              >
+                Vista de portada
               </Link>
               <Link className="transition hover:text-signal-teal" href="/categories">
-                Categories
+                Categorías
               </Link>
               <Link className="transition hover:text-signal-teal" href="/regions">
-                Regions
+                Regiones
               </Link>
-              <Link className="transition hover:text-signal-teal" href="/#oracle">
-                Oracle
+              <Link className="transition hover:text-signal-teal" href="/es#oracle">
+                Oráculo
               </Link>
-              <Link className="transition hover:text-signal-teal" href="/send-signal">
-                Send a Signal
+              <Link
+                className="transition hover:text-signal-teal"
+                href="/send-signal"
+              >
+                Enviar una señal
               </Link>
               <Link
                 className="transition hover:text-signal-teal"
                 href="/source-guidelines"
               >
-                Source Guidelines
+                Guía de fuentes
               </Link>
             </nav>
-            <LanguageSwitcher enHref={enHref} esHref={esHref} locale="en" />
+            <LanguageSwitcher enHref={enHref} esHref={esHref} locale="es" />
           </div>
         </header>
 
         <section className="grid gap-5 py-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.32em] text-signal-teal">
-              Full Field Log
+              Registro de Campo completo
             </p>
             <h1 className="mt-4 max-w-4xl text-4xl font-black leading-tight md:text-6xl">
-              Browse the living record of weird.
+              Explora el registro vivo de lo raro.
             </h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-muted">
-              Public, unverified field notes grouped by when they joined OddSkies.
-              Search by title, source, location, region, category, quality, and
-              filed date without cluttering the front map.
+              Notas públicas y sin verificar, agrupadas por cuándo entraron a
+              OddSkies. Busca por título, fuente, ubicación, región, categoría,
+              calidad y fecha de archivo sin saturar el mapa principal.
             </p>
           </div>
 
           <aside className="field-card border-signal-amber/25 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-signal-amber">
-              Reading rules
+              Reglas de lectura
             </p>
             <p className="mt-3 text-sm leading-6 text-muted">
-              Every case file stays unverified. Source links are kept visible
-              when available, and the Oracle can only offer a playful reality
-              check.
+              Cada expediente sigue sin verificarse. Los enlaces de fuente se
+              mantienen visibles cuando existen, y el Oráculo solo ofrece un
+              chequeo juguetón de realidad.
             </p>
             <p className="mt-3 rounded-md border border-night-800 bg-night-950/60 px-3 py-2 text-xs leading-5 text-muted">
-              Monthly Sweeps keep the Field Log moving: fresh July files stay
-              visible even when the weird thing happened earlier.
+              Los barridos mensuales mantienen vivo el Registro: los archivos
+              nuevos de julio siguen visibles aunque lo raro haya ocurrido
+              antes.
             </p>
           </aside>
         </section>
 
         <FieldLogBrowser
           initialFilters={initialFilters}
-          locale="en"
+          locale="es"
           reports={reports}
         />
       </div>

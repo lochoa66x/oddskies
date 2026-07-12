@@ -13,7 +13,14 @@ import {
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
+import {
+  categoryLabel,
+  localizedPath,
+  regionLabel,
+  type Locale,
+} from "@/lib/i18n";
 import { AtlasMotionGuard } from "@/components/AtlasMotionGuard";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { WorldMapBase } from "@/components/WorldMapBase";
 
 const heroTags = ["UFO / UAP", "Strange Lights", "Haunted Places", "Unknown"];
@@ -27,7 +34,14 @@ const navItems = [
 type ClusterStyle = CSSProperties & { "--cluster-size": string };
 type LabelSide = "above" | "left" | "right";
 
-export function Hero({ reports }: { reports: Report[] }) {
+export function Hero({
+  locale = "en",
+  reports,
+}: {
+  locale?: Locale;
+  reports: Report[];
+}) {
+  const copy = getHeroCopy(locale);
   const [activeRegion, setActiveRegion] = useState<RegionFilter>("All");
   const filteredReports = useMemo(
     () => filterReportsByRegion(reports, activeRegion),
@@ -86,34 +100,35 @@ export function Hero({ reports }: { reports: Report[] }) {
           </span>
         </a>
 
-        <nav className="hidden items-center gap-1 rounded-md border border-night-800 bg-night-900/80 p-1 text-sm text-muted md:flex">
-          {navItems.map((item) => (
-            <Link
-              className="rounded px-3 py-2 transition hover:bg-night-850 hover:text-parchment"
-              href={item.href}
-              key={item.label}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="flex items-center gap-2">
+          <nav className="hidden items-center gap-1 rounded-md border border-night-800 bg-night-900/80 p-1 text-sm text-muted md:flex">
+            {navItems.map((item) => (
+              <Link
+                className="rounded px-3 py-2 transition hover:bg-night-850 hover:text-parchment"
+                href={localizedPath(locale, item.href)}
+                key={item.label}
+              >
+                {copy.nav[item.label] ?? item.label}
+              </Link>
+            ))}
+          </nav>
+          <LanguageSwitcher enHref="/" esHref="/es" locale={locale} />
+        </div>
       </header>
 
       <div className="relative z-10 mx-auto grid max-w-[88rem] gap-6 px-5 pb-9 pt-2 md:pt-4 lg:grid-cols-[0.62fr_1.38fr] lg:items-start lg:gap-8 lg:pb-10 lg:pt-5 xl:pt-6">
         <div className="lg:pt-8 xl:pt-12">
           <p className="inline-flex rounded-md border border-signal-amber/30 bg-signal-amber/10 px-3 py-2 text-sm font-semibold text-signal-amber">
-            Mystery Atlas / Phase 1 Preview
+            {copy.kicker}
           </p>
           <h1 className="mt-4 max-w-3xl text-5xl font-semibold leading-[0.95] text-parchment sm:text-6xl lg:text-6xl xl:text-7xl">
-            Explore the weird side of the map.
+            {copy.title}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-8 text-muted md:text-lg">
-            OddSkies organizes strange, unverified public reports — from UFOs
-            and strange lights to haunted places and local legends — by time,
-            place, category, and source.
+            {copy.description}
           </p>
           <p className="mt-4 max-w-xl rounded-md border border-night-800 bg-night-900/80 px-4 py-3 text-sm font-semibold text-parchment">
-            Verified? No. Interesting? Maybe. Source-linked? Always.
+            {copy.disclaimer}
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <a
@@ -121,20 +136,20 @@ export function Hero({ reports }: { reports: Report[] }) {
               href="#map"
             >
               <span aria-hidden="true" className="cta-glyph cta-glyph-map" />
-              Explore the Map
+              {copy.mapCta}
             </a>
             <Link
               className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-teal/40 bg-signal-teal/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/70 hover:bg-signal-teal/20"
-              href="/field-log"
+              href={localizedPath(locale, "/field-log")}
             >
-              Browse the Field Log
+              {copy.fieldLogCta}
             </Link>
             <a
               className="hero-cta hero-cta-secondary inline-flex min-h-14 items-center justify-center gap-3 rounded-md border border-signal-violet/40 bg-signal-violet/[0.12] px-5 py-3 text-sm font-bold text-parchment transition hover:border-signal-teal/60 hover:bg-signal-teal/10"
               href="#oracle"
             >
               <span aria-hidden="true" className="cta-glyph cta-glyph-oracle" />
-              Ask the Oracle
+              {copy.oracleCta}
             </a>
           </div>
         </div>
@@ -143,18 +158,18 @@ export function Hero({ reports }: { reports: Report[] }) {
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-night-800 bg-night-850 px-5 py-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-teal">
-                Live Atlas Preview
+                {copy.atlasTitle}
               </p>
               <p className="mt-1 text-sm text-muted">
-                Public report activity, not verified events.
+                {copy.atlasDescription}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
-                Global field layer
+                {copy.fieldLayer}
               </span>
               <span className="rounded-md border border-night-800 bg-night-950 px-3 py-2 text-xs text-muted">
-                Global preview / {plottedCount} plotted
+                {copy.plotted(plottedCount)}
               </span>
             </div>
           </div>
@@ -175,14 +190,13 @@ export function Hero({ reports }: { reports: Report[] }) {
                     onClick={() => setActiveRegion(region)}
                     type="button"
                   >
-                    {region}
+                    {regionLabel(region, locale)}
                   </button>
                 );
               })}
             </div>
             <p className="text-xs leading-5 text-muted">
-              Reports are approved public field notes. Everything remains
-              unverified until a source trail says otherwise.
+              {copy.reportRule}
             </p>
           </div>
 
@@ -229,10 +243,10 @@ export function Hero({ reports }: { reports: Report[] }) {
 
             <div className="absolute left-5 right-5 top-5 z-[3] flex flex-wrap items-start justify-between gap-2">
               <div className="max-w-[13rem] rounded-md border border-night-800 bg-night-950/80 px-3 py-2 text-xs text-muted">
-                Field layer: public report markers
+                {copy.markerLayer}
               </div>
               <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs font-semibold text-signal-amber">
-                Not confirmed events
+                {copy.notConfirmed}
               </div>
             </div>
 
@@ -267,7 +281,7 @@ export function Hero({ reports }: { reports: Report[] }) {
                       className={`atlas-point-label atlas-point-label-${labelSide}`}
                     >
                       <span>{report.shortLabel}</span>
-                      <small>{report.region}</small>
+                      <small>{regionLabel(report.region, locale)}</small>
                     </span>
                   ) : null}
                 </div>
@@ -276,17 +290,17 @@ export function Hero({ reports }: { reports: Report[] }) {
 
             {markerReports.length === 0 ? (
               <div className="absolute left-5 right-5 top-24 rounded-md border border-night-800 bg-night-950/85 p-4 text-sm text-muted">
-                No plotted reports in this region yet.
+                {copy.noPlotted}
               </div>
             ) : null}
 
             <div className="absolute right-5 bottom-24 hidden rounded-md border border-night-800 bg-night-950/80 px-3 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-muted md:block">
-              Sweep 03 / anomalous cluster watch
+              {copy.sweep}
             </div>
 
             <div className="atlas-control absolute right-5 top-16 hidden rounded-md border border-night-800 bg-night-950/80 p-2 text-xs text-muted 2xl:flex">
-              <span>Markers</span>
-              <span>Source links</span>
+              <span>{copy.markers}</span>
+              <span>{copy.sourceLinks}</span>
               <span>48h</span>
             </div>
 
@@ -297,14 +311,14 @@ export function Hero({ reports }: { reports: Report[] }) {
                     className="rounded-md border border-night-800 bg-night-950/80 px-3 py-2 text-xs text-parchment"
                     key={tag}
                   >
-                    {tag}
+                    {categoryLabel(tag, locale)}
                   </span>
                 ))}
               </div>
               <div className="flex max-w-sm items-center gap-3 rounded-md border border-night-800 bg-night-950/85 px-3 py-2 text-xs text-muted">
-                <span>Quiet regions</span>
+                <span>{copy.quietRegions}</span>
                 <span className="h-2 flex-1 rounded-full bg-gradient-to-r from-signal-teal/35 via-signal-amber to-signal-ember" />
-                <span>Active regions</span>
+                <span>{copy.activeRegions}</span>
               </div>
             </div>
           </AtlasMotionGuard>
@@ -374,4 +388,66 @@ function getLabelSide(report: Report, left: number): LabelSide {
   }
 
   return "above";
+}
+
+function getHeroCopy(locale: Locale) {
+  if (locale === "es") {
+    return {
+      activeRegions: "Regiones activas",
+      atlasDescription: "Actividad de reportes públicos, no eventos verificados.",
+      atlasTitle: "Vista del atlas en vivo",
+      description:
+        "OddSkies organiza reportes públicos extraños y sin verificar — de OVNIs y luces raras a lugares embrujados y leyendas locales — por tiempo, lugar, categoría y fuente.",
+      disclaimer:
+        "¿Verificado? No. ¿Interesante? Tal vez. ¿Con fuentes? Siempre.",
+      fieldLayer: "Capa global de campo",
+      fieldLogCta: "Ver el registro de campo",
+      kicker: "Atlas de misterio / Vista fase 1",
+      mapCta: "Explorar el mapa",
+      markerLayer: "Capa: marcadores de reportes públicos",
+      markers: "Marcadores",
+      nav: {
+        About: "Acerca de",
+        "Field Log": "Registro",
+        Map: "Mapa",
+        Oracle: "Oráculo",
+      } as Record<string, string>,
+      noPlotted: "Aún no hay reportes trazados en esta región.",
+      notConfirmed: "No son eventos confirmados",
+      oracleCta: "Preguntar al Oráculo",
+      plotted: (count: number) => `Vista global / ${count} trazados`,
+      quietRegions: "Regiones quietas",
+      reportRule:
+        "Los reportes son notas públicas aprobadas. Todo sigue sin verificarse hasta que la ruta de fuentes diga lo contrario.",
+      sourceLinks: "Fuentes",
+      sweep: "Barrido 03 / vigilancia de clúster anómalo",
+      title: "Explora el lado raro del mapa.",
+    };
+  }
+
+  return {
+    activeRegions: "Active regions",
+    atlasDescription: "Public report activity, not verified events.",
+    atlasTitle: "Live Atlas Preview",
+    description:
+      "OddSkies organizes strange, unverified public reports — from UFOs and strange lights to haunted places and local legends — by time, place, category, and source.",
+    disclaimer: "Verified? No. Interesting? Maybe. Source-linked? Always.",
+    fieldLayer: "Global field layer",
+    fieldLogCta: "Browse the Field Log",
+    kicker: "Mystery Atlas / Phase 1 Preview",
+    mapCta: "Explore the Map",
+    markerLayer: "Field layer: public report markers",
+    markers: "Markers",
+    nav: {} as Record<string, string>,
+    noPlotted: "No plotted reports in this region yet.",
+    notConfirmed: "Not confirmed events",
+    oracleCta: "Ask the Oracle",
+    plotted: (count: number) => `Global preview / ${count} plotted`,
+    quietRegions: "Quiet regions",
+    reportRule:
+      "Reports are approved public field notes. Everything remains unverified until a source trail says otherwise.",
+    sourceLinks: "Source links",
+    sweep: "Sweep 03 / anomalous cluster watch",
+    title: "Explore the weird side of the map.",
+  };
 }

@@ -6,6 +6,7 @@ import {
   type OracleApiResponse,
   type OracleReading,
 } from "@/lib/oracle";
+import { uiLabel, type Locale } from "@/lib/i18n";
 import type { Report } from "@/lib/reports";
 
 type OracleState =
@@ -16,7 +17,14 @@ type OracleState =
 
 type ShareAction = "card" | "caption" | "full" | "link" | "native" | "summary";
 
-export function OracleReportPanel({ report }: { report: Report }) {
+export function OracleReportPanel({
+  locale = "en",
+  report,
+}: {
+  locale?: Locale;
+  report: Report;
+}) {
+  const copy = getOracleCopy(locale);
   const [state, setState] = useState<OracleState>({ status: "idle" });
   const [shareStatus, setShareStatus] = useState<ShareAction | null>(null);
 
@@ -50,7 +58,7 @@ export function OracleReportPanel({ report }: { report: Report }) {
       setState({ response: payload, status: "loaded" });
     } catch {
       setState({
-        message: "The Oracle lost the signal. Try again after the static clears.",
+        message: copy.signalLost,
         status: "error",
       });
     }
@@ -134,7 +142,7 @@ export function OracleReportPanel({ report }: { report: Report }) {
     try {
       await navigator.share({
         text: reading.shareableSummary,
-        title: `OddSkies Oracle: ${reading.headline}`,
+        title: `${copy.shareTitle}: ${reading.headline}`,
         url: url || undefined,
       });
       markShareStatus("native");
@@ -177,19 +185,19 @@ export function OracleReportPanel({ report }: { report: Report }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-signal-violet">
-            OddSkies Oracle / Alpha
+            {copy.kicker}
           </p>
           <p className="mt-1 text-sm font-semibold text-parchment">
-            Report-based reality check
+            {copy.subtitle}
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-1.5">
           <span className="rounded-md border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-signal-violet">
-            {sourceMode}
+            {uiLabel(sourceMode, locale)}
           </span>
           {response ? (
             <span className="rounded-md border border-night-800 bg-night-900 px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">
-              {getOracleStatusLabel(response.status)}
+              {getOracleStatusLabel(response.status, locale)}
             </span>
           ) : null}
         </div>
@@ -197,22 +205,19 @@ export function OracleReportPanel({ report }: { report: Report }) {
 
       <div className="mt-2 rounded-md border border-night-800 bg-night-900/45 px-3 py-2">
         <p className="text-xs leading-5 text-muted">
-          Think it&apos;s real? Ask our little bro for normal explanations,
-          weird clues, missing pieces, and a maybe-weird read.
+          {copy.prompt}
         </p>
         <p className="mt-1 text-[0.7rem] leading-4 text-signal-amber">
-          OddSkies has not verified this report. The Oracle is a playful
-          reality check, not confirmation.
+          {copy.unverified}
         </p>
       </div>
       {sourceMode === "Public report file" ? (
         <p className="mt-1 text-[0.7rem] leading-4 text-muted/80">
-          Still unverified. The Oracle is a reality check, not a truth machine.
+          {copy.publicReportNote}
         </p>
       ) : (
         <p className="mt-1 text-[0.7rem] leading-4 text-muted/80">
-          Reading this as a {sourceMode.toLowerCase()}. That label describes
-          source context, not truth.
+          {copy.sourceModeNote(uiLabel(sourceMode, locale).toLowerCase())}
         </p>
       )}
 
@@ -223,8 +228,8 @@ export function OracleReportPanel({ report }: { report: Report }) {
         type="button"
       >
         {state.status === "loading"
-          ? "Oracle is checking the fog..."
-          : "Ask the Oracle"}
+          ? copy.loading
+          : copy.ask}
       </button>
 
       {state.status === "error" ? (
@@ -240,14 +245,14 @@ export function OracleReportPanel({ report }: { report: Report }) {
             <div className="relative flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-signal-violet">
-                  The Oracle says
+                  {copy.oracleSays}
                 </p>
                 <p className="mt-2 text-xl font-semibold leading-7 text-parchment md:text-2xl md:leading-8">
                   {reading.headline}
                 </p>
               </div>
               <span className="rounded-md border border-signal-amber/30 bg-signal-amber/10 px-2 py-1 text-xs font-bold text-signal-amber">
-                {getOracleVerdictLabel(reading.verdict)}
+                {getOracleVerdictLabel(reading.verdict, locale)}
               </span>
             </div>
             <p className="relative mt-5 border-l-2 border-signal-violet/60 pl-4 text-lg font-semibold leading-8 text-parchment md:text-xl md:leading-9">
@@ -258,20 +263,20 @@ export function OracleReportPanel({ report }: { report: Report }) {
             </p>
           </div>
 
-          <OracleReadState response={response} />
+          <OracleReadState locale={locale} response={response} />
 
           <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_11rem]">
             <div className="rounded-md border border-night-800 bg-night-900/55 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                  Share Oracle Perspective
+                  {copy.sharePerspective}
                 </p>
                 <button
                   className="rounded-md border border-signal-violet/30 bg-signal-violet/10 px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-signal-violet transition hover:border-signal-violet/60 hover:bg-signal-violet/20"
                   onClick={shareOraclePerspective}
                   type="button"
                 >
-                  {shareStatus === "native" ? "Shared" : "Share"}
+                  {shareStatus === "native" ? copy.shared : copy.share}
                 </button>
               </div>
               <p className="mt-2 text-[0.8rem] leading-5 text-parchment">
@@ -280,27 +285,32 @@ export function OracleReportPanel({ report }: { report: Report }) {
               <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
                 <ShareButton
                   active={shareStatus === "summary"}
-                  label="Summary"
+                  copiedLabel={copy.copied}
+                  label={copy.summary}
                   onClick={copySummary}
                 />
                 <ShareButton
                   active={shareStatus === "full"}
-                  label="Full read"
+                  copiedLabel={copy.copied}
+                  label={copy.fullRead}
                   onClick={copyFullRead}
                 />
                 <ShareButton
                   active={shareStatus === "caption"}
-                  label="Caption"
+                  copiedLabel={copy.copied}
+                  label={copy.caption}
                   onClick={copyCaption}
                 />
                 <ShareButton
                   active={shareStatus === "link"}
-                  label="Link"
+                  copiedLabel={copy.copied}
+                  label={copy.link}
                   onClick={copyLink}
                 />
                 <ShareButton
                   active={shareStatus === "card"}
-                  label="Card PNG"
+                  copiedLabel={copy.copied}
+                  label={copy.cardPng}
                   onClick={downloadShareCard}
                 />
               </div>
@@ -309,52 +319,58 @@ export function OracleReportPanel({ report }: { report: Report }) {
                 className="mt-2 text-[0.68rem] leading-4 text-muted"
               >
                 {shareStatus
-                  ? getShareStatusText(shareStatus)
-                  : "Copy includes this Oracle link when your browser allows it."}
+                  ? getShareStatusText(shareStatus, locale)
+                  : copy.copyNote}
               </p>
             </div>
-            <MaybeWeirdMeter score={reading.maybeWeirdScore} />
+            <MaybeWeirdMeter
+              locale={locale}
+              score={reading.maybeWeirdScore}
+            />
           </div>
 
-          <OracleShareCard reading={reading} report={report} />
-
+          <OracleShareCard
+            locale={locale}
+            reading={reading}
+            report={report}
+          />
 
           <div className="flex items-center gap-2">
             <span className="h-px flex-1 bg-night-800" />
             <span className="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-muted">
-              Supporting signals
+              {copy.supportingSignals}
             </span>
             <span className="h-px flex-1 bg-night-800" />
           </div>
 
           <div className="grid gap-3 lg:grid-cols-2">
             <OracleSupportGroup
-              eyebrow="Normal lanes first"
-              note="Ordinary explanations stay at the front of the line."
+              eyebrow={copy.normalEyebrow}
+              note={copy.normalNote}
             >
               <OracleList
                 items={reading.normalExplanations}
-                title="Possible boring explanations"
+                title={copy.normalTitle}
               />
-              <OracleTextCard text={reading.sourceCheck} title="Source check" />
+              <OracleTextCard text={reading.sourceCheck} title={copy.sourceCheck} />
             </OracleSupportGroup>
             <OracleSupportGroup
-              eyebrow="Still worth checking"
-              note="Clues are inspection hooks, not evidence."
+              eyebrow={copy.checkingEyebrow}
+              note={copy.checkingNote}
             >
               <OracleList
                 items={reading.weirdClues}
-                title="Weird little clues"
+                title={copy.weirdClues}
               />
               <OracleList
                 items={reading.missingContext}
-                title="Missing pieces"
+                title={copy.missingPieces}
               />
-              <OracleTextCard text={reading.nextStep} title="Next step" />
+              <OracleTextCard text={reading.nextStep} title={copy.nextStep} />
             </OracleSupportGroup>
           </div>
 
-          <OracleSafetyNote note={reading.safetyNote} />
+          <OracleSafetyNote locale={locale} note={reading.safetyNote} />
         </div>
       ) : null}
     </div>
@@ -363,10 +379,12 @@ export function OracleReportPanel({ report }: { report: Report }) {
 
 function ShareButton({
   active,
+  copiedLabel,
   label,
   onClick,
 }: {
   active: boolean;
+  copiedLabel: string;
   label: string;
   onClick: () => void;
 }) {
@@ -376,28 +394,31 @@ function ShareButton({
       onClick={onClick}
       type="button"
     >
-      {active ? "Copied" : label}
+      {active ? copiedLabel : label}
     </button>
   );
 }
 
 function OracleShareCard({
+  locale,
   reading,
   report,
 }: {
+  locale: Locale;
   reading: OracleReading;
   report: Report;
 }) {
+  const copy = getOracleCopy(locale);
   const safeScore = getSafeMaybeWeirdScore(reading.maybeWeirdScore);
 
   return (
     <div className="rounded-lg border border-night-800 bg-night-950/45 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
-          Share card preview
+          {copy.shareCardPreview}
         </p>
         <span className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-2 py-1 text-[0.66rem] font-bold text-signal-amber">
-          {getOracleVerdictLabel(reading.verdict)}
+          {getOracleVerdictLabel(reading.verdict, locale)}
         </span>
       </div>
 
@@ -405,7 +426,7 @@ function OracleShareCard({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-signal-violet">
-              OddSkies Oracle
+              {copy.kicker}
             </p>
             <h3 className="mt-2 text-xl font-black leading-7 text-parchment">
               {reading.headline}
@@ -414,7 +435,7 @@ function OracleShareCard({
           <div className="min-w-[6rem]">
             <div className="flex items-center justify-between gap-2">
               <span className="font-mono text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-signal-amber">
-                Maybe-weird
+                {copy.maybeWeird}
               </span>
               <span className="text-sm font-black text-signal-amber">
                 {safeScore}
@@ -433,16 +454,21 @@ function OracleShareCard({
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-night-800 pt-3 text-[0.68rem] leading-4 text-muted">
           <span>{report.shortLabel || report.title}</span>
-          <span>Reality check, not truth machine.</span>
+          <span>{copy.realityCheck}</span>
         </div>
       </div>
     </div>
   );
 }
 
-function OracleSafetyNote({ note }: { note: string }) {
-  const required =
-    "OddSkies has not verified this report. This Oracle read is a playful reality check, not confirmation.";
+function OracleSafetyNote({
+  locale,
+  note,
+}: {
+  locale: Locale;
+  note: string;
+}) {
+  const required = getOracleCopy(locale).unverified;
   const extra = note
     .replace(/OddSkies cannot verify this report\.?/i, "")
     .replace(/OddSkies has not verified this report\.?/i, "")
@@ -457,21 +483,28 @@ function OracleSafetyNote({ note }: { note: string }) {
   );
 }
 
-function OracleReadState({ response }: { response: OracleApiResponse | null }) {
+function OracleReadState({
+  locale,
+  response,
+}: {
+  locale: Locale;
+  response: OracleApiResponse | null;
+}) {
   if (!response) {
     return null;
   }
 
-  const text = getOracleReadStateText(response);
+  const copy = getOracleCopy(locale);
+  const text = getOracleReadStateText(response, locale);
 
   return (
     <div className="rounded-md border border-night-800 bg-night-900/40 px-3 py-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-mono text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
-          Read state
+          {copy.readState}
         </p>
         <span className="rounded-md border border-night-800 bg-night-950 px-2 py-1 text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-muted">
-          {getOracleStatusLabel(response.status)}
+          {getOracleStatusLabel(response.status, locale)}
         </span>
       </div>
       <p className="mt-2 text-[0.72rem] leading-5 text-muted">{text}</p>
@@ -487,24 +520,38 @@ function getOracleError(payload: OracleApiResponse | { error?: string }) {
   return "The Oracle is staring into the fog and needs a moment.";
 }
 
-function getOracleStatusLabel(status: OracleApiResponse["status"]) {
+function getOracleStatusLabel(
+  status: OracleApiResponse["status"],
+  locale: Locale = "en",
+) {
   if (status === "sleeping") {
-    return "Oracle sleeping";
+    return locale === "es" ? "Oráculo dormido" : "Oracle sleeping";
   }
 
   if (status === "cached") {
-    return "Latest cached read";
+    return locale === "es" ? "Última lectura guardada" : "Latest cached read";
   }
 
   if (status === "fallback") {
-    return "Static fallback";
+    return locale === "es" ? "Lectura local" : "Static fallback";
   }
 
-  return "Oracle read";
+  return locale === "es" ? "Lectura del Oráculo" : "Oracle read";
 }
 
-function getOracleReadStateText(response: OracleApiResponse) {
+function getOracleReadStateText(
+  response: OracleApiResponse,
+  locale: Locale = "en",
+) {
   if (response.status === "cached") {
+    if (locale === "es") {
+      return response.cachedAt
+        ? `Mostrando la última lectura guardada del Oráculo desde ${formatOracleDate(
+            response.cachedAt,
+          )}. Mismo reporte, misma pregunta, misma linterna pequeña.`
+        : "Mostrando la última lectura guardada del Oráculo para este reporte.";
+    }
+
     return response.cachedAt
       ? `Showing the latest cached Oracle read from ${formatOracleDate(
           response.cachedAt,
@@ -513,29 +560,56 @@ function getOracleReadStateText(response: OracleApiResponse) {
   }
 
   if (response.status === "fallback") {
+    if (locale === "es") {
+      return "El Oráculo en vivo encontró estática, así que esta es una lectura local. Útil, cauta, y sin fingir magia fresca.";
+    }
+
     return "The live Oracle caught static, so this is a local fallback read. Useful, cautious, and not pretending to be fresh magic.";
   }
 
   if (response.status === "sleeping") {
+    if (locale === "es") {
+      return "El Oráculo está dormido, así que OddSkies muestra una lectura local cuidadosa hasta que aclare la niebla.";
+    }
+
     return "The Oracle is asleep, so OddSkies is showing a careful local read until the fog clears.";
+  }
+
+  if (locale === "es") {
+    return "Lectura fresca del Oráculo para este expediente público.";
   }
 
   return "Fresh Oracle read for this public case file.";
 }
 
-function getOracleVerdictLabel(verdict: OracleApiResponse["reading"]["verdict"]) {
-  const labels: Record<OracleApiResponse["reading"]["verdict"], string> = {
-    "Culture Note": "Culture note",
-    "Mildly Odd": "Mildly odd",
-    "Needs Another Witness": "Bring another witness",
-    "Probably Normal": "Probably just Earth",
-    "Reality Mostly Intact": "Reality mostly intact",
-    "Sky Is Being Dramatic": "Sky being dramatic",
-    "Source Trail Is Thin": "Trail needs breadcrumbs",
-    "Suspiciously Interesting": "Suspiciously interesting",
+function getOracleVerdictLabel(
+  verdict: OracleApiResponse["reading"]["verdict"],
+  locale: Locale = "en",
+) {
+  const labels: Record<Locale, Record<OracleApiResponse["reading"]["verdict"], string>> = {
+    en: {
+      "Culture Note": "Culture note",
+      "Mildly Odd": "Mildly odd",
+      "Needs Another Witness": "Bring another witness",
+      "Probably Normal": "Probably just Earth",
+      "Reality Mostly Intact": "Reality mostly intact",
+      "Sky Is Being Dramatic": "Sky being dramatic",
+      "Source Trail Is Thin": "Trail needs breadcrumbs",
+      "Suspiciously Interesting": "Suspiciously interesting",
+    },
+    es: {
+      "Culture Note": "Nota cultural",
+      "Mildly Odd": "Medianamente raro",
+      "Needs Another Witness": "Trae otro testigo",
+      "Probably Normal": "Probablemente normal",
+      "Reality Mostly Intact": "Realidad casi intacta",
+      "Sky Is Being Dramatic": "El cielo anda dramático",
+      "Source Trail Is Thin": "Ruta de fuentes débil",
+      "Suspiciously Interesting": "Sospechosamente interesante",
+    },
   };
 
-  return labels[verdict];
+  return labels[locale][verdict];
 }
 
 function buildOracleSummaryText(reading: OracleReading, url: string) {
@@ -585,16 +659,20 @@ function buildOracleFullText(
     .join("\n");
 }
 
-function getShareStatusText(action: ShareAction) {
+function getShareStatusText(action: ShareAction, locale: Locale = "en") {
   if (action === "card") {
-    return "Oracle card downloaded.";
+    return locale === "es"
+      ? "Tarjeta del Oráculo descargada."
+      : "Oracle card downloaded.";
   }
 
   if (action === "native") {
-    return "Oracle perspective shared.";
+    return locale === "es"
+      ? "Perspectiva del Oráculo compartida."
+      : "Oracle perspective shared.";
   }
 
-  return "Copied to clipboard.";
+  return locale === "es" ? "Copiado al portapapeles." : "Copied to clipboard.";
 }
 
 async function writeClipboardText(text: string) {
@@ -679,21 +757,32 @@ function OracleList({ items, title }: { items: string[]; title: string }) {
   );
 }
 
-function MaybeWeirdMeter({ score }: { score: number }) {
+function MaybeWeirdMeter({
+  locale,
+  score,
+}: {
+  locale: Locale;
+  score: number;
+}) {
+  const copy = getOracleCopy(locale);
   const safeScore = getSafeMaybeWeirdScore(score);
 
   return (
     <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 p-3">
       <div className="flex items-center justify-between gap-2">
         <p className="font-mono text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-signal-amber">
-          Maybe-weird
+          {copy.maybeWeird}
         </p>
         <span className="text-sm font-black text-signal-amber">
           {safeScore}
         </span>
       </div>
       <div
-        aria-label={`Maybe-weird meter ${safeScore} out of 100`}
+        aria-label={
+          locale === "es"
+            ? `Medidor quizá-raro ${safeScore} de 100`
+            : `Maybe-weird meter ${safeScore} out of 100`
+        }
         className="mt-3 h-2 overflow-hidden rounded-full border border-signal-amber/25 bg-night-950"
         role="meter"
         aria-valuemax={100}
@@ -706,10 +795,102 @@ function MaybeWeirdMeter({ score }: { score: number }) {
         />
       </div>
       <p className="mt-2 text-[0.7rem] leading-4 text-muted">
-        Curiosity meter, not evidence.
+        {copy.curiosityMeter}
       </p>
     </div>
   );
+}
+
+function getOracleCopy(locale: Locale) {
+  if (locale === "es") {
+    return {
+      ask: "Preguntar al Oráculo",
+      caption: "Texto breve",
+      cardPng: "Tarjeta PNG",
+      checkingEyebrow: "Aún vale revisar",
+      checkingNote: "Pistas raras y huecos que mantienen la lectura abierta.",
+      copied: "Copiado",
+      copyNote:
+        "La copia incluye este enlace del Oráculo cuando el navegador lo permite.",
+      curiosityMeter: "Medidor de curiosidad, no evidencia.",
+      fullRead: "Lectura completa",
+      kicker: "OddSkies Oráculo",
+      link: "Enlace",
+      loading: "El Oráculo revisa la niebla...",
+      maybeWeird: "Quizá-raro",
+      missingPieces: "Piezas faltantes",
+      nextStep: "Siguiente paso",
+      normalEyebrow: "Primero lo normal",
+      normalNote:
+        "Explicaciones terrestres antes de subirle el volumen al misterio.",
+      normalTitle: "Explicaciones normales",
+      oracleSays: "El Oráculo dice",
+      prompt:
+        "¿Crees que es real? Pregúntale al Oráculo por explicaciones normales, pistas raras, piezas faltantes y una lectura quizá-rara.",
+      publicReportNote:
+        "Archivo público: incluido para revisión y curiosidad; sigue sin verificarse.",
+      readState: "Estado de lectura",
+      realityCheck: "Chequeo de realidad, no máquina de verdad.",
+      share: "Compartir",
+      shareCardPreview: "Vista previa de tarjeta",
+      sharePerspective: "Compartir perspectiva del Oráculo",
+      shared: "Compartido",
+      shareTitle: "Oráculo OddSkies",
+      signalLost: "El Oráculo perdió la señal. Intenta otra vez en un momento.",
+      sourceCheck: "Chequeo de fuente",
+      sourceModeNote: (mode: string) =>
+        `Modo de fuente: ${mode}. La lectura sigue siendo cauta y sin confirmar.`,
+      subtitle: "Chequeo de realidad basado en reportes",
+      summary: "Resumen",
+      supportingSignals: "Señales de apoyo",
+      unverified:
+        "OddSkies no ha verificado este reporte. El Oráculo es un chequeo juguetón de realidad, no una confirmación.",
+      weirdClues: "Pistas raras",
+    };
+  }
+
+  return {
+    ask: "Ask the Oracle",
+    caption: "Caption",
+    cardPng: "Card PNG",
+    checkingEyebrow: "Still worth checking",
+    checkingNote: "Weird clues and missing pieces that keep the read open.",
+    copied: "Copied",
+    copyNote: "Copy includes this Oracle link when your browser allows it.",
+    curiosityMeter: "Curiosity meter, not evidence.",
+    fullRead: "Full read",
+    kicker: "OddSkies Oracle",
+    link: "Link",
+    loading: "The Oracle is checking the fog...",
+    maybeWeird: "Maybe-weird",
+    missingPieces: "Missing pieces",
+    nextStep: "Next step",
+    normalEyebrow: "Normal first",
+    normalNote: "Earthly explanations before the mystery gets louder.",
+    normalTitle: "Normal explanations",
+    oracleSays: "The Oracle says",
+    prompt:
+      "Think it's real? Ask our little bro for normal explanations, weird clues, missing pieces, and a maybe-weird read.",
+    publicReportNote:
+      "Public report file: included for review and curiosity; still unverified.",
+    readState: "Read state",
+    realityCheck: "Reality check, not truth machine.",
+    share: "Share",
+    shareCardPreview: "Share card preview",
+    sharePerspective: "Share Oracle perspective",
+    shared: "Shared",
+    shareTitle: "OddSkies Oracle",
+    signalLost: "The Oracle lost the signal. Try again in a moment.",
+    sourceCheck: "Source check",
+    sourceModeNote: (mode: string) =>
+      `Source mode: ${mode}. The read remains cautious and unconfirmed.`,
+    subtitle: "Report-based reality check",
+    summary: "Summary",
+    supportingSignals: "Supporting signals",
+    unverified:
+      "OddSkies has not verified this report. This Oracle read is a playful reality check, not confirmation.",
+    weirdClues: "Weird clues",
+  };
 }
 
 function formatOracleDate(value: string) {

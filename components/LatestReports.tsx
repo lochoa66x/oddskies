@@ -6,7 +6,6 @@ import {
   categoryFilters,
   filterReportsByCategory,
   filterReportsByRegion,
-  getReportCasePath,
   getPublicReportDisplayBadge,
   isCategoryFilter,
   regionFilters,
@@ -14,18 +13,29 @@ import {
   type RegionFilter,
   type Report,
 } from "@/lib/reports";
+import {
+  categoryLabel,
+  localizedPath,
+  localizedReportCasePath,
+  regionLabel,
+  uiLabel,
+  type Locale,
+} from "@/lib/i18n";
 import { OracleReportPanel } from "@/components/OracleReportPanel";
 
 const ALL_CATEGORIES_PREVIEW_LIMIT = 5;
 const CATEGORY_PREVIEW_LIMIT = 3;
 
 export function LatestReports({
+  locale = "en",
   reports,
   totalCount,
 }: {
+  locale?: Locale;
   reports: Report[];
   totalCount?: number;
 }) {
+  const copy = getLatestReportsCopy(locale);
   const [activeRegion, setActiveRegion] = useState<RegionFilter>("All");
   const [activeCategory, setActiveCategory] =
     useState<CategoryFilter>("All categories");
@@ -47,10 +57,8 @@ export function LatestReports({
   const visibleCount = Math.min(previewLimit, matchingCount);
   const countLabel =
     activeCategory === "All categories" && activeRegion === "All"
-      ? `Showing latest ${visibleCount} of ${
-          totalCount ?? reports.length
-        } approved reports.`
-      : `Showing latest ${visibleCount} of ${matchingCount} matching reports.`;
+      ? copy.approvedCount(visibleCount, totalCount ?? reports.length)
+      : copy.matchingCount(visibleCount, matchingCount);
   const selected =
     filteredReports.find((report) => report.id === selectedId) ??
     filteredReports[0];
@@ -112,31 +120,30 @@ export function LatestReports({
         <div className="mb-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
-              Field Log
+              {copy.kicker}
               <span className="ml-2 text-xs normal-case tracking-[0.16em] lg:hidden">
-                swipe -&gt;
+                {copy.swipe}
               </span>
               <span className="ml-2 hidden text-xs normal-case tracking-[0.16em] text-muted lg:inline">
-                scroll field notes ↓
+                {copy.scroll}
               </span>
             </p>
             <h2 className="mt-2 max-w-3xl text-3xl font-semibold text-parchment md:text-4xl">
-              Latest reports, filed as unverified.
+              {copy.title}
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-              Showing the latest approved field notes. Older reports live in the
-              Full Field Log, grouped into monthly sweeps.
+              {copy.description}
             </p>
             <p className="mt-1 text-xs leading-5 text-muted">{countLabel}</p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Link
                 className="inline-flex min-h-11 items-center justify-center rounded-md border border-signal-teal/40 bg-signal-teal/15 px-4 py-2 text-sm font-bold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
-                href="/field-log"
+                href={localizedPath(locale, "/field-log")}
               >
-                View Full Field Log
+                {copy.fullLog}
               </Link>
               <span className="text-xs leading-5 text-muted">
-                Homepage is the preview. The Full Field Log keeps the rest.
+                {copy.previewNote}
               </span>
             </div>
           </div>
@@ -157,7 +164,7 @@ export function LatestReports({
                 onClick={() => changeRegion(region)}
                 type="button"
               >
-                {region}
+                {regionLabel(region, locale)}
               </button>
             );
           })}
@@ -178,7 +185,7 @@ export function LatestReports({
                 onClick={() => changeCategory(category)}
                 type="button"
               >
-                {category}
+                {categoryLabel(category, locale)}
               </button>
             );
           })}
@@ -192,9 +199,10 @@ export function LatestReports({
                   const selectedCard = selected?.id === report.id;
                   const compactLocationLabel = getCompactLocationLabel(
                     report.location,
+                    locale,
                   );
                   const locationConfidenceLabel =
-                    getLocationConfidenceBadge(report);
+                    getLocationConfidenceBadge(report, locale);
 
                   return (
                     <div
@@ -225,7 +233,7 @@ export function LatestReports({
                           Field note {String(index + 1).padStart(2, "0")}
                         </span>
                         <span className="rounded border border-night-800 bg-night-950/60 px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                          {getPublicReportDisplayBadge(report)}
+                          {uiLabel(getPublicReportDisplayBadge(report), locale)}
                         </span>
                       </div>
                       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -234,11 +242,11 @@ export function LatestReports({
                             className={`size-2.5 shrink-0 rounded-full ${report.marker}`}
                           />
                           <p className="truncate text-xs font-bold uppercase tracking-[0.14em] text-parchment">
-                            {report.category}
+                            {categoryLabel(report.category, locale)}
                           </p>
                         </div>
                         <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
-                          Unverified
+                          {uiLabel("Unverified", locale)}
                         </span>
                       </div>
                       <h3 className="mt-3 text-base font-semibold leading-6 text-parchment transition group-hover:text-signal-teal">
@@ -254,7 +262,7 @@ export function LatestReports({
                           {report.eventDateTime}
                         </span>
                         <span className="rounded border border-signal-violet/25 bg-signal-violet/10 px-2 py-1 text-signal-violet">
-                          {report.confidenceMood}
+                          {uiLabel(report.confidenceMood, locale)}
                         </span>
                         {locationConfidenceLabel ? (
                           <span className="rounded border border-signal-teal/25 bg-signal-teal/10 px-2 py-1 text-signal-teal">
@@ -267,14 +275,14 @@ export function LatestReports({
                       </p>
                       <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
                         <span className="rounded-md border border-night-800 bg-night-950/70 px-3 py-2 text-xs text-muted">
-                          {report.sourceType} · {report.sourceName}
+                          {uiLabel(report.sourceType, locale)} · {report.sourceName}
                         </span>
                         <Link
                           className="inline-flex items-center gap-2 rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
-                          href={getReportCasePath(report)}
+                          href={localizedReportCasePath(report, locale)}
                           onClick={(event) => event.stopPropagation()}
                         >
-                          Open Case File
+                          {copy.openCase}
                         </Link>
                         <a
                           className="source-link inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold"
@@ -284,8 +292,8 @@ export function LatestReports({
                           target={isExternalSource(report.sourceUrl) ? "_blank" : undefined}
                         >
                           {report.sourceUrl
-                            ? "View original source"
-                            : "Source guidelines"}
+                            ? copy.originalSource
+                            : copy.sourceGuidelines}
                           <span aria-hidden="true">↗</span>
                         </a>
                       </div>
@@ -294,20 +302,20 @@ export function LatestReports({
                 })
               ) : (
                 <div className="rounded-lg border border-night-800 bg-night-850 p-5 text-sm text-muted">
-                  No reports are listed for this filter yet.
+                  {copy.empty}
                 </div>
               )}
               <Link
                 className="rounded-md border border-signal-teal/30 bg-signal-teal/10 px-3 py-2 text-xs font-semibold leading-5 text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
-                href="/field-log"
+                href={localizedPath(locale, "/field-log")}
               >
-                Browse the Full Field Log →
+                {copy.browseFullLog}
               </Link>
             </div>
           </div>
 
           {selected ? (
-            <ReportDetail selected={selected} />
+            <ReportDetail locale={locale} selected={selected} />
           ) : null}
         </div>
       </div>
@@ -316,14 +324,17 @@ export function LatestReports({
 }
 
 function ReportDetail({
+  locale,
   selected,
 }: {
+  locale: Locale;
   selected: Report;
 }) {
+  const copy = getLatestReportsCopy(locale);
   const sourceHref = getSourceHref(selected.sourceUrl);
   const external = isExternalSource(selected.sourceUrl);
-  const metaLine = getLocationMetaLine(selected);
-  const caseFacts = getCaseFacts(selected);
+  const metaLine = getLocationMetaLine(selected, locale);
+  const caseFacts = getCaseFacts(selected, locale);
   const caseBadges = getCaseBadges(selected);
 
   return (
@@ -332,30 +343,30 @@ function ReportDetail({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-signal-amber">
-              Open Case File
+              {copy.openCaseHeading}
             </p>
             <h3 className="mt-2 line-clamp-3 text-2xl font-semibold text-parchment">
               {selected.title}
             </h3>
             {selected.originalTitle ? (
               <p className="mt-2 line-clamp-2 max-w-2xl text-xs leading-5 text-muted">
-                Original title: {selected.originalTitle}
+                {copy.originalTitle}: {selected.originalTitle}
               </p>
             ) : null}
           </div>
           <span className="rounded-md border border-signal-amber/35 bg-signal-amber/10 px-2 py-1 text-xs font-bold uppercase text-signal-amber">
-            Unverified
+            {uiLabel("Unverified", locale)}
           </span>
         </div>
         {metaLine ? <p className="mt-1 text-sm text-muted">{metaLine}</p> : null}
       </div>
 
       <div className="space-y-3 p-4 md:p-5">
-        <OracleReportPanel report={selected} />
+        <OracleReportPanel locale={locale} report={selected} />
 
         <div className="rounded-md border border-night-800 bg-night-950/55 p-3.5">
           <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-muted">
-            Report summary
+            {copy.reportSummary}
           </p>
           <p className="mt-2 text-sm leading-6 text-muted">
             {selected.summary}
@@ -369,7 +380,7 @@ function ReportDetail({
                 className={`rounded border px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] ${badge.className}`}
                 key={badge.label}
               >
-                {badge.label}
+                {categoryLabel(uiLabel(badge.label, locale), locale)}
               </span>
             ))}
           </div>
@@ -378,7 +389,7 @@ function ReportDetail({
             {caseFacts.map((fact) => (
               <div className={fact.wide ? "sm:col-span-2" : ""} key={fact.label}>
                 <dt className="font-mono text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                  {fact.label}
+                  {copy.factLabels[fact.label] ?? fact.label}
                 </dt>
                 <dd className="mt-1 break-words text-sm font-semibold leading-5 text-parchment">
                   {fact.value}
@@ -391,23 +402,20 @@ function ReportDetail({
         <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
           <div className="rounded-md border border-signal-amber/25 bg-signal-amber/10 p-3.5">
             <p className="text-sm leading-6 text-signal-amber">
-              OddSkies has not verified this report. It may be real, mistaken,
-              AI-generated, staged, satire, folklore, or a joke. Check the
-              original source when available.
+              {copy.unverifiedNote}
             </p>
             {selected.oracleReady ? (
               <p className="mt-2 text-xs leading-5 text-muted">
-                Oracle-ready means there is enough public context for a playful
-                future reading. It does not mean the report is true.
+                {copy.oracleReadyNote}
               </p>
             ) : null}
           </div>
           <div className="grid gap-2">
             <Link
               className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-sm font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
-              href={getReportCasePath(selected)}
+              href={localizedReportCasePath(selected, locale)}
             >
-              Open Case File
+              {copy.openCase}
             </Link>
             <a
               className="source-link inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
@@ -415,7 +423,7 @@ function ReportDetail({
               rel={external ? "noreferrer" : undefined}
               target={external ? "_blank" : undefined}
             >
-              {selected.sourceUrl ? "View original source" : "Source guidelines"}
+              {selected.sourceUrl ? copy.originalSource : copy.sourceGuidelines}
               <span aria-hidden="true">↗</span>
             </a>
           </div>
@@ -425,7 +433,7 @@ function ReportDetail({
   );
 }
 
-function getLocationConfidenceLabel(report: Report) {
+function getLocationConfidenceLabel(report: Report, locale: Locale = "en") {
   const confidence = report.locationConfidence;
   const resolution = report.locationResolution;
 
@@ -434,16 +442,18 @@ function getLocationConfidenceLabel(report: Report) {
   }
 
   return resolution
-    ? `${toDisplayLabel(confidence)} / ${toDisplayLabel(resolution)}`
-    : toDisplayLabel(confidence);
+    ? `${uiLabel(confidence, locale)} / ${uiLabel(resolution, locale)}`
+    : uiLabel(confidence, locale);
 }
 
-function getLocationConfidenceBadge(report: Report) {
+function getLocationConfidenceBadge(report: Report, locale: Locale = "en") {
   if (!report.locationConfidence) {
     return undefined;
   }
 
-  return `Location ${toDisplayLabel(report.locationConfidence)}`;
+  return locale === "es"
+    ? `Ubicación ${uiLabel(report.locationConfidence, locale).toLowerCase()}`
+    : `Location ${toDisplayLabel(report.locationConfidence)}`;
 }
 
 function getLocationChipClass(location: string) {
@@ -454,38 +464,46 @@ function getLocationChipClass(location: string) {
   return `rounded border px-2 py-1 ${tone}`;
 }
 
-function getCompactLocationLabel(location: string) {
-  return isMissingLocation(location) ? "Loc: reviewing" : location;
+function getCompactLocationLabel(location: string, locale: Locale = "en") {
+  if (!isMissingLocation(location)) {
+    return location;
+  }
+
+  return locale === "es" ? "Ubicación: revisión" : "Loc: reviewing";
 }
 
-function getDetailLocationLabel(location: string) {
-  return isMissingLocation(location) ? "Location under review" : location;
+function getDetailLocationLabel(location: string, locale: Locale = "en") {
+  if (!isMissingLocation(location)) {
+    return location;
+  }
+
+  return locale === "es" ? "Ubicación en revisión" : "Location under review";
 }
 
-function getLocationMetaLine(report: Report) {
-  return [getDetailLocationLabel(report.location), report.region]
+function getLocationMetaLine(report: Report, locale: Locale) {
+  return [getDetailLocationLabel(report.location, locale), regionLabel(report.region, locale)]
     .filter((value) => value && value !== "—" && value !== "Unknown")
     .join(" · ");
 }
 
-function getCaseFacts(report: Report) {
+function getCaseFacts(report: Report, locale: Locale) {
   const reviewTrail = [
-    report.sourceQualityLabel ?? "Source-light",
-    getLocationConfidenceLabel(report) !== "—"
-      ? `location ${getLocationConfidenceLabel(report).toLowerCase()}`
+    uiLabel(report.sourceQualityLabel ?? "Source-light", locale),
+    getLocationConfidenceLabel(report, locale) !== "—"
+      ? `${locale === "es" ? "ubicación" : "location"} ${getLocationConfidenceLabel(report, locale).toLowerCase()}`
       : "",
   ]
     .filter(Boolean)
     .join(" · ");
 
-  const sourceTrail = [report.sourceType, report.sourceName]
+  const sourceTrail = [uiLabel(report.sourceType, locale), report.sourceName]
     .filter((value) => value && value !== "Unknown")
     .join(" · ");
 
   return [
     {
       label: "Where",
-      value: getDetailLocationLabel(report.location),
+      value: getDetailLocationLabel(report.location, locale),
     },
     ...(report.country
       ? [
@@ -497,7 +515,7 @@ function getCaseFacts(report: Report) {
       : []),
     {
       label: "Region",
-      value: report.region,
+      value: regionLabel(report.region, locale),
     },
     {
       label: "When",
@@ -577,4 +595,72 @@ function toDisplayLabel(value: string) {
   const normalized = value.replace(/[_-]+/g, " ").trim().toLowerCase();
 
   return normalized.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function getLatestReportsCopy(locale: Locale) {
+  if (locale === "es") {
+    return {
+      approvedCount: (visible: number, total: number) =>
+        `Mostrando los ${visible} más recientes de ${total} reportes aprobados.`,
+      browseFullLog: "Explorar el Registro completo →",
+      description:
+        "Mostrando las notas de campo aprobadas más recientes. Los reportes anteriores viven en el Registro completo, agrupados por barridos mensuales.",
+      empty: "Aún no hay reportes para este filtro.",
+      factLabels: {
+        Country: "País",
+        Region: "Región",
+        "Review trail": "Ruta de revisión",
+        "Source trail": "Ruta de fuente",
+        When: "Cuándo",
+        Where: "Dónde",
+      } as Record<string, string>,
+      fullLog: "Ver Registro completo",
+      kicker: "Registro de campo",
+      matchingCount: (visible: number, total: number) =>
+        `Mostrando los ${visible} más recientes de ${total} reportes coincidentes.`,
+      openCase: "Abrir expediente",
+      openCaseHeading: "Expediente abierto",
+      oracleReadyNote:
+        "Listo para el Oráculo significa que hay suficiente contexto público para una lectura juguetona. No significa que el reporte sea verdadero.",
+      originalSource: "Ver fuente original",
+      originalTitle: "Título original",
+      previewNote:
+        "La portada es la vista previa. El Registro completo guarda el resto.",
+      reportSummary: "Resumen del reporte",
+      scroll: "desplaza notas ↓",
+      sourceGuidelines: "Guía de fuentes",
+      swipe: "desliza ->",
+      title: "Reportes recientes, archivados como sin verificar.",
+      unverifiedNote:
+        "OddSkies no ha verificado este reporte. Puede ser real, equivocado, generado por IA, montado, sátira, folclore o una broma. Revisa la fuente original cuando esté disponible.",
+    };
+  }
+
+  return {
+    approvedCount: (visible: number, total: number) =>
+      `Showing latest ${visible} of ${total} approved reports.`,
+    browseFullLog: "Browse the Full Field Log →",
+    description:
+      "Showing the latest approved field notes. Older reports live in the Full Field Log, grouped into monthly sweeps.",
+    empty: "No reports are listed for this filter yet.",
+    factLabels: {} as Record<string, string>,
+    fullLog: "View Full Field Log",
+    kicker: "Field Log",
+    matchingCount: (visible: number, total: number) =>
+      `Showing latest ${visible} of ${total} matching reports.`,
+    openCase: "Open Case File",
+    openCaseHeading: "Open Case File",
+    oracleReadyNote:
+      "Oracle-ready means there is enough public context for a playful future reading. It does not mean the report is true.",
+    originalSource: "View original source",
+    originalTitle: "Original title",
+    previewNote: "Homepage is the preview. The Full Field Log keeps the rest.",
+    reportSummary: "Report summary",
+    scroll: "scroll field notes ↓",
+    sourceGuidelines: "Source guidelines",
+    swipe: "swipe ->",
+    title: "Latest reports, filed as unverified.",
+    unverifiedNote:
+      "OddSkies has not verified this report. It may be real, mistaken, AI-generated, staged, satire, folklore, or a joke. Check the original source when available.",
+  };
 }

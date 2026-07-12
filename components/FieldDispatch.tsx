@@ -1,25 +1,9 @@
 import Link from "next/link";
+import { localizedPath, type Locale } from "@/lib/i18n";
 
-const fieldDispatchSignals = [
-  {
-    label: "Collectors",
-    status: "Controlled tests",
-  },
-  {
-    label: "Oracle",
-    status: "Awake-ish",
-  },
-  {
-    label: "Global map",
-    status: "Marker mode",
-  },
-  {
-    label: "Reports",
-    status: "Review first",
-  },
-];
+export function FieldDispatch({ locale = "en" }: { locale?: Locale }) {
+  const copy = getFieldDispatchCopy(locale);
 
-export function FieldDispatch() {
   return (
     <section className="bg-night-950 px-5 py-6 md:py-8" id="field-dispatch">
       <div className="mx-auto max-w-7xl">
@@ -36,24 +20,22 @@ export function FieldDispatch() {
           <div className="relative grid gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-amber">
-                Field Dispatch
+                {copy.kicker}
               </p>
               <h2 className="mt-2 max-w-2xl text-3xl font-semibold text-parchment md:text-4xl">
-                The map is about to get weirder.
+                {copy.title}
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted md:text-base md:leading-7">
-                Collectors are warming up. The Oracle is awake-ish. Reports
-                still wait for review before joining the public Field Log.
+                {copy.description}
               </p>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-                Reports will still be unverified. OddSkies just gets better at
-                keeping the trail organized.
+                {copy.unverified}
               </p>
             </div>
 
             <div className="grid gap-3">
               <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                {fieldDispatchSignals.map((signal) => (
+                {copy.signals.map((signal) => (
                   <div
                     className="rounded-md border border-night-800 bg-night-950/70 p-3"
                     key={signal.label}
@@ -71,21 +53,20 @@ export function FieldDispatch() {
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
                   className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-signal-teal/40 bg-signal-teal/15 px-4 py-2 text-sm font-bold text-signal-teal transition hover:border-signal-teal/70 hover:bg-signal-teal/20"
-                  href="/field-log"
+                  href={localizedPath(locale, "/field-log")}
                 >
-                  Watch the field log
+                  {copy.watchFieldLog}
                 </Link>
                 <a
                   className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-signal-violet/35 bg-signal-violet/10 px-4 py-2 text-sm font-bold text-parchment transition hover:border-signal-violet/70 hover:bg-signal-violet/20"
                   href="#oracle"
                 >
-                  Check the Oracle Alpha
+                  {copy.checkOracle}
                 </a>
               </div>
 
               <p className="rounded-md border border-signal-amber/25 bg-signal-amber/10 px-3 py-2 text-xs leading-5 text-signal-amber">
-                No confirmed events, no dramatic certainty. Just a stranger
-                little map getting ready for its next sweep.
+                {copy.footerNote}
               </p>
             </div>
           </div>
@@ -93,4 +74,46 @@ export function FieldDispatch() {
       </div>
     </section>
   );
+}
+
+function getFieldDispatchCopy(locale: Locale) {
+  if (locale === "es") {
+    return {
+      checkOracle: "Consultar el Oráculo Alfa",
+      description:
+        "Los colectores están calentando. El Oráculo está medio despierto. Los reportes aún esperan revisión antes de entrar al Registro público.",
+      footerNote:
+        "Sin eventos confirmados, sin certeza dramática. Solo un mapa más raro preparándose para su siguiente barrido.",
+      kicker: "Despacho de campo",
+      signals: [
+        { label: "Colectores", status: "Pruebas controladas" },
+        { label: "Oráculo", status: "Medio despierto" },
+        { label: "Mapa global", status: "Modo marcador" },
+        { label: "Reportes", status: "Revisión primero" },
+      ],
+      title: "El mapa está por ponerse más raro.",
+      unverified:
+        "Los reportes seguirán sin verificarse. OddSkies solo mejora organizando la ruta.",
+      watchFieldLog: "Ver el Registro",
+    };
+  }
+
+  return {
+    checkOracle: "Check the Oracle Alpha",
+    description:
+      "Collectors are warming up. The Oracle is awake-ish. Reports still wait for review before joining the public Field Log.",
+    footerNote:
+      "No confirmed events, no dramatic certainty. Just a stranger little map getting ready for its next sweep.",
+    kicker: "Field Dispatch",
+    signals: [
+      { label: "Collectors", status: "Controlled tests" },
+      { label: "Oracle", status: "Awake-ish" },
+      { label: "Global map", status: "Marker mode" },
+      { label: "Reports", status: "Review first" },
+    ],
+    title: "The map is about to get weirder.",
+    unverified:
+      "Reports will still be unverified. OddSkies just gets better at keeping the trail organized.",
+    watchFieldLog: "Watch the field log",
+  };
 }

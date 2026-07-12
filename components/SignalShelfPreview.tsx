@@ -4,12 +4,24 @@ import {
   getFeaturedCuratedLinks,
   isExternalCuratedLink,
 } from "@/lib/curated-links";
+import {
+  categoryLabel,
+  localizedPath,
+  regionLabel,
+  uiLabel,
+  type Locale,
+} from "@/lib/i18n";
 
 type SignalShelfPreviewProps = {
+  locale?: Locale;
   links: CuratedLink[];
 };
 
-export function SignalShelfPreview({ links }: SignalShelfPreviewProps) {
+export function SignalShelfPreview({
+  locale = "en",
+  links,
+}: SignalShelfPreviewProps) {
+  const copy = getSignalShelfCopy(locale);
   const previewLinks = getFeaturedCuratedLinks(links, 3);
 
   return (
@@ -18,21 +30,20 @@ export function SignalShelfPreview({ links }: SignalShelfPreviewProps) {
         <div className="mb-3.5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-signal-teal">
-              Signal Shelf
+              {copy.kicker}
             </p>
             <h2 className="mt-2 text-3xl font-semibold text-parchment md:text-4xl">
-              Useful trails, not verdicts.
+              {copy.title}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-              A small shelf of OddSkies links and future public resources that
-              help with source context. Not reports, not proof, not a scoreboard.
+              {copy.description}
             </p>
           </div>
           <Link
             className="source-link inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-bold"
-            href="/signal-shelf"
+            href={localizedPath(locale, "/signal-shelf")}
           >
-            Open Signal Shelf
+            {copy.openShelf}
           </Link>
         </div>
 
@@ -42,14 +53,14 @@ export function SignalShelfPreview({ links }: SignalShelfPreviewProps) {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                    {formatLabel(link.linkType)}
+                    {formatLabel(link.linkType, locale)}
                   </p>
                   <h3 className="mt-2 text-xl font-semibold text-parchment">
                     {link.title}
                   </h3>
                 </div>
                 <span className="rounded-md border border-signal-amber/40 bg-signal-amber/10 px-2.5 py-1 text-xs font-bold uppercase tracking-[0.12em] text-signal-amber">
-                  {formatLabel(link.safetyLabel)}
+                  {formatLabel(link.safetyLabel, locale)}
                 </span>
               </div>
               <p className="mt-3 text-sm leading-6 text-muted">
@@ -58,9 +69,9 @@ export function SignalShelfPreview({ links }: SignalShelfPreviewProps) {
               <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted">
                 <span>{link.sourceName}</span>
                 <span>/</span>
-                <span>{link.category}</span>
+                <span>{categoryLabel(link.category, locale)}</span>
                 <span>/</span>
-                <span>{link.region}</span>
+                <span>{regionLabel(link.region, locale)}</span>
               </div>
               <div className="mt-4">
                 {isExternalCuratedLink(link.url) ? (
@@ -70,14 +81,14 @@ export function SignalShelfPreview({ links }: SignalShelfPreviewProps) {
                     rel="noreferrer"
                     target="_blank"
                   >
-                    Open source
+                    {copy.openSource}
                   </a>
                 ) : (
                   <Link
                     className="text-sm font-bold text-signal-teal transition hover:text-parchment"
-                    href={link.url}
+                    href={localizedPath(locale, link.url)}
                   >
-                    Open page
+                    {copy.openPage}
                   </Link>
                 )}
               </div>
@@ -86,14 +97,43 @@ export function SignalShelfPreview({ links }: SignalShelfPreviewProps) {
         </div>
 
         <p className="mt-3 rounded-lg border border-night-800 bg-night-900/70 p-3 text-xs leading-5 text-muted">
-          Signal Shelf is curated navigation. Public reports still belong in
-          the Field Log, and raw sources still wait behind the review door.
+          {copy.footerNote}
         </p>
       </div>
     </section>
   );
 }
 
-function formatLabel(value: string) {
-  return value.replaceAll("_", " ");
+function formatLabel(value: string, locale: Locale) {
+  const label = value.replaceAll("_", " ");
+
+  return uiLabel(label, locale);
+}
+
+function getSignalShelfCopy(locale: Locale) {
+  if (locale === "es") {
+    return {
+      description:
+        "Un pequeño estante de enlaces de OddSkies y recursos públicos futuros que ayudan con el contexto de fuentes. No son reportes, no son prueba, no son marcador.",
+      footerNote:
+        "El Estante de señales es navegación curada. Los reportes públicos siguen perteneciendo al Registro de Campo, y las fuentes crudas siguen esperando detrás de la puerta de revisión.",
+      kicker: "Estante de señales",
+      openPage: "Abrir página",
+      openShelf: "Abrir Estante de señales",
+      openSource: "Abrir fuente",
+      title: "Rutas útiles, no veredictos.",
+    };
+  }
+
+  return {
+    description:
+      "A small shelf of OddSkies links and future public resources that help with source context. Not reports, not proof, not a scoreboard.",
+    footerNote:
+      "Signal Shelf is curated navigation. Public reports still belong in the Field Log, and raw sources still wait behind the review door.",
+    kicker: "Signal Shelf",
+    openPage: "Open page",
+    openShelf: "Open Signal Shelf",
+    openSource: "Open source",
+    title: "Useful trails, not verdicts.",
+  };
 }

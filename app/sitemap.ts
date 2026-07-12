@@ -5,6 +5,7 @@ import {
   getReportsForRegion,
   regionDefinitions,
 } from "@/lib/report-taxonomy";
+import { localizedReportCasePath } from "@/lib/i18n";
 import { getFieldLogReports, getReportCasePath, getReports } from "@/lib/reports";
 
 const siteUrl = "https://oddskies.com";
@@ -23,6 +24,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.8,
       url: getAbsoluteUrl("/field-log"),
+    },
+    {
+      changeFrequency: "daily",
+      priority: 0.9,
+      url: getAbsoluteUrl("/es"),
+    },
+    {
+      changeFrequency: "daily",
+      priority: 0.72,
+      url: getAbsoluteUrl("/es/field-log"),
     },
     {
       changeFrequency: "weekly",
@@ -64,6 +75,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
     url: getAbsoluteUrl(getReportCasePath(report)),
   }));
+  const spanishReportRoutes = reports.map((report) => ({
+    changeFrequency: "weekly" as const,
+    lastModified:
+      getSitemapDate(report.createdAtRaw) ??
+      getSitemapDate(report.eventDateTimeRaw),
+    priority: 0.5,
+    url: getAbsoluteUrl(localizedReportCasePath(report, "es")),
+  }));
   const categoryRoutes = categoryDefinitions
     .filter((category) => getReportsForCategory(reports, category).length > 0)
     .map((category) => ({
@@ -84,6 +103,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categoryRoutes,
     ...regionRoutes,
     ...reportRoutes,
+    ...spanishReportRoutes,
   ]);
 }
 
