@@ -295,6 +295,64 @@ It does not:
 - expose collected posts in the public UI
 - use AI classification
 
+## AI-Assisted Discovery Workflow
+
+The Discovery Assistant helps find possible OddSkies candidates faster. It is a
+research helper, not a truth machine. Discovery finds leads, not facts.
+
+Preview candidates without writing anything:
+
+```bash
+npm run discover:weird -- --query "ufo sighting" --dry-run
+```
+
+Preview a category-flavored search:
+
+```bash
+npm run discover:weird -- --query "haunted road" --category "Haunted Places" --limit 5 --dry-run
+```
+
+Search a date window:
+
+```bash
+npm run discover:weird -- --query "strange lights" --since 2026-06-01 --until 2026-06-07 --dry-run
+```
+
+Stage candidates only after reviewing the dry-run output:
+
+```bash
+npm run discover:weird -- --query "strange lights" --limit 5 --stage
+```
+
+For now, this command reuses the Bluesky collector/search path. Future discovery
+providers can plug into the same review-first flow.
+
+The dry-run shortlist shows:
+
+- title
+- source URL
+- platform/source
+- category guess
+- location guess
+- event or reported date
+- summary
+- why it might fit OddSkies
+- warnings such as low context, duplicate risk, promotional text, joke/satire
+  risk, sensitive location details, or missing source links
+
+When `--stage` is used, candidates still go only to `public.raw_sources`.
+Safety gates hold obvious low-context, promotional, joke/satire, sensitive, or
+missing-source candidates. Duplicates are skipped by source URL or source post
+ID when available.
+
+Principles:
+
+- Raw sources are evidence trails, not public reports.
+- Human review is required before promotion.
+- Public reports remain unverified.
+- Oracle reads may be playful, but they do not verify reports.
+- Never expose `public.raw_sources` in the public UI.
+
 ## Admin Collector Test
 
 The protected review UI includes a small Bluesky collector test:

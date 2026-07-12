@@ -1143,7 +1143,8 @@ export function RawSourcesReview() {
               Staged source pulls
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted">
-              Pull tiny batches into raw_sources only. Nothing becomes public
+              Pull tiny batches into raw_sources only. The Discovery Assistant
+              is for candidate staging, not publishing. Nothing becomes public
               until a raw source is reviewed and promoted.
             </p>
           </div>

@@ -7,6 +7,7 @@
     "collect:fediverse": "node scripts/collect-fediverse.mjs",
     "collect:rss": "node scripts/collect-rss.mjs",
     "collect:youtube": "node scripts/collect-youtube.mjs",
+    "discover:weird": "node scripts/discover-weird-reports.mjs",
     "enrich:reports": "node scripts/enrich-reports.mjs",
     "promote:raw": "node scripts/promote-raw-source.mjs",
     "promote:raw-source": "node scripts/promote-raw-source.mjs",
@@ -19,6 +20,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
