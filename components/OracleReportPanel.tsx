@@ -7,6 +7,7 @@ import {
   type OracleReading,
 } from "@/lib/oracle";
 import { uiLabel, type Locale } from "@/lib/i18n";
+import { trackOddSkiesEvent } from "@/lib/client-analytics";
 import type { Report } from "@/lib/reports";
 
 type OracleState =
@@ -36,6 +37,10 @@ export function OracleReportPanel({
   async function askOracle() {
     setState({ status: "loading" });
     setShareStatus(null);
+    trackOddSkiesEvent("oracle_asked", {
+      category: report.category,
+      mood_label: report.confidenceMood,
+    });
 
     try {
       const response = await fetch("/api/oracle/report", {

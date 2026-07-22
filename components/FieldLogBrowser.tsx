@@ -19,6 +19,7 @@ import {
   uiLabel,
   type Locale,
 } from "@/lib/i18n";
+import { trackOddSkiesEvent } from "@/lib/client-analytics";
 import { OracleReportPanel } from "@/components/OracleReportPanel";
 
 const allSourceTypes = "All source types";
@@ -190,6 +191,31 @@ export function FieldLogBrowser({
     setSelectedId(filteredReports[0]?.id ?? reports[0]?.id ?? "");
   }, [filteredReports, reports]);
 
+  function trackFilterChange(category: CategoryFilter, region: RegionFilter) {
+    trackOddSkiesEvent("field_log_filter_changed", {
+      category,
+      region,
+    });
+  }
+
+  function resetFilters() {
+    setActiveRegion("All");
+    setActiveCategory("All categories");
+    setActiveSourceType(allSourceTypes);
+    setActiveSourceQuality(allSourceQualities);
+    setActiveLocationConfidence(allLocationConfidences);
+    setActiveSort("Newest first");
+    setFromDate("");
+    setToDate("");
+    setQuery("");
+    trackFilterChange("All categories", "All");
+  }
+
+  function selectReport(report: Report) {
+    setSelectedId(report.id);
+    trackReportOpened(report);
+  }
+
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(22rem,0.55fr)] lg:items-start">
       <section className="space-y-4">
@@ -208,14 +234,24 @@ export function FieldLogBrowser({
             <FieldLogSelect
               formatOption={(value) => regionLabel(value, locale)}
               label={copy.region}
-              onChange={(value) => setActiveRegion(value as RegionFilter)}
+              onChange={(value) => {
+                const region = value as RegionFilter;
+
+                setActiveRegion(region);
+                trackFilterChange(activeCategory, region);
+              }}
               options={regionFilters}
               value={activeRegion}
             />
             <FieldLogSelect
               formatOption={(value) => categoryLabel(value, locale)}
               label={copy.category}
-              onChange={(value) => setActiveCategory(value as CategoryFilter)}
+              onChange={(value) => {
+                const category = value as CategoryFilter;
+
+                setActiveCategory(category);
+                trackFilterChange(category, activeRegion);
+              }}
               options={categoryFilters}
               value={activeCategory}
             />
@@ -280,17 +316,7 @@ export function FieldLogBrowser({
           </div>
           <button
             className="rounded-md border border-night-800 bg-night-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted transition hover:border-signal-teal/40 hover:text-parchment"
-            onClick={() => {
-              setActiveRegion("All");
-              setActiveCategory("All categories");
-              setActiveSourceType(allSourceTypes);
-              setActiveSourceQuality(allSourceQualities);
-              setActiveLocationConfidence(allLocationConfidences);
-              setActiveSort("Newest first");
-              setFromDate("");
-              setToDate("");
-              setQuery("");
-            }}
+            onClick={resetFilters}
             type="button"
           >
             {copy.resetFilters}
@@ -314,7 +340,9 @@ export function FieldLogBrowser({
                     <FieldLogCard
                       locale={locale}
                       key={report.id}
-                      onSelect={() => setSelectedId(report.id)}
+                      onOpenCase={() => trackReportOpened(report)}
+                      onSelect={() => selectReport(report)}
+                      onSourceClick={() => trackSourceClicked(report)}
                       report={report}
                       selected={selected?.id === report.id}
                     />
@@ -333,17 +361,7 @@ export function FieldLogBrowser({
             </p>
             <button
               className="mt-4 rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
-              onClick={() => {
-                setActiveRegion("All");
-                setActiveCategory("All categories");
-                setActiveSourceType(allSourceTypes);
-                setActiveSourceQuality(allSourceQualities);
-                setActiveLocationConfidence(allLocationConfidences);
-                setActiveSort("Newest first");
-                setFromDate("");
-                setToDate("");
-                setQuery("");
-              }}
+              onClick={resetFilters}
               type="button"
             >
               {copy.clearScan}
@@ -363,7 +381,13 @@ export function FieldLogBrowser({
       </section>
 
       {selected ? (
-        <FieldLogCaseFile locale={locale} report={selected} sticky />
+        <FieldLogCaseFile
+          locale={locale}
+          onOpenCase={() => trackReportOpened(selected)}
+          onSourceClick={() => trackSourceClicked(selected)}
+          report={selected}
+          sticky
+        />
       ) : null}
     </div>
   );
@@ -371,12 +395,16 @@ export function FieldLogBrowser({
 
 function FieldLogCard({
   locale,
+  onOpenCase,
   onSelect,
+  onSourceClick,
   report,
   selected,
 }: {
   locale: Locale;
+  onOpenCase: () => void;
   onSelect: () => void;
+  onSourceClick: () => void;
   report: Report;
   selected: boolean;
 }) {
@@ -447,12 +475,14 @@ function FieldLogCard({
         <Link
           className="inline-flex min-h-10 items-center justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
           href={localizedReportCasePath(report, locale)}
+          onClick={onOpenCase}
         >
           {copy.openCase}
         </Link>
         <a
           className="source-link inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-semibold"
           href={sourceHref}
+          onClick={onSourceClick}
           rel={external ? "noreferrer" : undefined}
           target={external ? "_blank" : undefined}
         >
@@ -466,10 +496,14 @@ function FieldLogCard({
 
 export function FieldLogCaseFile({
   locale = "en",
+  onOpenCase,
+  onSourceClick,
   report,
   sticky = false,
 }: {
   locale?: Locale;
+  onOpenCase?: () => void;
+  onSourceClick?: () => void;
   report: Report;
   sticky?: boolean;
 }) {
@@ -574,12 +608,14 @@ export function FieldLogCaseFile({
           <Link
             className="inline-flex min-h-11 items-center justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-sm font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
             href={localizedReportCasePath(report, locale)}
+            onClick={onOpenCase}
           >
             {copy.shareCase}
           </Link>
           <a
             className="source-link inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
             href={sourceHref}
+            onClick={onSourceClick}
             rel={external ? "noreferrer" : undefined}
             target={external ? "_blank" : undefined}
           >
@@ -657,6 +693,20 @@ function getUniqueValues(reports: Report[], key: keyof Report) {
   return [...new Set(reports.map((report) => report[key]))]
     .filter((value): value is string => typeof value === "string" && value.length > 0)
     .sort((a, b) => a.localeCompare(b));
+}
+
+function trackReportOpened(report: Report) {
+  trackOddSkiesEvent("report_opened", {
+    category: report.category,
+    region: report.region,
+  });
+}
+
+function trackSourceClicked(report: Report) {
+  trackOddSkiesEvent("source_clicked", {
+    category: report.category,
+    source_type: report.sourceType,
+  });
 }
 
 function getInitialRegion(value?: string): RegionFilter {

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { trackOddSkiesEvent } from "@/lib/client-analytics";
 
 const categories = [
   "",
@@ -54,6 +55,7 @@ export function SendSignalForm() {
     event.preventDefault();
     setLoading(true);
     setResult(null);
+    trackOddSkiesEvent("send_signal_started", { mode: "link" });
 
     try {
       const response = await fetch("/api/send-signal", {
@@ -75,16 +77,22 @@ export function SendSignalForm() {
       });
       const payload = (await response.json()) as Partial<Result>;
 
+      const ok = Boolean(response.ok && payload.ok !== false);
+
       setResult({
         message:
           payload.message ??
           (response.ok
             ? "Signal received. It is waiting in the fog for review. If it fits OddSkies, it may appear later as an unverified Field Log entry."
             : "The signal got lost in the fog. Try again soon."),
-        ok: Boolean(response.ok && payload.ok !== false),
+        ok,
       });
 
-      if (response.ok) {
+      if (ok) {
+        trackOddSkiesEvent("send_signal_submitted", {
+          category: categoryGuess,
+          mode: "link",
+        });
         setSourceUrl("");
         setSubmitterNote("");
         setCategoryGuess("");
@@ -93,8 +101,17 @@ export function SendSignalForm() {
         setContactEmail("");
         setConsent(false);
         setSafety(false);
+      } else {
+        trackOddSkiesEvent("send_signal_failed", {
+          mode: "link",
+          reason: getSignalFailureReason(response.status),
+        });
       }
     } catch {
+      trackOddSkiesEvent("send_signal_failed", {
+        mode: "link",
+        reason: "network",
+      });
       setResult({
         message: "The signal got lost in the fog. Try again soon.",
         ok: false,
@@ -107,8 +124,13 @@ export function SendSignalForm() {
   async function handleScreenshotSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setScreenshotResult(null);
+    trackOddSkiesEvent("send_signal_started", { mode: "screenshot" });
 
     if (!screenshotFile) {
+      trackOddSkiesEvent("send_signal_failed", {
+        mode: "screenshot",
+        reason: "validation",
+      });
       setScreenshotResult({
         message: "The screenshot signal did not come through. Check the file and try again.",
         ok: false,
@@ -117,6 +139,10 @@ export function SendSignalForm() {
     }
 
     if (!screenshotTypes.includes(screenshotFile.type)) {
+      trackOddSkiesEvent("send_signal_failed", {
+        mode: "screenshot",
+        reason: "validation",
+      });
       setScreenshotResult({
         message: "Use a JPG, PNG, or WebP screenshot.",
         ok: false,
@@ -125,6 +151,10 @@ export function SendSignalForm() {
     }
 
     if (screenshotFile.size === 0 || screenshotFile.size > maxScreenshotSize) {
+      trackOddSkiesEvent("send_signal_failed", {
+        mode: "screenshot",
+        reason: "validation",
+      });
       setScreenshotResult({
         message: "Use a screenshot under 5 MB.",
         ok: false,
@@ -154,16 +184,22 @@ export function SendSignalForm() {
       });
       const payload = (await response.json()) as Partial<Result>;
 
+      const ok = Boolean(response.ok && payload.ok !== false);
+
       setScreenshotResult({
         message:
           payload.message ??
           (response.ok
             ? "Screenshot signal received. It is waiting in the fog for review."
             : "The screenshot signal did not come through. Check the file and try again."),
-        ok: Boolean(response.ok && payload.ok !== false),
+        ok,
       });
 
-      if (response.ok) {
+      if (ok) {
+        trackOddSkiesEvent("send_signal_submitted", {
+          category: screenshotCategory,
+          mode: "screenshot",
+        });
         const form = event.currentTarget;
 
         form.reset();
@@ -176,8 +212,17 @@ export function SendSignalForm() {
         setScreenshotEmail("");
         setScreenshotConsent(false);
         setScreenshotSafety(false);
+      } else {
+        trackOddSkiesEvent("send_signal_failed", {
+          mode: "screenshot",
+          reason: getSignalFailureReason(response.status),
+        });
       }
     } catch {
+      trackOddSkiesEvent("send_signal_failed", {
+        mode: "screenshot",
+        reason: "network",
+      });
       setScreenshotResult({
         message: "The screenshot signal did not come through. Check the file and try again.",
         ok: false,
@@ -402,6 +447,14 @@ export function SendSignalForm() {
       </div>
     </section>
   );
+}
+
+function getSignalFailureReason(status: number) {
+  if (status >= 400 && status < 500) {
+    return "validation";
+  }
+
+  return "unknown";
 }
 
 function SignalContextFields({

@@ -21,6 +21,7 @@ import {
   uiLabel,
   type Locale,
 } from "@/lib/i18n";
+import { trackOddSkiesEvent } from "@/lib/client-analytics";
 import { OracleReportPanel } from "@/components/OracleReportPanel";
 
 const ALL_CATEGORIES_PREVIEW_LIMIT = 5;
@@ -71,6 +72,7 @@ export function LatestReports({
 
     setActiveRegion(region);
     setSelectedId(nextReports[0]?.id ?? "");
+    trackFilterChange(activeCategory, region);
   }
 
   function changeCategory(category: CategoryFilter) {
@@ -81,6 +83,7 @@ export function LatestReports({
 
     setActiveCategory(category);
     setSelectedId(nextReports[0]?.id ?? "");
+    trackFilterChange(category, activeRegion);
   }
 
   useEffect(() => {
@@ -99,6 +102,7 @@ export function LatestReports({
 
       setActiveCategory(category);
       setSelectedId(nextReports[0]?.id ?? "");
+      trackFilterChange(category, activeRegion);
     }
 
     window.addEventListener("oddskies:category-filter", handleCategoryFilter);
@@ -110,6 +114,18 @@ export function LatestReports({
       );
     };
   }, [activeRegion, reports]);
+
+  function trackFilterChange(category: CategoryFilter, region: RegionFilter) {
+    trackOddSkiesEvent("field_log_filter_changed", {
+      category,
+      region,
+    });
+  }
+
+  function selectReport(report: Report) {
+    setSelectedId(report.id);
+    trackReportOpened(report);
+  }
 
   return (
     <section
@@ -213,7 +229,7 @@ export function LatestReports({
                           : "border-night-800 hover:border-signal-teal/45"
                       }`}
                       key={report.id}
-                      onClick={() => setSelectedId(report.id)}
+                      onClick={() => selectReport(report)}
                       onKeyDown={(event) => {
                         if (
                           event.target !== event.currentTarget ||
@@ -223,7 +239,7 @@ export function LatestReports({
                         }
 
                         event.preventDefault();
-                        setSelectedId(report.id);
+                        selectReport(report);
                       }}
                       role="button"
                       tabIndex={0}
@@ -280,14 +296,20 @@ export function LatestReports({
                         <Link
                           className="inline-flex items-center gap-2 rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-xs font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
                           href={localizedReportCasePath(report, locale)}
-                          onClick={(event) => event.stopPropagation()}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            trackReportOpened(report);
+                          }}
                         >
                           {copy.openCase}
                         </Link>
                         <a
                           className="source-link inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold"
                           href={getSourceHref(report.sourceUrl)}
-                          onClick={(event) => event.stopPropagation()}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            trackSourceClicked(report);
+                          }}
                           rel={isExternalSource(report.sourceUrl) ? "noreferrer" : undefined}
                           target={isExternalSource(report.sourceUrl) ? "_blank" : undefined}
                         >
@@ -414,12 +436,14 @@ function ReportDetail({
             <Link
               className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-signal-teal/35 bg-signal-teal/10 px-3 py-2 text-sm font-semibold text-signal-teal transition hover:bg-signal-teal hover:text-night-950"
               href={localizedReportCasePath(selected, locale)}
+              onClick={() => trackReportOpened(selected)}
             >
               {copy.openCase}
             </Link>
             <a
               className="source-link inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
               href={sourceHref}
+              onClick={() => trackSourceClicked(selected)}
               rel={external ? "noreferrer" : undefined}
               target={external ? "_blank" : undefined}
             >
@@ -444,6 +468,20 @@ function getLocationConfidenceLabel(report: Report, locale: Locale = "en") {
   return resolution
     ? `${uiLabel(confidence, locale)} / ${uiLabel(resolution, locale)}`
     : uiLabel(confidence, locale);
+}
+
+function trackReportOpened(report: Report) {
+  trackOddSkiesEvent("report_opened", {
+    category: report.category,
+    region: report.region,
+  });
+}
+
+function trackSourceClicked(report: Report) {
+  trackOddSkiesEvent("source_clicked", {
+    category: report.category,
+    source_type: report.sourceType,
+  });
 }
 
 function getLocationConfidenceBadge(report: Report, locale: Locale = "en") {

@@ -129,7 +129,8 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
     notes: [
       "Collector pulls and community uploads are counted separately so they can be reviewed with different spam rules.",
       "Raw sources are evidence trails, not public reports.",
-      "Visitor metrics are placeholders until a privacy-friendly analytics source is connected.",
+      "Route traffic and core web vitals live in Vercel Analytics after deployment; Search Console remains the source for query and indexing visibility.",
+      "OddSkies does not verify reports, track personal identities, or send raw submission text into analytics.",
     ],
     overview: [
       metric("Public reports", visibleReports.length, `${archivedReports.length} archived, ${featuredReports.length} featured.`, "teal"),
@@ -150,9 +151,9 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
       funnel("Private or spam watch", collectorRows, communityRows, isSpamWatch),
     ],
     visitorSignals: [
-      { detail: "Privacy-friendly analytics not connected yet.", label: "Visitors", tone: "muted", value: "Waiting" },
-      { detail: "No location analytics source selected.", label: "Top country", tone: "muted", value: "Not tracked" },
-      { detail: "Add later with a consent-aware provider.", label: "Traffic trend", tone: "muted", value: "Quiet" },
+      { detail: "Use Vercel Web Analytics for route-level visits after deploy.", label: "Visitors", tone: "teal", value: "Vercel Analytics" },
+      { detail: "Use Vercel Speed Insights for real-user page performance.", label: "Performance", tone: "violet", value: "Speed Insights" },
+      { detail: "Use Search Console for sitemap, indexing, query, and CTR checks.", label: "Search visibility", tone: "amber", value: "Search Console" },
     ],
     warnings,
   };
@@ -171,7 +172,7 @@ function emptyMetrics(warnings: string[]): AdminMetrics {
     recentRuns: [],
     reviewFunnel: [],
     visitorSignals: [
-      { detail: "Analytics source not connected.", label: "Visitors", tone: "muted", value: "Waiting" },
+      { detail: "Deploy with Vercel Analytics, Speed Insights, and Search Console verification.", label: "Traffic plan", tone: "muted", value: "Dashboard pending" },
     ],
     warnings,
   };

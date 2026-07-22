@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
+import { trackOddSkiesEvent } from "@/lib/client-analytics";
 
 type LanguageSwitcherProps = {
   className?: string;
@@ -42,6 +45,13 @@ export function LanguageSwitcher({
             }`}
             href={hrefs[option.locale]}
             key={option.locale}
+            onClick={() => {
+              if (!active) {
+                trackOddSkiesEvent("language_changed", {
+                  locale: option.locale,
+                });
+              }
+            }}
           >
             {option.label}
           </Link>
